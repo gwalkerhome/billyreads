@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>System Diagnostic</title>
-    <link rel="stylesheet" href="style.css">
     <style>
-        body { background: #1A202C; color: #A0AEC0; font-family: monospace; padding: 40px; }
+        body { background: #1A202C; color: #A0AEC0; font-family: monospace; padding: 20px; }
         .console { 
             background: #000; 
             padding: 20px; 
@@ -14,20 +13,78 @@
             border: 1px solid #4A5568; 
             min-height: 300px; 
             white-space: pre-wrap;
-            color: #4ADE80; /* Classic Terminal Green */
+            color: #4ADE80; 
+            overflow-y: auto;
+            font-size: 14px;
         }
-        .controls { margin-top: 20px; display: flex; gap: 10px; }
+        h2 { color: #F7FAFC; margin-bottom: 10px; }
+        .btn {
+            background: #3182CE; color: white; border: none; padding: 15px; 
+            border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px;
+        }
     </style>
 </head>
 <body>
-    <h2>SYSTEM DIAGNOSTIC</h2>
-    <div id="console-output" class="console">> Waiting for script...</div>
+    <h2>DIAGNOSTIC CONSOLE</h2>
+    <div id="console-output" class="console">> Initializing Test...</div>
     
-    <div class="controls">
-        <button class="btn-stage-1" style="flex: 1;" onclick="location.reload()"><span class="label">RELOAD TEST</span></button>
-        <button class="btn-stage-1" style="flex: 1; background: #718096;" onclick="window.location.href='settings.html'"><span class="label">EXIT</span></button>
-    </div>
+    <button class="btn" onclick="runTest()">RERUN DIAGNOSTIC</button>
+    <button class="btn" style="background:#4A5568;" onclick="window.location.href='settings.html'">EXIT TO SETTINGS</button>
 
-    <script src="test-gemini.js"></script>
+    <script>
+        const output = document.getElementById('console-output');
+
+        function log(msg, color = "#4ADE80") {
+            const span = document.createElement('div');
+            span.style.color = color;
+            span.innerText = `> ${msg}`;
+            output.appendChild(span);
+        }
+
+        async function runTest() {
+            output.innerHTML = ""; // Clear console
+            const apiKey = localStorage.getItem('gemini_key');
+            
+            if (!apiKey) {
+                log("FAIL: No API Key found in localStorage.", "#F87171");
+                return;
+            }
+
+            log("API Key detected. Sending ping to Gemini...");
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: "Hello! If you can hear me, respond with: SYSTEM ONLINE" }] }]
+            };
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    log(`API ERROR: ${data.error.message}`, "#F87171");
+                    log(`CODE: ${data.error.code}`, "#F87171");
+                } else if (data.candidates) {
+                    const reply = data.candidates[0].content.parts[0].text;
+                    log(`GEMINI RESPONSE: ${reply}`);
+                    log("HANDSHAKE SUCCESSFUL!", "#4ADE80");
+                } else {
+                    log("UNEXPECTED RESPONSE FORMAT", "#F87171");
+                    log(JSON.stringify(data));
+                }
+            } catch (err) {
+                log(`NETWORK ERROR: ${err.message}`, "#F87171");
+            }
+        }
+
+        // Run automatically
+        runTest();
+    </script>
 </body>
 </html>
