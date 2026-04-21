@@ -9,53 +9,72 @@
         .console { 
             background: #000; 
             padding: 20px; 
-            border-radius: 10px; 
+            border-radius: 12px; 
             border: 1px solid #4A5568; 
-            min-height: 300px; 
+            min-height: 350px; 
             white-space: pre-wrap;
             color: #4ADE80; 
             overflow-y: auto;
             font-size: 14px;
+            box-shadow: inset 0 0 10px rgba(0,255,0,0.1);
         }
-        h2 { color: #F7FAFC; margin-bottom: 10px; }
+        h2 { color: #F7FAFC; margin-bottom: 15px; letter-spacing: 1px; }
         .btn {
-            background: #3182CE; color: white; border: none; padding: 15px; 
-            border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px;
+            background: #3182CE; color: white; border: none; padding: 15px 25px; 
+            border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 15px;
+            transition: opacity 0.2s;
         }
+        .btn:active { opacity: 0.8; }
+        .status-tag { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 12px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
-    <h2>DIAGNOSTIC CONSOLE</h2>
-    <div id="console-output" class="console">> Initializing Test...</div>
+    <h2>COMMAND CENTER: DIAGNOSTICS</h2>
+    <div id="status-display" class="status-tag" style="background: #2D3748;">IDLE</div>
     
-    <button class="btn" onclick="runTest()">RERUN DIAGNOSTIC</button>
-    <button class="btn" style="background:#4A5568;" onclick="window.location.href='settings.html'">EXIT TO SETTINGS</button>
+    <div id="console-output" class="console">> Initializing Handshake...</div>
+    
+    <div style="display: flex; gap: 10px;">
+        <button class="btn" onclick="runTest()">EXECUTE PING</button>
+        <button class="btn" style="background:#4A5568;" onclick="window.location.href='settings.html'">EXIT TO SETTINGS</button>
+    </div>
 
     <script>
         const output = document.getElementById('console-output');
+        const statusTag = document.getElementById('status-display');
 
         function log(msg, color = "#4ADE80") {
-            const span = document.createElement('div');
-            span.style.color = color;
-            span.innerText = `> ${msg}`;
-            output.appendChild(span);
+            const div = document.createElement('div');
+            div.style.color = color;
+            div.style.marginBottom = "5px";
+            div.innerText = `[${new Date().toLocaleTimeString()}] > ${msg}`;
+            output.appendChild(div);
+            output.scrollTop = output.scrollHeight;
         }
 
         async function runTest() {
-            output.innerHTML = ""; // Clear console
+            output.innerHTML = ""; 
+            statusTag.innerText = "RUNNING...";
+            statusTag.style.background = "#2B6CB0";
+
             const apiKey = localStorage.getItem('gemini_key');
             
             if (!apiKey) {
-                log("FAIL: No API Key found in localStorage.", "#F87171");
+                log("CRITICAL FAILURE: No API Key found in localStorage.", "#F87171");
+                statusTag.innerText = "OFFLINE";
+                statusTag.style.background = "#C53030";
                 return;
             }
 
-            log("API Key detected. Sending ping to Gemini...");
+            log("Key detected. Targeting Model: gemini-3-flash...");
 
-// Replace the URL line in your testing.html script:
-const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            // Updated for 2026 Stable Endpoint and Model Naming
+            const url = `https://generativelanguage.googleapis.com/v1/models/gemini-3-flash:generateContent?key=${apiKey}`;
+
             const payload = {
-                contents: [{ parts: [{ text: "Hello! If you can hear me, respond with: SYSTEM ONLINE" }] }]
+                contents: [{ 
+                    parts: [{ text: "Respond with exactly: SYSTEM ONLINE 2026" }] 
+                }]
             };
 
             try {
@@ -68,22 +87,29 @@ const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flas
                 const data = await response.json();
 
                 if (data.error) {
-                    log(`API ERROR: ${data.error.message}`, "#F87171");
-                    log(`CODE: ${data.error.code}`, "#F87171");
-                } else if (data.candidates) {
+                    log(`API REJECTION: ${data.error.message}`, "#F87171");
+                    log(`HTTP CODE: ${data.error.code}`, "#F87171");
+                    statusTag.innerText = "ERROR " + data.error.code;
+                    statusTag.style.background = "#C53030";
+                } else if (data.candidates && data.candidates[0].content.parts[0].text) {
                     const reply = data.candidates[0].content.parts[0].text;
-                    log(`GEMINI RESPONSE: ${reply}`);
-                    log("HANDSHAKE SUCCESSFUL!", "#4ADE80");
+                    log(`GEMINI UPLINK: ${reply}`);
+                    log("HANDSHAKE SUCCESSFUL. SYSTEM IS STABLE.", "#4ADE80");
+                    statusTag.innerText = "ONLINE";
+                    statusTag.style.background = "#2F855A";
                 } else {
-                    log("UNEXPECTED RESPONSE FORMAT", "#F87171");
-                    log(JSON.stringify(data));
+                    log("UNEXPECTED DATA PACKET RECEIVED", "#F87171");
+                    log(JSON.stringify(data), "#A0AEC0");
+                    statusTag.innerText = "UNKNOWN";
                 }
             } catch (err) {
-                log(`NETWORK ERROR: ${err.message}`, "#F87171");
+                log(`NETWORK INTERRUPT: ${err.message}`, "#F87171");
+                statusTag.innerText = "TIMEOUT";
+                statusTag.style.background = "#C53030";
             }
         }
 
-        // Run automatically
+        // Auto-initiate
         runTest();
     </script>
 </body>
