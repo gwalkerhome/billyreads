@@ -8,7 +8,7 @@
 </head>
 <body>
     <div class="container">
-        <h2>Configuración</h2>
+        <h2>Panel de Control</h2>
         
         <div class="setting-group">
             <label>OpenAI API Key:</label>
@@ -16,18 +16,51 @@
         </div>
 
         <div class="setting-group">
-            <label>Nivel de Estricto: <span id="strict-val">5</span></label>
-            <input type="range" id="strict-scale" min="1" max="10" value="5">
+            <label>Velocidad de Voz: <span id="speed-val">1.0</span></label>
+            <input type="range" id="speech-rate" min="0.5" max="1.5" step="0.1" value="1.0" oninput="document.getElementById('speed-val').innerText = this.value">
+        </div>
+
+        <div class="setting-group">
+            <label>Voz del Compañero:</label>
+            <select id="voice-select">
+                <option value="es-ES">Cargando voces...</option>
+            </select>
         </div>
 
         <button class="btn-stage-1" onclick="saveSettings()">
-            <span class="label">Guardar Cambios</span>
+            <span class="label">GUARDAR CAMBIOS</span>
         </button>
     </div>
+
     <script>
+        // Load settings
+        document.getElementById('api-key').value = localStorage.getItem('openai_key') || '';
+        document.getElementById('speech-rate').value = localStorage.getItem('speech_rate') || 1.0;
+        document.getElementById('speed-val').innerText = localStorage.getItem('speech_rate') || 1.0;
+
+        // Populate Voices
+        function populateVoices() {
+            const voices = window.speechSynthesis.getVoices();
+            const select = document.getElementById('voice-select');
+            select.innerHTML = '';
+            
+            // Look for Spanish voices
+            voices.filter(v => v.lang.includes('es')).forEach(v => {
+                const option = document.createElement('option');
+                option.value = v.name;
+                option.innerText = v.name;
+                if(v.name === localStorage.getItem('preferred_voice')) option.selected = true;
+                select.appendChild(option);
+            });
+        }
+
+        window.speechSynthesis.onvoiceschanged = populateVoices;
+        populateVoices();
+
         function saveSettings() {
             localStorage.setItem('openai_key', document.getElementById('api-key').value);
-            localStorage.setItem('strictness', document.getElementById('strict-scale').value);
+            localStorage.setItem('speech_rate', document.getElementById('speech-rate').value);
+            localStorage.setItem('preferred_voice', document.getElementById('voice-select').value);
             alert('Configuración guardada');
             window.location.href = 'index.html';
         }
