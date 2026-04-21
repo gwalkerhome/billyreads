@@ -6,33 +6,124 @@
     <title>Configuración del Sistema</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .settings-container { display: flex; flex-direction: column; gap: 20px; padding: 20px; max-width: 600px; margin: auto; }
-        .config-box { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #E2E8F0; }
-        .config-box h3 { margin-top: 0; color: #2D3748; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #EDF2F7; padding-bottom: 10px; margin-bottom: 15px; }
-        .row { margin-bottom: 15px; }
-        .row label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 0.9rem; }
-        .input-field { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #CBD5E0; box-sizing: border-box; }
-        .slider-label { display: flex; justify-content: space-between; align-items: center; }
-        .toggle-group { display: flex; background: #EDF2F7; border-radius: 10px; padding: 5px; }
-        .toggle-btn { flex: 1; border: none; padding: 10px; border-radius: 8px; cursor: pointer; background: transparent; font-weight: bold; color: #718096; }
-        .toggle-btn.active { background: white; color: #3182CE; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        :root {
+            --panel-bg: #ffffff;
+            --accent-blue: #3182CE;
+            --border-color: #E2E8F0;
+            --text-main: #2D3748;
+        }
+
+        body { background: #F7FAFC; padding: 20px; font-family: sans-serif; }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            max-width: 1000px;
+            margin: 0 auto 40px auto;
+        }
+
+        .config-box {
+            background: var(--panel-bg);
+            padding: 24px;
+            border-radius: 24px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.03);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Span the full width for the header */
+        .dashboard-header {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .config-box h3 {
+            margin: 0 0 20px 0;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #718096;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .row { margin-bottom: 20px; }
+        .row label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 0.9rem; color: var(--text-main); }
+
+        .input-field { 
+            width: 100%; 
+            padding: 14px; 
+            border-radius: 12px; 
+            border: 1.5px solid var(--border-color); 
+            box-sizing: border-box; 
+            background: #F8FAFC;
+        }
+
+        .toggle-group { 
+            display: flex; 
+            background: #EDF2F7; 
+            border-radius: 12px; 
+            padding: 4px; 
+        }
+
+        .toggle-btn { 
+            flex: 1; 
+            border: none; 
+            padding: 12px; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            background: transparent; 
+            font-weight: bold; 
+            transition: all 0.2s;
+        }
+
+        .toggle-btn.active { background: white; color: var(--accent-blue); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+
+        .slider-wrap { display: flex; align-items: center; gap: 15px; }
+        input[type="range"] { flex-grow: 1; accent-color: var(--accent-blue); }
+        .value-badge { font-weight: bold; color: var(--accent-blue); min-width: 30px; }
+
+        .btn-test {
+            margin-top: auto;
+            background: white;
+            border: 2px solid var(--accent-blue);
+            color: var(--accent-blue);
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .action-footer {
+            grid-column: 1 / -1;
+            display: flex;
+            gap: 20px;
+        }
     </style>
 </head>
-<body style="background: #F7FAFC;">
-    <div class="settings-container">
-        <h2 style="text-align:center;">Centro de Mando</h2>
+<body>
+
+    <div class="dashboard-grid">
+        <header class="dashboard-header">
+            <h2 style="font-size: 1.8rem; color: #1A202C;">Centro de Mando</h2>
+            <p style="color: #A0AEC0;">Configuración de la Misión y Perfil del Alumno</p>
+        </header>
 
         <div class="config-box">
             <h3>👤 Perfil del Alumno</h3>
             <div class="row">
-                <label>Fecha de Nacimiento:</label>
+                <label>Fecha de Nacimiento</label>
                 <input type="date" id="billy-dob" class="input-field">
             </div>
             <div class="row">
-                <label>Nivel de Desafío:</label>
-                <div class="toggle-group" id="difficulty-toggle">
-                    <button class="toggle-btn" data-val="normal" onclick="setDiff('normal')">NORMAL</button>
-                    <button class="toggle-btn" data-val="high" onclick="setDiff('high')">EXPERTO</button>
+                <label>Nivel de Desafío</label>
+                <div class="toggle-group">
+                    <button class="toggle-btn" id="btn-normal" onclick="setDiff('normal')">NORMAL</button>
+                    <button class="toggle-btn" id="btn-high" onclick="setDiff('high')">EXPERTO</button>
                 </div>
             </div>
         </div>
@@ -40,51 +131,63 @@
         <div class="config-box">
             <h3>🔊 Calibración de Voz</h3>
             <div class="row">
-                <label>Voz Seleccionada:</label>
-                <select id="voice-select" class="input-field"><option>Cargando...</option></select>
+                <label>Voz Seleccionada</label>
+                <select id="voice-select" class="input-field"></select>
             </div>
             <div class="row">
-                <div class="slider-label"><label>Velocidad:</label><span id="speed-val">1.0</span></div>
-                <input type="range" id="speech-rate" min="0.5" max="1.5" step="0.1" value="1.0" style="width:100%" oninput="document.getElementById('speed-val').innerText = this.value">
+                <label>Velocidad</label>
+                <div class="slider-wrap">
+                    <input type="range" id="speech-rate" min="0.5" max="1.5" step="0.1" oninput="updateVal('speed-val', this.value)">
+                    <span class="value-badge" id="speed-val">1.0</span>
+                </div>
             </div>
             <div class="row">
-                <div class="slider-label"><label>Tono (Pitch):</label><span id="pitch-val">1.0</span></div>
-                <input type="range" id="speech-pitch" min="0.5" max="2.0" step="0.1" value="1.0" style="width:100%" oninput="document.getElementById('pitch-val').innerText = this.value">
+                <label>Tono (Pitch)</label>
+                <div class="slider-wrap">
+                    <input type="range" id="speech-pitch" min="0.5" max="2.0" step="0.1" oninput="updateVal('pitch-val', this.value)">
+                    <span class="value-badge" id="pitch-val">1.0</span>
+                </div>
             </div>
-            <button class="btn-settings" style="width:100%; border-color: #4299E1; color: #4299E1;" onclick="testVoice()">PROBAR CONFIGURACIÓN</button>
+            <button class="btn-test" onclick="testVoice()">PROBAR CONFIGURACIÓN</button>
         </div>
 
         <div class="config-box">
             <h3>⚙️ Núcleo del Sistema</h3>
             <div class="row">
-                <label>Gemini API Key:</label>
-                <input type="password" id="api-key" class="input-field" placeholder="sk-...">
+                <label>Gemini API Key</label>
+                <input type="password" id="api-key" class="input-field" placeholder="Pega tu clave aquí...">
             </div>
+            <p style="font-size: 0.8rem; color: #A0AEC0;">Esta clave permite la generación dinámica de contenido curricular.</p>
         </div>
 
-        <div style="display: flex; gap: 15px; margin-bottom: 40px;">
-            <button class="btn-stage-1" style="flex: 1;" onclick="saveSettings()"><span class="label">GUARDAR</span></button>
+        <footer class="action-footer">
+            <button class="btn-stage-1" style="flex: 2;" onclick="saveSettings()"><span class="label">GUARDAR CAMBIOS</span></button>
             <button class="btn-stage-1" style="flex: 1; background: #718096; box-shadow: 0 8px 0 #4A5568;" onclick="window.location.href='index.html'"><span class="label">CANCELAR</span></button>
-        </div>
+        </footer>
     </div>
 
     <script>
         // Load initial values
         document.getElementById('api-key').value = localStorage.getItem('gemini_key') || '';
         document.getElementById('billy-dob').value = localStorage.getItem('billy_dob') || '';
-        document.getElementById('speech-rate').value = localStorage.getItem('speech_rate') || 1.0;
-        document.getElementById('speed-val').innerText = localStorage.getItem('speech_rate') || 1.0;
-        document.getElementById('speech-pitch').value = localStorage.getItem('speech_pitch') || 1.0;
-        document.getElementById('pitch-val').innerText = localStorage.getItem('speech_pitch') || 1.0;
         
-        let currentDiff = localStorage.getItem('difficulty') || 'normal';
-        setDiff(currentDiff);
+        const r = localStorage.getItem('speech_rate') || 1.0;
+        document.getElementById('speech-rate').value = r;
+        document.getElementById('speed-val').innerText = r;
+
+        const p = localStorage.getItem('speech_pitch') || 1.0;
+        document.getElementById('speech-pitch').value = p;
+        document.getElementById('pitch-val').innerText = p;
+
+        let diff = localStorage.getItem('difficulty') || 'normal';
+        setDiff(diff);
+
+        function updateVal(id, val) { document.getElementById(id).innerText = val; }
 
         function setDiff(val) {
-            currentDiff = val;
-            document.querySelectorAll('.toggle-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.getAttribute('data-val') === val);
-            });
+            localStorage.setItem('difficulty', val);
+            document.getElementById('btn-normal').className = val === 'normal' ? 'toggle-btn active' : 'toggle-btn';
+            document.getElementById('btn-high').className = val === 'high' ? 'toggle-btn active' : 'toggle-btn';
         }
 
         function populateVoices() {
@@ -103,7 +206,7 @@
 
         function testVoice() {
             window.speechSynthesis.cancel();
-            const msg = new SpeechSynthesisUtterance("Sincronización de voz completada.");
+            const msg = new SpeechSynthesisUtterance("Sincronización lista.");
             msg.voice = window.speechSynthesis.getVoices().find(v => v.name === document.getElementById('voice-select').value);
             msg.pitch = document.getElementById('speech-pitch').value;
             msg.rate = document.getElementById('speech-rate').value;
@@ -116,8 +219,6 @@
             localStorage.setItem('speech_rate', document.getElementById('speech-rate').value);
             localStorage.setItem('speech_pitch', document.getElementById('speech-pitch').value);
             localStorage.setItem('preferred_voice', document.getElementById('voice-select').value);
-            localStorage.setItem('difficulty', currentDiff);
-            alert('Sistema Actualizado');
             window.location.href = 'index.html';
         }
     </script>
