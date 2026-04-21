@@ -52,8 +52,8 @@
 
             log("API Key detected. Sending ping to Gemini...");
 
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-
+// Replace the URL line in your testing.html script:
+const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
             const payload = {
                 contents: [{ parts: [{ text: "Hello! If you can hear me, respond with: SYSTEM ONLINE" }] }]
             };
