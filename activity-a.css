@@ -1,0 +1,67 @@
+/* activity-a.css */
+.app-container {
+    background-color: #1A202C; /* Deep Dark Background */
+    color: #E2E8F0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+}
+
+.progress-container {
+    background: #4A5568;
+    height: 15px;
+    border-radius: 10px;
+    margin-bottom: 30px;
+    overflow: hidden;
+}
+
+.energy-fill {
+    background: linear-gradient(90deg, #4299E1, #63B3ED);
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+.practice-card {
+    background: #2D3748;
+    border-radius: 20px;
+    padding: 40px;
+    text-align: center;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+}
+
+.category-tag {
+    color: #F6AD55;
+    font-weight: bold;
+    letter-spacing: 2px;
+    margin-bottom: 15px;
+}
+
+h2 { font-size: 2rem; line-height: 1.4; }
+
+.valenciano-bridge {
+    margin-top: 30px;
+    border-top: 1px solid #4A5568;
+    padding-top: 15px;
+}
+
+.valenciano-bridge summary {
+    color: #718096;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.btn-audio {
+    background: transparent;
+    border: 1px solid #63B3ED;
+    color: #63B3ED;
+    padding: 10px 20px;
+    border-radius: 10px;
+    margin-top: 20px;
+}
+
+.transcript-preview {
+    margin-top: 20px;
+    font-style: italic;
+    color: #A0AEC0;
+}
