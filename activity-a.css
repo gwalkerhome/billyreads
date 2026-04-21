@@ -1,7 +1,21 @@
-/* activity-a.css */
+/* activity-a.css - Full Replacement Code */
+:root {
+    --bg-dark: #1A202C;
+    --card-bg: #2D3748;
+    --accent-blue: #63B3ED;
+    --accent-orange: #F6AD55;
+    --error-red: #E53E3E;
+    --text-white: #E2E8F0;
+}
+
+body {
+    background-color: var(--bg-dark);
+    margin: 0;
+    font-family: sans-serif;
+}
+
 .app-container {
-    background-color: #1A202C; /* Deep Dark Background */
-    color: #E2E8F0;
+    color: var(--text-white);
     height: 100vh;
     display: flex;
     flex-direction: column;
@@ -23,7 +37,7 @@
 }
 
 .practice-card {
-    background: #2D3748;
+    background: var(--card-bg);
     border-radius: 20px;
     padding: 40px;
     text-align: center;
@@ -31,13 +45,22 @@
 }
 
 .category-tag {
-    color: #F6AD55;
+    color: var(--accent-orange);
     font-weight: bold;
     letter-spacing: 2px;
     margin-bottom: 15px;
 }
 
-h2 { font-size: 2rem; line-height: 1.4; }
+h2 { font-size: 2rem; line-height: 1.4; margin: 20px 0; }
+
+.btn-audio {
+    background: transparent;
+    border: 1px solid var(--accent-blue);
+    color: var(--accent-blue);
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 1.1rem;
+}
 
 .valenciano-bridge {
     margin-top: 30px;
@@ -51,17 +74,57 @@ h2 { font-size: 2rem; line-height: 1.4; }
     font-size: 0.9rem;
 }
 
-.btn-audio {
-    background: transparent;
-    border: 1px solid #63B3ED;
-    color: #63B3ED;
-    padding: 10px 20px;
-    border-radius: 10px;
-    margin-top: 20px;
+.action-zone {
+    margin-top: auto;
+    padding-bottom: 40px;
+    text-align: center;
+}
+
+/* Updated Button Stage 1 for Activity A */
+.btn-stage-1 {
+    background: var(--accent-blue);
+    border: none;
+    border-radius: 25px;
+    padding: 30px 60px;
+    box-shadow: 0 8px 0 #2C5282;
+    cursor: pointer;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    transition: all 0.1s;
+}
+
+.btn-stage-1 .label {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: white;
+}
+
+.btn-stage-1 .icon { font-size: 2.5rem; }
+
+/* Pulsing Red State for Recording */
+.btn-stage-1.recording {
+    background: var(--error-red);
+    box-shadow: 0 8px 0 #9B2C2C;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
 }
 
 .transcript-preview {
     margin-top: 20px;
     font-style: italic;
     color: #A0AEC0;
+}
+
+.btn-back {
+    background: none;
+    border: 1px solid #4A5568;
+    color: #718096;
+    padding: 10px;
+    border-radius: 10px;
 }
