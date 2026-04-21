@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Misión: Español</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="activity-a.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="progress-container">
+            <div id="energy-bar" class="energy-fill" style="width: 20%;"></div>
+        </div>
+
+        <main class="practice-card">
+            <div class="category-tag">CIENCIAS NATURALES</div>
+            
+            <h2 id="target-sentence">El esqueleto protege los órganos internos.</h2>
+            
+            <div class="audio-controls">
+                <button class="btn-audio" onclick="playAudio()">🔊 Escuchar</button>
+            </div>
+
+            <details class="valenciano-bridge">
+                <summary>Ver en Valenciano</summary>
+                <p id="val-translation">L'esquelet protegeix els òrgans interns.</p>
+            </details>
+        </main>
+
+        <section class="action-zone">
+            <button class="btn-stage-1 mic-active" id="record-btn">
+                <span class="icon">🎤</span>
+                <span class="label">HABLAR</span>
+            </button>
+            <p id="live-transcript" class="transcript-preview">Esperando voz...</p>
+        </section>
+
+        <footer>
+            <button class="btn-back" onclick="window.location.href='index.html'">SALIR DE LA MISIÓN</button>
+        </footer>
+    </div>
+    <script src="activity-a.js"></script>
+</body>
+</html>
