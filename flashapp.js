@@ -39,11 +39,27 @@ function loadNextCard() {
 
 loadNextCard();
 
+// UPDATED AUDIO LOGIC
 function playAudio() {
     window.speechSynthesis.cancel();
     const msg = new SpeechSynthesisUtterance(currentCard.es);
-    msg.lang = 'es-ES';
-    msg.rate = 0.85; 
+    
+    // Get settings from local storage
+    const savedRate = localStorage.getItem('speech_rate') || 1.0;
+    const preferredVoiceName = localStorage.getItem('preferred_voice');
+    
+    msg.rate = parseFloat(savedRate);
+    
+    // Find the voice object that matches the name
+    const voices = window.speechSynthesis.getVoices();
+    const selectedVoice = voices.find(v => v.name === preferredVoiceName);
+    
+    if (selectedVoice) {
+        msg.voice = selectedVoice;
+    } else {
+        msg.lang = 'es-ES';
+    }
+
     window.speechSynthesis.speak(msg);
 }
 
