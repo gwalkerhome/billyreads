@@ -1,4 +1,4 @@
-// activity-a.js - Full Replacement Code
+// activity-a.js - Full Replacement Code (iPad High-Stability Version)
 const sentences = [
     { es: "El esqueleto protege los órganos internos.", val: "L'esquelet protegeix els òrgans interns.", cat: "CIENCIAS" },
     { es: "Dénia tiene un castillo muy antiguo.", val: "Dénia té un castell molt antic.", cat: "HISTORIA" }
@@ -7,88 +7,104 @@ const sentences = [
 let currentIdx = 0;
 let isListening = false;
 
-// 1. Initialize Speech Recognition
+// 1. Setup Speech Recognition with Safari Prefixes
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const recognition = new SpeechRecognition();
 
-// iPad/Safari specific settings
 recognition.lang = 'es-ES';
-recognition.continuous = false; // Set to false for better iPad reliability
-recognition.interimResults = true; // Show text as he speaks
+recognition.continuous = false; 
+recognition.interimResults = true; // Essential for ADHD feedback
 
-// 2. Audio Playback Logic
+// 2. Audio Playback (Spanish Voice)
 function playAudio() {
+    // iPad Fix: Always cancel any pending speech before starting new speech
+    window.speechSynthesis.cancel();
+    
     const msg = new SpeechSynthesisUtterance(sentences[currentIdx].es);
     msg.lang = 'es-ES';
-    msg.rate = 0.9; 
+    msg.rate = 0.85; 
     window.speechSynthesis.speak(msg);
 }
 
-// 3. UI Element References
+// 3. UI References
 const recordBtn = document.getElementById('record-btn');
 const transcriptDisplay = document.getElementById('live-transcript');
 
-// 4. Toggle Microphone Logic
+// 4. Enhanced Start/Stop Logic
 recordBtn.onclick = () => {
     if (!isListening) {
-        startRecognition();
+        startListening();
     } else {
-        stopRecognition();
+        stopListening();
     }
 };
 
-function startRecognition() {
+function startListening() {
     try {
+        // iPad Fix: AudioContext must be resumed on a tap to "unlock" the mic
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        audioCtx.resume();
+
         recognition.start();
         isListening = true;
         recordBtn.classList.add('recording');
         recordBtn.querySelector('.label').innerText = "DETENER";
         transcriptDisplay.innerText = "Escuchando...";
+        transcriptDisplay.style.color = "#63B3ED";
     } catch (err) {
-        console.error("Mic error:", err);
+        transcriptDisplay.innerText = "Error al iniciar. Revisa los permisos.";
+        console.error(err);
     }
 }
 
-function stopRecognition() {
+function stopListening() {
     recognition.stop();
     isListening = false;
     recordBtn.classList.remove('recording');
     recordBtn.querySelector('.label').innerText = "HABLAR";
 }
 
-// 5. Handle the Result (Improved for iPad)
+// 5. Results Handling
 recognition.onresult = (event) => {
+    let interimTranscript = '';
     let finalTranscript = '';
+
     for (let i = event.resultIndex; i < event.results.length; ++i) {
         if (event.results[i].isFinal) {
             finalTranscript += event.results[i][0].transcript;
         } else {
-            // Show interim results so he knows it's working
-            transcriptDisplay.innerText = `Escuchando: ${event.results[i][0].transcript}`;
+            interimTranscript += event.results[i][0].transcript;
         }
     }
+
+    // Show the words as they happen
+    if (interimTranscript) {
+        transcriptDisplay.innerText = `Escuchando: ${interimTranscript}`;
+    }
     
-    if (finalTranscript !== '') {
+    // Once we have a final result
+    if (finalTranscript) {
         transcriptDisplay.innerText = `Dijiste: "${finalTranscript}"`;
-        // After success, we stop the recording UI
-        stopRecognition();
+        transcriptDisplay.style.color = "#48BB78"; // Change to green on success
+        stopListening();
     }
 };
 
-// 6. Handle Errors
+// 6. Error & End Handling
 recognition.onerror = (event) => {
-    console.error("Speech Recognition Error:", event.error);
-    stopRecognition();
-    if(event.error === 'no-speech') {
-        transcriptDisplay.innerText = "No se escuchó nada. ¡Intenta de nuevo!";
+    isListening = false;
+    recordBtn.classList.remove('recording');
+    recordBtn.querySelector('.label').innerText = "HABLAR";
+    
+    if (event.error === 'no-speech') {
+        transcriptDisplay.innerText = "No se detectó voz. Intenta de nuevo.";
     } else {
-        transcriptDisplay.innerText = "Error de micrófono. Revisa los permisos.";
+        transcriptDisplay.innerText = "Microfóno ocupado o bloqueado.";
     }
 };
 
-// Auto-cleanup if it ends by itself
 recognition.onend = () => {
     if (isListening) {
-        stopRecognition();
+        stopListening();
     }
 };
