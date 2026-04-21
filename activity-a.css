@@ -1,17 +1,16 @@
-/* activity-a.css - Full Replacement Code */
+/* activity-a.css - Full Replacement (Large Text Version) */
 :root {
     --bg-dark: #1A202C;
     --card-bg: #2D3748;
     --accent-blue: #63B3ED;
     --accent-orange: #F6AD55;
-    --error-red: #E53E3E;
     --text-white: #E2E8F0;
 }
 
 body {
     background-color: var(--bg-dark);
     margin: 0;
-    font-family: sans-serif;
+    font-family: 'Segoe UI', Roboto, sans-serif;
 }
 
 .app-container {
@@ -19,112 +18,90 @@ body {
     height: 100vh;
     display: flex;
     flex-direction: column;
-    padding: 20px;
+    padding: 30px;
+    box-sizing: border-box;
 }
 
 .progress-container {
     background: #4A5568;
-    height: 15px;
+    height: 20px;
     border-radius: 10px;
-    margin-bottom: 30px;
-    overflow: hidden;
+    margin-bottom: 20px;
 }
 
 .energy-fill {
-    background: linear-gradient(90deg, #4299E1, #63B3ED);
+    background: #48BB78;
     height: 100%;
-    transition: width 0.3s ease;
+    width: 10%;
+    transition: width 0.8s ease-in-out;
+    border-radius: 10px;
 }
 
 .practice-card {
     background: var(--card-bg);
-    border-radius: 20px;
+    border-radius: 30px;
     padding: 40px;
     text-align: center;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .category-tag {
     color: var(--accent-orange);
     font-weight: bold;
     letter-spacing: 2px;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
 }
 
-h2 { font-size: 2rem; line-height: 1.4; margin: 20px 0; }
+h2 { font-size: 2.2rem; margin: 20px 0; }
 
 .btn-audio {
-    background: transparent;
-    border: 1px solid var(--accent-blue);
+    background: #4A5568;
+    border: none;
+    color: white;
+    padding: 15px 30px;
+    border-radius: 15px;
+    font-size: 1.2rem;
+    margin-bottom: 30px;
+}
+
+.transcript-preview {
+    font-size: 1.8rem;
+    font-weight: bold;
+    min-height: 2em;
+    margin-top: 20px;
     color: var(--accent-blue);
-    padding: 10px 20px;
-    border-radius: 10px;
-    font-size: 1.1rem;
-}
-
-.valenciano-bridge {
-    margin-top: 30px;
-    border-top: 1px solid #4A5568;
-    padding-top: 15px;
-}
-
-.valenciano-bridge summary {
-    color: #718096;
-    cursor: pointer;
-    font-size: 0.9rem;
+    transition: all 0.3s ease;
 }
 
 .action-zone {
-    margin-top: auto;
-    padding-bottom: 40px;
+    padding: 40px 0;
     text-align: center;
 }
 
-/* Updated Button Stage 1 for Activity A */
 .btn-stage-1 {
     background: var(--accent-blue);
     border: none;
-    border-radius: 25px;
-    padding: 30px 60px;
-    box-shadow: 0 8px 0 #2C5282;
+    border-radius: 50px;
+    padding: 25px 80px;
+    box-shadow: 0 10px 0 #2C5282;
     cursor: pointer;
-    display: inline-flex;
-    flex-direction: column;
-    align-items: center;
-    transition: all 0.1s;
+}
+
+.btn-stage-1.recording {
+    background: #E53E3E;
+    box-shadow: 0 10px 0 #9B2C2C;
 }
 
 .btn-stage-1 .label {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     font-weight: bold;
     color: white;
 }
 
-.btn-stage-1 .icon { font-size: 2.5rem; }
-
-/* Pulsing Red State for Recording */
-.btn-stage-1.recording {
-    background: var(--error-red);
-    box-shadow: 0 8px 0 #9B2C2C;
-    animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-
-.transcript-preview {
+.valenciano-bridge {
     margin-top: 20px;
-    font-style: italic;
-    color: #A0AEC0;
-}
-
-.btn-back {
-    background: none;
-    border: 1px solid #4A5568;
-    color: #718096;
-    padding: 10px;
-    border-radius: 10px;
+    opacity: 0.7;
 }
