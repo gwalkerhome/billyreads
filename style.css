@@ -1,0 +1,70 @@
+:root {
+    --bg-color: #F0F4F8;
+    --primary-orange: #FF8C42;
+    --primary-blue: #4299E1;
+    --text-dark: #2D3748;
+    --white: #FFFFFF;
+}
+
+body {
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-dark);
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.container {
+    text-align: center;
+    width: 90%;
+    max-width: 800px;
+}
+
+h1 { font-size: 2.5rem; margin-bottom: 2rem; }
+
+/* BUTTON STAGE 1 DESIGN */
+.btn-stage-1 {
+    background: var(--white);
+    border: none;
+    border-radius: 25px;
+    padding: 40px 20px;
+    box-shadow: 0 8px 0 #CBD5E0; /* 3D Shadow */
+    cursor: pointer;
+    transition: all 0.1s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    width: 100%;
+}
+
+.btn-stage-1:active {
+    transform: translateY(4px);
+    box-shadow: 0 4px 0 #CBD5E0;
+}
+
+.btn-stage-1 .icon { font-size: 4rem; }
+.btn-stage-1 .label { font-size: 1.5rem; font-weight: bold; color: var(--primary-blue); }
+
+.grid-choice {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+.btn-settings {
+    margin-top: 50px;
+    background: none;
+    border: 2px solid #CBD5E0;
+    padding: 10px 20px;
+    border-radius: 15px;
+    font-size: 1.2rem;
+}
+
+/* Feedback colors */
+.correct { color: #48BB78; }
+.retry { color: var(--primary-orange); }
