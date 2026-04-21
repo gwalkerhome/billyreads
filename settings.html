@@ -6,27 +6,8 @@
     <title>Configuración de Misión</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .test-btn {
-            background: #48BB78;
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 10px;
-            margin-top: 10px;
-            width: 100%;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .refresh-btn {
-            background: #A0AEC0;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 5px;
-            font-size: 0.9rem;
-            margin-bottom: 10px;
-            cursor: pointer;
-        }
+        .test-btn { background: #48BB78; color: white; border: none; padding: 12px; border-radius: 10px; margin-top: 10px; width: 100%; font-weight: bold; cursor: pointer; }
+        .refresh-btn { background: #A0AEC0; color: white; border: none; padding: 8px 12px; border-radius: 5px; font-size: 0.9rem; margin-bottom: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -39,13 +20,19 @@
         </div>
 
         <div class="setting-group">
-            <label>Velocidad de Voz: <span id="speed-val">1.0</span></label>
+            <label>Velocidad (Rapidez): <span id="speed-val">1.0</span></label>
             <input type="range" id="speech-rate" min="0.3" max="1.5" step="0.1" value="1.0" oninput="document.getElementById('speed-val').innerText = this.value">
         </div>
 
         <div class="setting-group">
+            <label>Tono (Agudeza): <span id="pitch-val">1.0</span></label>
+            <p style="font-size: 0.8rem; color: #718096; margin: 0 0 10px 0;">Súbelo a 1.2 o 1.4 para que suene como un niño.</p>
+            <input type="range" id="speech-pitch" min="0.5" max="2.0" step="0.1" value="1.0" oninput="document.getElementById('pitch-val').innerText = this.value">
+        </div>
+
+        <div class="setting-group">
             <label>Voz del Compañero:</label>
-            <button class="refresh-btn" onclick="populateVoices()">🔄 Actualizar lista de voces</button>
+            <button class="refresh-btn" onclick="populateVoices()">🔄 Forzar búsqueda de voces</button>
             <select id="voice-select">
                 <option value="">-- Buscando voces --</option>
             </select>
@@ -63,26 +50,19 @@
     </div>
 
     <script>
-        // Load stored settings on page open
         document.getElementById('api-key').value = localStorage.getItem('openai_key') || '';
-        const savedRate = localStorage.getItem('speech_rate') || 1.0;
-        document.getElementById('speech-rate').value = savedRate;
-        document.getElementById('speed-val').innerText = savedRate;
+        document.getElementById('speech-rate').value = localStorage.getItem('speech_rate') || 1.0;
+        document.getElementById('speed-val').innerText = localStorage.getItem('speech_rate') || 1.0;
+        document.getElementById('speech-pitch').value = localStorage.getItem('speech_pitch') || 1.0;
+        document.getElementById('pitch-val').innerText = localStorage.getItem('speech_pitch') || 1.0;
 
         function populateVoices() {
             let voices = window.speechSynthesis.getVoices();
             const select = document.getElementById('voice-select');
             const preferredVoice = localStorage.getItem('preferred_voice');
-            
             select.innerHTML = '';
+            
             const spanishVoices = voices.filter(v => v.lang.includes('es'));
-
-            if (spanishVoices.length === 0) {
-                const opt = document.createElement('option');
-                opt.innerText = "No se encontraron voces. Pulsa Actualizar.";
-                select.appendChild(opt);
-                return;
-            }
 
             spanishVoices.forEach(v => {
                 const option = document.createElement('option');
@@ -93,24 +73,29 @@
             });
         }
 
-        // Trigger voice list update
+        // iPad specialized: Keep checking for voices every second until they appear
         window.speechSynthesis.onvoiceschanged = populateVoices;
-        setTimeout(populateVoices, 500);
+        const voiceCheckInterval = setInterval(() => {
+            if (window.speechSynthesis.getVoices().length > 0) {
+                populateVoices();
+                clearInterval(voiceCheckInterval);
+            }
+        }, 1000);
 
         function testVoice() {
             window.speechSynthesis.cancel();
             const msg = new SpeechSynthesisUtterance("¡Hola! Soy tu compañero de lectura.");
             const voices = window.speechSynthesis.getVoices();
-            const selectedName = document.getElementById('voice-select').value;
-            
-            msg.voice = voices.find(v => v.name === selectedName);
+            msg.voice = voices.find(v => v.name === document.getElementById('voice-select').value);
             msg.rate = document.getElementById('speech-rate').value;
+            msg.pitch = document.getElementById('speech-pitch').value;
             window.speechSynthesis.speak(msg);
         }
 
         function saveSettings() {
             localStorage.setItem('openai_key', document.getElementById('api-key').value);
             localStorage.setItem('speech_rate', document.getElementById('speech-rate').value);
+            localStorage.setItem('speech_pitch', document.getElementById('speech-pitch').value);
             localStorage.setItem('preferred_voice', document.getElementById('voice-select').value);
             alert('Configuración guardada');
             window.location.href = 'index.html';
