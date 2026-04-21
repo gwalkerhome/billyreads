@@ -4,43 +4,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Misión: Flashcards</title>
-    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="flashstyle.css">
 </head>
 <body>
     <div class="app-container">
-        <div class="progress-container">
-            <div id="energy-bar" class="energy-fill"></div>
+        <div class="header-status">
+            <div class="status-label">SINCRONIZACIÓN DE MISIÓN</div>
+            <div class="progress-container">
+                <div id="energy-bar" class="energy-fill"></div>
+            </div>
         </div>
 
-        <main class="practice-card">
-            <div class="category-tag">CARGANDO...</div>
+        <main class="mission-card">
+            <div class="category-tag" id="subject-tag">SISTEMA LISTO</div>
             
-            <h2 id="target-sentence">Cargando misión...</h2>
-            
-            <div class="audio-controls">
-                <button class="btn-audio" onclick="playAudio()">🔊 Escuchar</button>
+            <div class="display-zone">
+                <h2 id="target-sentence">Iniciando protocolo...</h2>
+                
+                <button class="btn-audio-circle" onclick="playAudio()" aria-label="Escuchar">
+                    <span class="icon">🔊</span>
+                </button>
             </div>
 
             <details class="valenciano-bridge">
-                <summary>Ver en Valenciano</summary>
-                <p id="val-translation">...</p>
+                <summary>DESCIFRAR EN VALENCIANO</summary>
+                <div class="valenciano-content">
+                    <p id="val-translation">...</p>
+                </div>
             </details>
-
-            <div id="live-transcript" class="transcript-preview">Esperando voz...</div>
         </main>
 
         <section class="action-zone">
+            <div id="live-transcript" class="transcript-preview">ESPERANDO SEÑAL...</div>
+            
             <button class="btn-stage-1" id="record-btn">
                 <span class="icon">🎤</span>
-                <span class="label">HABLAR</span>
+                <span class="label">COMUNICAR</span>
             </button>
         </section>
 
         <footer>
-            <button class="btn-back" onclick="window.location.href='index.html'">SALIR</button>
+            <button class="btn-exit" onclick="window.location.href='index.html'">ABORTAR MISIÓN</button>
         </footer>
     </div>
+    
     <script src="flashapp.js"></script>
 </body>
 </html>
