@@ -3,96 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gemini Model Scanner</title>
+    <title>Model Handshake</title>
     <style>
         body { background: #1A202C; color: #A0AEC0; font-family: monospace; padding: 20px; }
         .console { 
-            background: #000; 
-            padding: 20px; 
-            border-radius: 12px; 
-            border: 1px solid #4A5568; 
-            min-height: 400px; 
-            white-space: pre-wrap;
-            color: #4ADE80; 
-            overflow-y: auto;
-            font-size: 13px;
-            line-height: 1.5;
+            background: #000; padding: 20px; border-radius: 12px; border: 1px solid #4A5568; 
+            min-height: 200px; color: #4ADE80; font-size: 14px; margin-bottom: 15px;
         }
-        .controls { margin-top: 20px; display: flex; gap: 10px; }
-        .btn {
-            background: #3182CE; color: white; border: none; padding: 12px 20px; 
-            border-radius: 8px; font-weight: bold; cursor: pointer;
-        }
+        .btn { background: #3182CE; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; }
     </style>
 </head>
 <body>
-    <h2 style="color: white;">SYSTEM SCAN: AVAILABLE MODELS</h2>
-    <div id="console-output" class="console">> Initializing Scanner...</div>
+    <h2>TESTING MODEL: gemini-2.5-flash</h2>
+    <div id="console-output" class="console">> Waiting for command...</div>
     
-    <div class="controls">
-        <button class="btn" onclick="runScanner()">SCAN MODELS</button>
-        <button class="btn" style="background:#4A5568;" onclick="window.location.href='settings.html'">EXIT</button>
-    </div>
+    <button class="btn" onclick="pingModel()">SEND PING</button>
+    <button class="btn" style="background:#4A5568;" onclick="window.location.href='settings.html'">BACK TO SETTINGS</button>
 
     <script>
-        const output = document.getElementById('console-output');
-
-        function log(msg, color = "#4ADE80") {
-            const div = document.createElement('div');
-            div.style.color = color;
-            div.innerText = `> ${msg}`;
-            output.appendChild(div);
-            output.scrollTop = output.scrollHeight;
-        }
-
-        async function runScanner() {
-            output.innerHTML = "";
+        async function pingModel() {
+            const output = document.getElementById('console-output');
             const apiKey = localStorage.getItem('gemini_key');
-            
-            if (!apiKey) {
-                log("CRITICAL: No API Key found. Please save it in Settings first.", "#F87171");
-                return;
-            }
+            output.innerText = "> Sending request...";
 
-            log("Contacting Google Discovery Service...");
-
-            // Endpoint to list all models available to your specific key
-            const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
+            // Targeted URL based on your scan results
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
             try {
-                const response = await fetch(url);
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: "Respond with: SYSTEM ONLINE 2.5" }] }] })
+                });
+
                 const data = await response.json();
-
-                if (data.error) {
-                    log(`API ERROR: ${data.error.message}`, "#F87171");
-                    log(`CODE: ${data.error.code}`, "#F87171");
-                } else if (data.models) {
-                    log(`SUCCESS: Found ${data.models.length} accessible models.\n`, "#4ADE80");
-                    log("COPY THE NAME FOR THE FLASHAPP URL:", "#E2E8F0");
-                    log("--------------------------------------", "#4A5568");
-                    
-                    data.models.forEach(m => {
-                        // Highlight Flash models as they are our targets
-                        const isFlash = m.name.toLowerCase().includes('flash');
-                        const color = isFlash ? "#F6E05E" : "#63B3ED";
-                        const prefix = isFlash ? "[TARGET] " : "[OTHER]  ";
-                        
-                        log(`${prefix}${m.name}`, color);
-                        log(`   Description: ${m.description.substring(0, 60)}...`, "#718096");
-                    });
-
-                    log("--------------------------------------", "#4A5568");
+                
+                if (data.candidates) {
+                    output.innerText = `> SUCCESS: ${data.candidates[0].content.parts[0].text}`;
+                    output.style.color = "#4ADE80";
                 } else {
-                    log("Received unexpected response format.", "#F87171");
-                    log(JSON.stringify(data), "#A0AEC0");
+                    output.innerText = `> API ERROR: ${JSON.stringify(data.error)}`;
+                    output.style.color = "#F87171";
                 }
             } catch (err) {
-                log(`NETWORK INTERRUPT: ${err.message}`, "#F87171");
+                output.innerText = `> CONNECTION ERROR: ${err.message}`;
+                output.style.color = "#F87171";
             }
         }
-
-        // Run automatically on page load
-        runScanner();
     </script>
 </body>
 </html>
