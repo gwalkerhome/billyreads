@@ -69,8 +69,8 @@
             log("Key detected. Targeting Model: gemini-3-flash...");
 
             // Updated for 2026 Stable Endpoint and Model Naming
-            const url = `https://generativelanguage.googleapis.com/v1/models/gemini-3-flash:generateContent?key=${apiKey}`;
-
+// Using the 3.1 Flash model which is the current 2026 standard
+const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash:generateContent?key=${apiKey}`;
             const payload = {
                 contents: [{ 
                     parts: [{ text: "Respond with exactly: SYSTEM ONLINE 2026" }] 
