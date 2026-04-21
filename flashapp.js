@@ -1,4 +1,4 @@
-// flashapp.js - Complete Gemini Learning Journey Engine
+// flashapp.js - Production Gemini Learning Journey Engine
 let flashcards = [];
 let currentIndex = 0;
 let isListening = false;
@@ -16,8 +16,6 @@ function getSchoolYear() {
         age--;
     }
     
-    // Spanish Primary System approximation:
-    // Age 6=1º, 7=2º, 8=3º, 9=4º, 10=5º, 11=6º
     const yearLevel = age - 5;
     if (yearLevel < 1) return "1º de Primaria";
     if (yearLevel > 6) return "6º de Primaria";
@@ -27,22 +25,30 @@ function getSchoolYear() {
 // 2. GEMINI API INTEGRATION
 async function fetchJourneyCards() {
     const apiKey = localStorage.getItem('gemini_key');
+    const difficulty = localStorage.getItem('difficulty') || 'normal';
+    const schoolYear = getSchoolYear();
+    
     if (!apiKey) {
         document.getElementById('target-sentence').innerText = "Configura la API Key en Ajustes";
         return;
     }
 
-    const schoolYear = getSchoolYear();
+    const difficultyInstruction = difficulty === 'high' 
+        ? "Usa vocabulario sofisticado y conceptos científicos detallados." 
+        : "Usa un lenguaje claro y adecuado para su edad.";
+
+    // TARGETING THE CONFIRMED 2.5 MODEL
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+
     const prompt = `Actúa como un Director de Primaria en España. Genera 20 tarjetas de aprendizaje para un alumno de ${schoolYear}.
+    ${difficultyInstruction}
     USA EL PROTOCOLO 'LEARNING JOURNEY':
     - 70% contenido de ${schoolYear} (Ciencias, Historia, Geografía).
     - 10% contenido 'Ancla' del año anterior (Repaso).
     - 20% contenido 'Teaser' del año siguiente (Avanzado).
     
-    DEVUELVE ÚNICAMENTE un array JSON puro (sin markdown) con este formato:
-    [{"es": "frase en español", "val": "traducción valenciano", "cat": "TEMA", "keywords": ["palabra1", "palabra2"]}]`;
-
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    IMPORTANTE: Responde EXCLUSIVAMENTE con un array JSON puro. No añadas texto explicativo ni markdown.
+    FORMATO: [{"es": "frase en español", "val": "traducción valenciano", "cat": "TEMA", "keywords": ["palabra1", "palabra2"]}]`;
 
     try {
         const response = await fetch(url, {
@@ -52,14 +58,22 @@ async function fetchJourneyCards() {
         });
         
         const data = await response.json();
-        const rawText = data.candidates[0].content.parts[0].text;
-        const cleanJson = rawText.replace(/```json|```/g, '').trim();
+        let rawText = data.candidates[0].content.parts[0].text;
+
+        // JSON SANITIZER: Isolates the array and removes AI "chatter"
+        const start = rawText.indexOf('[');
+        const end = rawText.lastIndexOf(']');
+        if (start !== -1 && end !== -1) {
+            rawText = rawText.substring(start, end + 1);
+        }
         
-        flashcards = JSON.parse(cleanJson);
+        flashcards = JSON.parse(rawText);
+        currentIndex = 0;
         loadCard();
+        
     } catch (err) {
-        console.error("Error:", err);
-        document.getElementById('target-sentence').innerText = "Error cargando la misión.";
+        console.error("Gemini Error:", err);
+        document.getElementById('target-sentence').innerText = "Error cargando la misión. Reintenta.";
     }
 }
 
@@ -83,14 +97,14 @@ function loadCard() {
     document.getElementById('energy-bar').style.width = `${progress}%`;
 }
 
-// 4. SPEECH SYNTHESIS (THE BOY VOICE)
+// 4. SPEECH SYNTHESIS
 function playAudio() {
     window.speechSynthesis.cancel();
     const card = flashcards[currentIndex];
     const msg = new SpeechSynthesisUtterance(card.es);
     
-    const preferredVoiceName = localStorage.getItem('preferred_voice');
     const voices = window.speechSynthesis.getVoices();
+    const preferredVoiceName = localStorage.getItem('preferred_voice');
     msg.voice = voices.find(v => v.name === preferredVoiceName);
     
     msg.pitch = parseFloat(localStorage.getItem('speech_pitch') || 1.0);
@@ -100,7 +114,7 @@ function playAudio() {
     window.speechSynthesis.speak(msg);
 }
 
-// 5. SPEECH RECOGNITION (LISTENING)
+// 5. SPEECH RECOGNITION
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const recognition = new SpeechRecognition();
 recognition.lang = 'es-ES';
@@ -110,8 +124,6 @@ const recordBtn = document.getElementById('record-btn');
 
 recordBtn.onclick = () => {
     if (!isListening) {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        audioCtx.resume();
         recognition.start();
         isListening = true;
         recordBtn.classList.add('recording');
@@ -125,7 +137,6 @@ recordBtn.onclick = () => {
 };
 
 recognition.onresult = (event) => {
-    let interim = '';
     for (let i = event.resultIndex; i < event.results.length; ++i) {
         if (event.results[i].isFinal) {
             processResult(event.results[i][0].transcript.toLowerCase());
@@ -140,23 +151,21 @@ function processResult(spokenText) {
     const isSuccess = card.keywords.some(k => spokenText.includes(k.toLowerCase()));
 
     if (isSuccess) {
-        document.getElementById('live-transcript').innerText = `¡CORRECTO: "${spokenText}"!`;
+        document.getElementById('live-transcript').innerText = `¡CORRECTO!`;
         document.getElementById('live-transcript').style.color = "#4ADE80";
         
-        // Success shout
         const praise = new SpeechSynthesisUtterance("¡Muy bien!");
         praise.pitch = parseFloat(localStorage.getItem('speech_pitch') || 1.0);
         praise.lang = 'es-ES';
         window.speechSynthesis.speak(praise);
 
         currentIndex++;
-        setTimeout(loadCard, 2000);
+        setTimeout(loadCard, 1500);
     } else {
         document.getElementById('live-transcript').innerText = `REINTENTAR: "${spokenText}"`;
         document.getElementById('live-transcript').style.color = "#F87171";
     }
     
-    // Auto-stop recording after a result
     isListening = false;
     recordBtn.classList.remove('recording');
     recordBtn.querySelector('.label').innerText = "COMUNICAR";
