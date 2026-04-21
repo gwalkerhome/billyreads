@@ -33,10 +33,13 @@
             flex-direction: column;
         }
 
-        /* Span the full width for the header */
-        .dashboard-header {
+        .dashboard-header { grid-column: 1 / -1; text-align: center; margin-bottom: 10px; }
+
+        /* LANGUAGE TOGGLE STYLING */
+        .lang-control {
             grid-column: 1 / -1;
-            text-align: center;
+            display: flex;
+            justify-content: center;
             margin-bottom: 10px;
         }
 
@@ -63,64 +66,41 @@
             background: #F8FAFC;
         }
 
-        .toggle-group { 
-            display: flex; 
-            background: #EDF2F7; 
-            border-radius: 12px; 
-            padding: 4px; 
-        }
-
-        .toggle-btn { 
-            flex: 1; 
-            border: none; 
-            padding: 12px; 
-            border-radius: 10px; 
-            cursor: pointer; 
-            background: transparent; 
-            font-weight: bold; 
-            transition: all 0.2s;
-        }
-
+        .toggle-group { display: flex; background: #EDF2F7; border-radius: 12px; padding: 4px; }
+        .toggle-btn { flex: 1; border: none; padding: 12px; border-radius: 10px; cursor: pointer; background: transparent; font-weight: bold; transition: all 0.2s; }
         .toggle-btn.active { background: white; color: var(--accent-blue); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
 
         .slider-wrap { display: flex; align-items: center; gap: 15px; }
         input[type="range"] { flex-grow: 1; accent-color: var(--accent-blue); }
         .value-badge { font-weight: bold; color: var(--accent-blue); min-width: 30px; }
 
-        .btn-test {
-            margin-top: auto;
-            background: white;
-            border: 2px solid var(--accent-blue);
-            color: var(--accent-blue);
-            padding: 12px;
-            border-radius: 12px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .action-footer {
-            grid-column: 1 / -1;
-            display: flex;
-            gap: 20px;
-        }
+        .btn-test { margin-top: auto; background: white; border: 2px solid var(--accent-blue); color: var(--accent-blue); padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; }
+        .action-footer { grid-column: 1 / -1; display: flex; gap: 20px; }
     </style>
 </head>
 <body>
 
     <div class="dashboard-grid">
         <header class="dashboard-header">
-            <h2 style="font-size: 1.8rem; color: #1A202C;">Centro de Mando</h2>
-            <p style="color: #A0AEC0;">Configuración de la Misión y Perfil del Alumno</p>
+            <h2 id="main-title">Centro de Mando</h2>
+            <p id="sub-title">Configuración de la Misión y Perfil del Alumno</p>
         </header>
 
+        <div class="lang-control">
+            <div class="toggle-group" style="width: 200px;">
+                <button class="toggle-btn" id="lang-es" onclick="setLang('es')">ESP</button>
+                <button class="toggle-btn" id="lang-en" onclick="setLang('en')">ENG</button>
+            </div>
+        </div>
+
         <div class="config-box">
-            <h3>👤 Perfil del Alumno</h3>
+            <h3 id="head-profile">👤 Perfil del Alumno</h3>
             <div class="row">
-                <label>Fecha de Nacimiento</label>
+                <label id="lbl-dob">Fecha de Nacimiento</label>
                 <input type="date" id="billy-dob" class="input-field">
             </div>
             <div class="row">
-                <label>Nivel de Desafío</label>
+                <label id="lbl-diff">Nivel de Desafío</label>
                 <div class="toggle-group">
                     <button class="toggle-btn" id="btn-normal" onclick="setDiff('normal')">NORMAL</button>
                     <button class="toggle-btn" id="btn-high" onclick="setDiff('high')">EXPERTO</button>
@@ -129,66 +109,102 @@
         </div>
 
         <div class="config-box">
-            <h3>🔊 Calibración de Voz</h3>
+            <h3 id="head-voice">🔊 Calibración de Voz</h3>
             <div class="row">
-                <label>Voz Seleccionada</label>
+                <label id="lbl-voice">Voz Seleccionada</label>
                 <select id="voice-select" class="input-field"></select>
             </div>
             <div class="row">
-                <label>Velocidad</label>
+                <label id="lbl-speed">Velocidad</label>
                 <div class="slider-wrap">
                     <input type="range" id="speech-rate" min="0.5" max="1.5" step="0.1" oninput="updateVal('speed-val', this.value)">
                     <span class="value-badge" id="speed-val">1.0</span>
                 </div>
             </div>
             <div class="row">
-                <label>Tono (Pitch)</label>
+                <label id="lbl-pitch">Tono (Pitch)</label>
                 <div class="slider-wrap">
                     <input type="range" id="speech-pitch" min="0.5" max="2.0" step="0.1" oninput="updateVal('pitch-val', this.value)">
                     <span class="value-badge" id="pitch-val">1.0</span>
                 </div>
             </div>
-            <button class="btn-test" onclick="testVoice()">PROBAR CONFIGURACIÓN</button>
+            <button class="btn-test" id="btn-test-voice" onclick="testVoice()">PROBAR CONFIGURACIÓN</button>
         </div>
 
         <div class="config-box">
-            <h3>⚙️ Núcleo del Sistema</h3>
+            <h3 id="head-core">⚙️ Núcleo del Sistema</h3>
             <div class="row">
-                <label>Gemini API Key</label>
-                <input type="password" id="api-key" class="input-field" placeholder="Pega tu clave aquí...">
+                <label id="lbl-key">Gemini API Key</label>
+                <input type="password" id="api-key" class="input-field" placeholder="...">
             </div>
-            <p style="font-size: 0.8rem; color: #A0AEC0;">Esta clave permite la generación dinámica de contenido curricular.</p>
+            <p id="txt-key-desc" style="font-size: 0.8rem; color: #A0AEC0;">Esta clave permite la generación dinámica de contenido.</p>
         </div>
 
         <footer class="action-footer">
-            <button class="btn-stage-1" style="flex: 2;" onclick="saveSettings()"><span class="label">GUARDAR CAMBIOS</span></button>
-            <button class="btn-stage-1" style="flex: 1; background: #718096; box-shadow: 0 8px 0 #4A5568;" onclick="window.location.href='index.html'"><span class="label">CANCELAR</span></button>
+            <button class="btn-stage-1" style="flex: 2;" onclick="saveSettings()"><span class="label" id="btn-save">GUARDAR CAMBIOS</span></button>
+            <button class="btn-stage-1" style="flex: 1; background: #718096; box-shadow: 0 8px 0 #4A5568;" onclick="window.location.href='index.html'"><span class="label" id="btn-cancel">CANCELAR</span></button>
         </footer>
     </div>
 
     <script>
-        // Load initial values
+        const i18n = {
+            es: {
+                title: "Centro de Mando", sub: "Configuración de la Misión y Perfil del Alumno",
+                profile: "👤 Perfil del Alumno", dob: "Fecha de Nacimiento", diff: "Nivel de Desafío",
+                voice: "🔊 Calibración de Voz", selVoice: "Voz Seleccionada", speed: "Velocidad", pitch: "Tono (Pitch)", test: "PROBAR CONFIGURACIÓN",
+                core: "⚙️ Núcleo del Sistema", key: "Gemini API Key", desc: "Clave para la generación dinámica.",
+                save: "GUARDAR CAMBIOS", cancel: "CANCELAR"
+            },
+            en: {
+                title: "Command Center", sub: "Mission Configuration & Student Profile",
+                profile: "👤 Student Profile", dob: "Date of Birth", diff: "Challenge Level",
+                voice: "🔊 Voice Calibration", selVoice: "Selected Voice", speed: "Reading Speed", pitch: "Tone (Pitch)", test: "TEST SETTINGS",
+                core: "⚙️ System Core", key: "Gemini API Key", desc: "This key enables dynamic curriculum generation.",
+                save: "SAVE CHANGES", cancel: "CANCEL"
+            }
+        };
+
+        function setLang(lang) {
+            localStorage.setItem('admin_lang', lang);
+            document.getElementById('lang-es').className = lang === 'es' ? 'toggle-btn active' : 'toggle-btn';
+            document.getElementById('lang-en').className = lang === 'en' ? 'toggle-btn active' : 'toggle-btn';
+            
+            const t = i18n[lang];
+            document.getElementById('main-title').innerText = t.title;
+            document.getElementById('sub-title').innerText = t.sub;
+            document.getElementById('head-profile').innerText = t.profile;
+            document.getElementById('lbl-dob').innerText = t.dob;
+            document.getElementById('lbl-diff').innerText = t.diff;
+            document.getElementById('head-voice').innerText = t.voice;
+            document.getElementById('lbl-voice').innerText = t.selVoice;
+            document.getElementById('lbl-speed').innerText = t.speed;
+            document.getElementById('lbl-pitch').innerText = t.pitch;
+            document.getElementById('btn-test-voice').innerText = t.test;
+            document.getElementById('head-core').innerText = t.core;
+            document.getElementById('lbl-key').innerText = t.key;
+            document.getElementById('txt-key-desc').innerText = t.desc;
+            document.getElementById('btn-save').innerText = t.save;
+            document.getElementById('btn-cancel').innerText = t.cancel;
+        }
+
+        // Initialize Settings
         document.getElementById('api-key').value = localStorage.getItem('gemini_key') || '';
         document.getElementById('billy-dob').value = localStorage.getItem('billy_dob') || '';
+        document.getElementById('speech-rate').value = localStorage.getItem('speech_rate') || 1.0;
+        document.getElementById('speed-val').innerText = localStorage.getItem('speech_rate') || 1.0;
+        document.getElementById('speech-pitch').value = localStorage.getItem('speech_pitch') || 1.0;
+        document.getElementById('pitch-val').innerText = localStorage.getItem('speech_pitch') || 1.0;
         
-        const r = localStorage.getItem('speech_rate') || 1.0;
-        document.getElementById('speech-rate').value = r;
-        document.getElementById('speed-val').innerText = r;
-
-        const p = localStorage.getItem('speech_pitch') || 1.0;
-        document.getElementById('speech-pitch').value = p;
-        document.getElementById('pitch-val').innerText = p;
-
-        let diff = localStorage.getItem('difficulty') || 'normal';
-        setDiff(diff);
-
-        function updateVal(id, val) { document.getElementById(id).innerText = val; }
+        setLang(localStorage.getItem('admin_lang') || 'es');
+        setDiff(localStorage.getItem('difficulty') || 'normal');
 
         function setDiff(val) {
             localStorage.setItem('difficulty', val);
             document.getElementById('btn-normal').className = val === 'normal' ? 'toggle-btn active' : 'toggle-btn';
             document.getElementById('btn-high').className = val === 'high' ? 'toggle-btn active' : 'toggle-btn';
         }
+
+        function updateVal(id, val) { document.getElementById(id).innerText = val; }
 
         function populateVoices() {
             let voices = window.speechSynthesis.getVoices();
@@ -206,7 +222,7 @@
 
         function testVoice() {
             window.speechSynthesis.cancel();
-            const msg = new SpeechSynthesisUtterance("Sincronización lista.");
+            const msg = new SpeechSynthesisUtterance(localStorage.getItem('admin_lang') === 'en' ? "Voice sync complete." : "Sincronización de voz lista.");
             msg.voice = window.speechSynthesis.getVoices().find(v => v.name === document.getElementById('voice-select').value);
             msg.pitch = document.getElementById('speech-pitch').value;
             msg.rate = document.getElementById('speech-rate').value;
