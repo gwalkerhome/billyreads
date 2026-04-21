@@ -1,6 +1,5 @@
-// activity-a.js - Full Replacement Code (Flashcard System)
+// flashapp.js - Full Replacement Code
 
-// 1. THE FLASHCARD LIBRARY (Organized by School Subject)
 const flashcards = [
     { es: "El esqueleto protege los órganos internos.", val: "L'esquelet protegeix els òrgans interns.", cat: "CIENCIAS", keywords: ["esqueleto", "protege"] },
     { es: "Las plantas necesitan luz para crecer.", val: "Les plantes necessiten llum per a créixer.", cat: "CIENCIAS", keywords: ["plantas", "crecer"] },
@@ -12,13 +11,11 @@ const flashcards = [
 let currentCard = null;
 let isListening = false;
 
-// 2. Initialize Speech
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const recognition = new SpeechRecognition();
 recognition.lang = 'es-ES';
 recognition.interimResults = true;
 
-// UI Elements
 const recordBtn = document.getElementById('record-btn');
 const transcriptDisplay = document.getElementById('live-transcript');
 const energyBar = document.getElementById('energy-bar');
@@ -26,28 +23,22 @@ const sentenceDisplay = document.getElementById('target-sentence');
 const categoryTag = document.querySelector('.category-tag');
 const valencianoText = document.getElementById('val-translation');
 
-// 3. START A NEW ROUND
 function loadNextCard() {
-    // Reset UI
     transcriptDisplay.innerText = "Esperando voz...";
     transcriptDisplay.style.color = "#63B3ED";
     transcriptDisplay.style.fontSize = "1.5rem";
     energyBar.style.width = "10%";
 
-    // Pick a random card
     const randomIdx = Math.floor(Math.random() * flashcards.length);
     currentCard = flashcards[randomIdx];
 
-    // Update Screen
     sentenceDisplay.innerText = currentCard.es;
     categoryTag.innerText = currentCard.cat;
     valencianoText.innerText = currentCard.val;
 }
 
-// Initial Load
 loadNextCard();
 
-// 4. AUDIO & MIC LOGIC
 function playAudio() {
     window.speechSynthesis.cancel();
     const msg = new SpeechSynthesisUtterance(currentCard.es);
@@ -58,18 +49,22 @@ function playAudio() {
 
 recordBtn.onclick = () => {
     if (!isListening) {
-        try {
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            audioCtx.resume();
-            recognition.start();
-            isListening = true;
-            recordBtn.classList.add('recording');
-            recordBtn.querySelector('.label').innerText = "DETENER";
-        } catch (err) { console.error(err); }
+        startListening();
     } else {
         stopListening();
     }
 };
+
+function startListening() {
+    try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        audioCtx.resume();
+        recognition.start();
+        isListening = true;
+        recordBtn.classList.add('recording');
+        recordBtn.querySelector('.label').innerText = "DETENER";
+    } catch (err) { console.error(err); }
+}
 
 function stopListening() {
     recognition.stop();
@@ -89,8 +84,6 @@ recognition.onresult = (event) => {
 
 function processResult(spokenText) {
     transcriptDisplay.innerText = `"${spokenText}"`;
-    
-    // Check if he said any of the keywords for the current card
     const isSuccess = currentCard.keywords.some(keyword => spokenText.includes(keyword));
 
     if (isSuccess) {
@@ -102,7 +95,6 @@ function processResult(spokenText) {
         shout.lang = 'es-ES';
         window.speechSynthesis.speak(shout);
 
-        // Load a new card after 2 seconds
         setTimeout(loadNextCard, 2500);
     } else {
         transcriptDisplay.style.color = "#F6AD55";
