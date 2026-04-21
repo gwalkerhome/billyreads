@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Diagnostic</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { background: #1A202C; color: #A0AEC0; font-family: monospace; padding: 40px; }
+        .console { 
+            background: #000; 
+            padding: 20px; 
+            border-radius: 10px; 
+            border: 1px solid #4A5568; 
+            min-height: 300px; 
+            white-space: pre-wrap;
+            color: #4ADE80; /* Classic Terminal Green */
+        }
+        .controls { margin-top: 20px; display: flex; gap: 10px; }
+    </style>
+</head>
+<body>
+    <h2>SYSTEM DIAGNOSTIC</h2>
+    <div id="console-output" class="console">> Waiting for script...</div>
+    
+    <div class="controls">
+        <button class="btn-stage-1" style="flex: 1;" onclick="location.reload()"><span class="label">RELOAD TEST</span></button>
+        <button class="btn-stage-1" style="flex: 1; background: #718096;" onclick="window.location.href='settings.html'"><span class="label">EXIT</span></button>
+    </div>
+
+    <script src="test-gemini.js"></script>
+</body>
+</html>
