@@ -2,9 +2,32 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configuración</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Configuración de Misión</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        .test-btn {
+            background: #48BB78;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 10px;
+            width: 100%;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .refresh-btn {
+            background: #A0AEC0;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -17,45 +40,73 @@
 
         <div class="setting-group">
             <label>Velocidad de Voz: <span id="speed-val">1.0</span></label>
-            <input type="range" id="speech-rate" min="0.5" max="1.5" step="0.1" value="1.0" oninput="document.getElementById('speed-val').innerText = this.value">
+            <input type="range" id="speech-rate" min="0.3" max="1.5" step="0.1" value="1.0" oninput="document.getElementById('speed-val').innerText = this.value">
         </div>
 
         <div class="setting-group">
             <label>Voz del Compañero:</label>
+            <button class="refresh-btn" onclick="populateVoices()">🔄 Actualizar lista de voces</button>
             <select id="voice-select">
-                <option value="es-ES">Cargando voces...</option>
+                <option value="">-- Buscando voces --</option>
             </select>
+            <button class="test-btn" onclick="testVoice()">🔊 Probar esta voz</button>
         </div>
 
-        <button class="btn-stage-1" onclick="saveSettings()">
-            <span class="label">GUARDAR CAMBIOS</span>
-        </button>
+        <div style="display: flex; gap: 15px; margin-top: 20px;">
+            <button class="btn-stage-1" style="flex: 1;" onclick="saveSettings()">
+                <span class="label">GUARDAR</span>
+            </button>
+            <button class="btn-stage-1" style="flex: 1; background: #718096; box-shadow: 0 8px 0 #4A5568;" onclick="window.location.href='index.html'">
+                <span class="label">VOLVER</span>
+            </button>
+        </div>
     </div>
 
     <script>
-        // Load settings
+        // Load stored settings on page open
         document.getElementById('api-key').value = localStorage.getItem('openai_key') || '';
-        document.getElementById('speech-rate').value = localStorage.getItem('speech_rate') || 1.0;
-        document.getElementById('speed-val').innerText = localStorage.getItem('speech_rate') || 1.0;
+        const savedRate = localStorage.getItem('speech_rate') || 1.0;
+        document.getElementById('speech-rate').value = savedRate;
+        document.getElementById('speed-val').innerText = savedRate;
 
-        // Populate Voices
         function populateVoices() {
-            const voices = window.speechSynthesis.getVoices();
+            let voices = window.speechSynthesis.getVoices();
             const select = document.getElementById('voice-select');
-            select.innerHTML = '';
+            const preferredVoice = localStorage.getItem('preferred_voice');
             
-            // Look for Spanish voices
-            voices.filter(v => v.lang.includes('es')).forEach(v => {
+            select.innerHTML = '';
+            const spanishVoices = voices.filter(v => v.lang.includes('es'));
+
+            if (spanishVoices.length === 0) {
+                const opt = document.createElement('option');
+                opt.innerText = "No se encontraron voces. Pulsa Actualizar.";
+                select.appendChild(opt);
+                return;
+            }
+
+            spanishVoices.forEach(v => {
                 const option = document.createElement('option');
                 option.value = v.name;
-                option.innerText = v.name;
-                if(v.name === localStorage.getItem('preferred_voice')) option.selected = true;
+                option.innerText = v.name + (v.localService ? ' (Local)' : '');
+                if (v.name === preferredVoice) option.selected = true;
                 select.appendChild(option);
             });
         }
 
+        // Trigger voice list update
         window.speechSynthesis.onvoiceschanged = populateVoices;
-        populateVoices();
+        setTimeout(populateVoices, 500);
+
+        function testVoice() {
+            window.speechSynthesis.cancel();
+            const msg = new SpeechSynthesisUtterance("¡Hola! Soy tu compañero de lectura.");
+            const voices = window.speechSynthesis.getVoices();
+            const selectedName = document.getElementById('voice-select').value;
+            
+            msg.voice = voices.find(v => v.name === selectedName);
+            msg.rate = document.getElementById('speech-rate').value;
+            window.speechSynthesis.speak(msg);
+        }
 
         function saveSettings() {
             localStorage.setItem('openai_key', document.getElementById('api-key').value);
