@@ -3,44 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Configuración de Misión</title>
+    <title>Configuración del Sistema</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        .settings-container { display: flex; flex-direction: column; gap: 20px; padding: 20px; max-width: 600px; margin: auto; }
+        .config-box { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #E2E8F0; }
+        .config-box h3 { margin-top: 0; color: #2D3748; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #EDF2F7; padding-bottom: 10px; margin-bottom: 15px; }
+        .row { margin-bottom: 15px; }
+        .row label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 0.9rem; }
+        .input-field { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #CBD5E0; box-sizing: border-box; }
+        .slider-label { display: flex; justify-content: space-between; align-items: center; }
+        .toggle-group { display: flex; background: #EDF2F7; border-radius: 10px; padding: 5px; }
+        .toggle-btn { flex: 1; border: none; padding: 10px; border-radius: 8px; cursor: pointer; background: transparent; font-weight: bold; color: #718096; }
+        .toggle-btn.active { background: white; color: #3182CE; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    </style>
 </head>
-<body>
-    <div class="container">
-        <h2>Perfil del Operador</h2>
-        
-        <div class="setting-group">
-            <label>Gemini API Key:</label>
-            <input type="password" id="api-key" placeholder="Pega tu clave aquí...">
+<body style="background: #F7FAFC;">
+    <div class="settings-container">
+        <h2 style="text-align:center;">Centro de Mando</h2>
+
+        <div class="config-box">
+            <h3>👤 Perfil del Alumno</h3>
+            <div class="row">
+                <label>Fecha de Nacimiento:</label>
+                <input type="date" id="billy-dob" class="input-field">
+            </div>
+            <div class="row">
+                <label>Nivel de Desafío:</label>
+                <div class="toggle-group" id="difficulty-toggle">
+                    <button class="toggle-btn" data-val="normal" onclick="setDiff('normal')">NORMAL</button>
+                    <button class="toggle-btn" data-val="high" onclick="setDiff('high')">EXPERTO</button>
+                </div>
+            </div>
         </div>
 
-        <div class="setting-group">
-            <label>Fecha de Nacimiento de Billy:</label>
-            <input type="date" id="billy-dob">
+        <div class="config-box">
+            <h3>🔊 Calibración de Voz</h3>
+            <div class="row">
+                <label>Voz Seleccionada:</label>
+                <select id="voice-select" class="input-field"><option>Cargando...</option></select>
+            </div>
+            <div class="row">
+                <div class="slider-label"><label>Velocidad:</label><span id="speed-val">1.0</span></div>
+                <input type="range" id="speech-rate" min="0.5" max="1.5" step="0.1" value="1.0" style="width:100%" oninput="document.getElementById('speed-val').innerText = this.value">
+            </div>
+            <div class="row">
+                <div class="slider-label"><label>Tono (Pitch):</label><span id="pitch-val">1.0</span></div>
+                <input type="range" id="speech-pitch" min="0.5" max="2.0" step="0.1" value="1.0" style="width:100%" oninput="document.getElementById('pitch-val').innerText = this.value">
+            </div>
+            <button class="btn-settings" style="width:100%; border-color: #4299E1; color: #4299E1;" onclick="testVoice()">PROBAR CONFIGURACIÓN</button>
         </div>
 
-        <div class="setting-group">
-            <label>Tono (Agudeza): <span id="pitch-val">1.0</span></label>
-            <input type="range" id="speech-pitch" min="0.5" max="2.0" step="0.1" value="1.0" oninput="document.getElementById('pitch-val').innerText = this.value">
+        <div class="config-box">
+            <h3>⚙️ Núcleo del Sistema</h3>
+            <div class="row">
+                <label>Gemini API Key:</label>
+                <input type="password" id="api-key" class="input-field" placeholder="sk-...">
+            </div>
         </div>
 
-        <div class="setting-group">
-            <label>Voz del Compañero:</label>
-            <select id="voice-select"><option value="">Buscando voces...</option></select>
-            <button class="btn-settings" style="margin-top:10px; width:100%" onclick="testVoice()">🔊 Probar Voz</button>
-        </div>
-
-        <div style="display: flex; gap: 15px; margin-top: 20px;">
+        <div style="display: flex; gap: 15px; margin-bottom: 40px;">
             <button class="btn-stage-1" style="flex: 1;" onclick="saveSettings()"><span class="label">GUARDAR</span></button>
-            <button class="btn-stage-1" style="flex: 1; background: #718096; box-shadow: 0 8px 0 #4A5568;" onclick="window.location.href='index.html'"><span class="label">VOLVER</span></button>
+            <button class="btn-stage-1" style="flex: 1; background: #718096; box-shadow: 0 8px 0 #4A5568;" onclick="window.location.href='index.html'"><span class="label">CANCELAR</span></button>
         </div>
     </div>
 
     <script>
+        // Load initial values
         document.getElementById('api-key').value = localStorage.getItem('gemini_key') || '';
         document.getElementById('billy-dob').value = localStorage.getItem('billy_dob') || '';
+        document.getElementById('speech-rate').value = localStorage.getItem('speech_rate') || 1.0;
+        document.getElementById('speed-val').innerText = localStorage.getItem('speech_rate') || 1.0;
         document.getElementById('speech-pitch').value = localStorage.getItem('speech_pitch') || 1.0;
+        document.getElementById('pitch-val').innerText = localStorage.getItem('speech_pitch') || 1.0;
+        
+        let currentDiff = localStorage.getItem('difficulty') || 'normal';
+        setDiff(currentDiff);
+
+        function setDiff(val) {
+            currentDiff = val;
+            document.querySelectorAll('.toggle-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-val') === val);
+            });
+        }
 
         function populateVoices() {
             let voices = window.speechSynthesis.getVoices();
@@ -48,8 +93,7 @@
             select.innerHTML = '';
             voices.filter(v => v.lang.includes('es')).forEach(v => {
                 const opt = document.createElement('option');
-                opt.value = v.name;
-                opt.innerText = v.name;
+                opt.value = v.name; opt.innerText = v.name;
                 if(v.name === localStorage.getItem('preferred_voice')) opt.selected = true;
                 select.appendChild(opt);
             });
@@ -59,18 +103,21 @@
 
         function testVoice() {
             window.speechSynthesis.cancel();
-            const msg = new SpeechSynthesisUtterance("¡Hola! Estoy listo para la misión.");
+            const msg = new SpeechSynthesisUtterance("Sincronización de voz completada.");
             msg.voice = window.speechSynthesis.getVoices().find(v => v.name === document.getElementById('voice-select').value);
             msg.pitch = document.getElementById('speech-pitch').value;
+            msg.rate = document.getElementById('speech-rate').value;
             window.speechSynthesis.speak(msg);
         }
 
         function saveSettings() {
             localStorage.setItem('gemini_key', document.getElementById('api-key').value);
             localStorage.setItem('billy_dob', document.getElementById('billy-dob').value);
+            localStorage.setItem('speech_rate', document.getElementById('speech-rate').value);
             localStorage.setItem('speech_pitch', document.getElementById('speech-pitch').value);
             localStorage.setItem('preferred_voice', document.getElementById('voice-select').value);
-            alert('Perfil actualizado');
+            localStorage.setItem('difficulty', currentDiff);
+            alert('Sistema Actualizado');
             window.location.href = 'index.html';
         }
     </script>
