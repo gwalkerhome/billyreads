@@ -1,5 +1,4 @@
-// flashapp.js - Full Replacement Code
-
+// flashapp.js - Fixed Speech Logic for iPad
 const flashcards = [
     { es: "El esqueleto protege los órganos internos.", val: "L'esquelet protegeix els òrgans interns.", cat: "CIENCIAS", keywords: ["esqueleto", "protege"] },
     { es: "Las plantas necesitan luz para crecer.", val: "Les plantes necessiten llum per a créixer.", cat: "CIENCIAS", keywords: ["plantas", "crecer"] },
@@ -20,14 +19,13 @@ const recordBtn = document.getElementById('record-btn');
 const transcriptDisplay = document.getElementById('live-transcript');
 const energyBar = document.getElementById('energy-bar');
 const sentenceDisplay = document.getElementById('target-sentence');
-const categoryTag = document.querySelector('.category-tag');
+const categoryTag = document.getElementById('subject-tag');
 const valencianoText = document.getElementById('val-translation');
 
 function loadNextCard() {
-    transcriptDisplay.innerText = "Esperando voz...";
-    transcriptDisplay.style.color = "#63B3ED";
-    transcriptDisplay.style.fontSize = "1.5rem";
-    energyBar.style.width = "10%";
+    transcriptDisplay.innerText = "ESPERANDO SEÑAL...";
+    transcriptDisplay.style.color = "#38BDF8";
+    energyBar.style.width = "15%";
 
     const randomIdx = Math.floor(Math.random() * flashcards.length);
     currentCard = flashcards[randomIdx];
@@ -39,26 +37,29 @@ function loadNextCard() {
 
 loadNextCard();
 
-// UPDATED AUDIO LOGIC
+// --- CRITICAL FIX FOR PITCH ---
 function playAudio() {
     window.speechSynthesis.cancel();
     const msg = new SpeechSynthesisUtterance(currentCard.es);
     
-    // Get settings from local storage
-    const savedRate = localStorage.getItem('speech_rate') || 1.0;
+    // 1. Find the voice first
     const preferredVoiceName = localStorage.getItem('preferred_voice');
-    
-    msg.rate = parseFloat(savedRate);
-    
-    // Find the voice object that matches the name
     const voices = window.speechSynthesis.getVoices();
     const selectedVoice = voices.find(v => v.name === preferredVoiceName);
     
     if (selectedVoice) {
         msg.voice = selectedVoice;
-    } else {
-        msg.lang = 'es-ES';
     }
+    
+    // 2. Set lang as backup
+    msg.lang = 'es-ES';
+
+    // 3. APPLY SETTINGS LAST (Important for iPad Safari)
+    const savedRate = localStorage.getItem('speech_rate') || 1.0;
+    const savedPitch = localStorage.getItem('speech_pitch') || 1.0;
+    
+    msg.rate = parseFloat(savedRate);
+    msg.pitch = parseFloat(savedPitch);
 
     window.speechSynthesis.speak(msg);
 }
@@ -86,7 +87,7 @@ function stopListening() {
     recognition.stop();
     isListening = false;
     recordBtn.classList.remove('recording');
-    recordBtn.querySelector('.label').innerText = "HABLAR";
+    recordBtn.querySelector('.label').innerText = "COMUNICAR";
 }
 
 recognition.onresult = (event) => {
@@ -103,17 +104,25 @@ function processResult(spokenText) {
     const isSuccess = currentCard.keywords.some(keyword => spokenText.includes(keyword));
 
     if (isSuccess) {
-        transcriptDisplay.style.color = "#48BB78";
-        transcriptDisplay.style.fontSize = "2rem";
+        transcriptDisplay.style.color = "#4ADE80"; // Neon Green
         energyBar.style.width = "100%";
         
+        // Success feedback with child-like pitch
         const shout = new SpeechSynthesisUtterance("¡Excelente!");
+        
+        const voices = window.speechSynthesis.getVoices();
+        const selectedVoice = voices.find(v => v.name === localStorage.getItem('preferred_voice'));
+        if (selectedVoice) shout.voice = selectedVoice;
+        
+        shout.pitch = parseFloat(localStorage.getItem('speech_pitch') || 1.0);
+        shout.rate = parseFloat(localStorage.getItem('speech_rate') || 1.0);
         shout.lang = 'es-ES';
+        
         window.speechSynthesis.speak(shout);
 
         setTimeout(loadNextCard, 2500);
     } else {
-        transcriptDisplay.style.color = "#F6AD55";
+        transcriptDisplay.style.color = "#F87171"; // Neon Red
     }
     stopListening();
 }
