@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Configuración</h2>
+        
+        <div class="setting-group">
+            <label>OpenAI API Key:</label>
+            <input type="password" id="api-key" placeholder="sk-...">
+        </div>
+
+        <div class="setting-group">
+            <label>Nivel de Estricto: <span id="strict-val">5</span></label>
+            <input type="range" id="strict-scale" min="1" max="10" value="5">
+        </div>
+
+        <button class="btn-stage-1" onclick="saveSettings()">
+            <span class="label">Guardar Cambios</span>
+        </button>
+    </div>
+    <script>
+        function saveSettings() {
+            localStorage.setItem('openai_key', document.getElementById('api-key').value);
+            localStorage.setItem('strictness', document.getElementById('strict-scale').value);
+            alert('Configuración guardada');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
