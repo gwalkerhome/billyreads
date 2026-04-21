@@ -1,98 +1,170 @@
-// flashapp.js - Gemini Learning Journey Engine
+// flashapp.js - Complete Gemini Learning Journey Engine
 let flashcards = [];
 let currentIndex = 0;
 let isListening = false;
 
-// 1. CALCULATE ACADEMIC CONTEXT
+// 1. ACADEMIC CONTEXT LOGIC
 function getSchoolYear() {
-    const dob = new Date(localStorage.getItem('billy_dob'));
-    if (isNaN(dob)) return "4º de Primaria"; // Fallback
-    const age = new Date().getFullYear() - dob.getFullYear();
-    // Spanish system: age 8 = 3º, age 9 = 4º, etc.
-    const year = age - 5; 
-    return `${year}º de Primaria en España`;
+    const dobValue = localStorage.getItem('billy_dob');
+    if (!dobValue) return "4º de Primaria"; 
+    
+    const dob = new Date(dobValue);
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const m = today.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+        age--;
+    }
+    
+    // Spanish Primary System approximation:
+    // Age 6=1º, 7=2º, 8=3º, 9=4º, 10=5º, 11=6º
+    const yearLevel = age - 5;
+    if (yearLevel < 1) return "1º de Primaria";
+    if (yearLevel > 6) return "6º de Primaria";
+    return `${yearLevel}º de Primaria`;
 }
 
-// 2. FETCH FROM GEMINI
+// 2. GEMINI API INTEGRATION
 async function fetchJourneyCards() {
     const apiKey = localStorage.getItem('gemini_key');
+    if (!apiKey) {
+        document.getElementById('target-sentence').innerText = "Configura la API Key en Ajustes";
+        return;
+    }
+
     const schoolYear = getSchoolYear();
+    const prompt = `Actúa como un Director de Primaria en España. Genera 20 tarjetas de aprendizaje para un alumno de ${schoolYear}.
+    USA EL PROTOCOLO 'LEARNING JOURNEY':
+    - 70% contenido de ${schoolYear} (Ciencias, Historia, Geografía).
+    - 10% contenido 'Ancla' del año anterior (Repaso).
+    - 20% contenido 'Teaser' del año siguiente (Avanzado).
     
-    const prompt = `Act as a Primary School Director. Generate 20 learning flashcards for a student in ${schoolYear}.
-    FOLLOW THE LEARNING JOURNEY PROTOCOL:
-    - 70% content from ${schoolYear} curriculum (Science, History, Geography, Math).
-    - 10% 'Anchor' content from the previous year (Review).
-    - 20% 'Teaser' content from the next year group (Advanced preview).
-    
-    OUTPUT ONLY a JSON array of objects:
-    [{"es": "sentence in spanish", "val": "translation in valenciano", "cat": "SUBJECT", "keywords": ["key1", "key2"]}]`;
+    DEVUELVE ÚNICAMENTE un array JSON puro (sin markdown) con este formato:
+    [{"es": "frase en español", "val": "traducción valenciano", "cat": "TEMA", "keywords": ["palabra1", "palabra2"]}]`;
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
     try {
         const response = await fetch(url, {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
         });
+        
         const data = await response.json();
-        const text = data.candidates[0].content.parts[0].text;
-        // Clean JSON formatting if Gemini adds markdown blocks
-        const cleanJson = text.replace(/```json|```/g, '');
+        const rawText = data.candidates[0].content.parts[0].text;
+        const cleanJson = rawText.replace(/```json|```/g, '').trim();
+        
         flashcards = JSON.parse(cleanJson);
         loadCard();
     } catch (err) {
-        console.error("Gemini Error:", err);
-        document.getElementById('target-sentence').innerText = "Error al conectar con la base de datos.";
+        console.error("Error:", err);
+        document.getElementById('target-sentence').innerText = "Error cargando la misión.";
     }
 }
 
-// 3. CORE LOGIC
-const recordBtn = document.getElementById('record-btn');
-const transcriptDisplay = document.getElementById('live-transcript');
-const energyBar = document.getElementById('energy-bar');
-
+// 3. UI & DISPLAY LOGIC
 function loadCard() {
     if (currentIndex >= flashcards.length) {
-        document.getElementById('target-sentence').innerText = "¡Misión completada!";
+        document.getElementById('target-sentence').innerText = "¡MISIÓN COMPLETADA!";
+        document.getElementById('live-transcript').innerText = "Excelente trabajo, Operador.";
         return;
     }
+
     const card = flashcards[currentIndex];
     document.getElementById('target-sentence').innerText = card.es;
     document.getElementById('subject-tag').innerText = card.cat;
     document.getElementById('val-translation').innerText = card.val;
-    transcriptDisplay.innerText = "ESPERANDO SEÑAL...";
-    energyBar.style.width = `${((currentIndex) / flashcards.length) * 100}%`;
+    
+    document.getElementById('live-transcript').innerText = "ESPERANDO SEÑAL...";
+    document.getElementById('live-transcript').style.color = "#38BDF8";
+    
+    const progress = ((currentIndex) / flashcards.length) * 100;
+    document.getElementById('energy-bar').style.width = `${progress}%`;
 }
 
+// 4. SPEECH SYNTHESIS (THE BOY VOICE)
 function playAudio() {
     window.speechSynthesis.cancel();
     const card = flashcards[currentIndex];
     const msg = new SpeechSynthesisUtterance(card.es);
-    msg.voice = window.speechSynthesis.getVoices().find(v => v.name === localStorage.getItem('preferred_voice'));
+    
+    const preferredVoiceName = localStorage.getItem('preferred_voice');
+    const voices = window.speechSynthesis.getVoices();
+    msg.voice = voices.find(v => v.name === preferredVoiceName);
+    
     msg.pitch = parseFloat(localStorage.getItem('speech_pitch') || 1.0);
     msg.rate = parseFloat(localStorage.getItem('speech_rate') || 0.9);
+    msg.lang = 'es-ES';
+
     window.speechSynthesis.speak(msg);
 }
 
-// Initialize
-if (localStorage.getItem('gemini_key')) {
-    fetchJourneyCards();
-} else {
-    alert("Por favor, introduce la API Key en Configuración.");
-}
+// 5. SPEECH RECOGNITION (LISTENING)
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const recognition = new SpeechRecognition();
+recognition.lang = 'es-ES';
+recognition.interimResults = true;
 
-// ... Speech recognition logic remains the same (recognition.onresult calls processResult) ...
+const recordBtn = document.getElementById('record-btn');
+
+recordBtn.onclick = () => {
+    if (!isListening) {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        audioCtx.resume();
+        recognition.start();
+        isListening = true;
+        recordBtn.classList.add('recording');
+        recordBtn.querySelector('.label').innerText = "DETENER";
+    } else {
+        recognition.stop();
+        isListening = false;
+        recordBtn.classList.remove('recording');
+        recordBtn.querySelector('.label').innerText = "COMUNICAR";
+    }
+};
+
+recognition.onresult = (event) => {
+    let interim = '';
+    for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+            processResult(event.results[i][0].transcript.toLowerCase());
+        } else {
+            document.getElementById('live-transcript').innerText = event.results[i][0].transcript;
+        }
+    }
+};
 
 function processResult(spokenText) {
     const card = flashcards[currentIndex];
-    const isSuccess = card.keywords.some(k => spokenText.toLowerCase().includes(k.toLowerCase()));
+    const isSuccess = card.keywords.some(k => spokenText.includes(k.toLowerCase()));
 
     if (isSuccess) {
-        transcriptDisplay.style.color = "#4ADE80";
-        energyBar.style.width = `${((currentIndex + 1) / flashcards.length) * 100}%`;
+        document.getElementById('live-transcript').innerText = `¡CORRECTO: "${spokenText}"!`;
+        document.getElementById('live-transcript').style.color = "#4ADE80";
+        
+        // Success shout
+        const praise = new SpeechSynthesisUtterance("¡Muy bien!");
+        praise.pitch = parseFloat(localStorage.getItem('speech_pitch') || 1.0);
+        praise.lang = 'es-ES';
+        window.speechSynthesis.speak(praise);
+
         currentIndex++;
         setTimeout(loadCard, 2000);
     } else {
-        transcriptDisplay.style.color = "#F87171";
+        document.getElementById('live-transcript').innerText = `REINTENTAR: "${spokenText}"`;
+        document.getElementById('live-transcript').style.color = "#F87171";
     }
+    
+    // Auto-stop recording after a result
+    isListening = false;
+    recordBtn.classList.remove('recording');
+    recordBtn.querySelector('.label').innerText = "COMUNICAR";
+}
+
+// START MISSION
+if (localStorage.getItem('gemini_key')) {
+    fetchJourneyCards();
+} else {
+    document.getElementById('target-sentence').innerText = "VE A AJUSTES PARA EMPEZAR";
 }
