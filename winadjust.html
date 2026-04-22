@@ -142,7 +142,8 @@
     
     // Header for the prompt
     let promptInfo = "### SYSTEM INSTRUCTION: BACKGROUND GENERATION BRIEF ###\n";
-    promptInfo += "Create a high-fidelity, 16:9 background image for a child's reading app. The style must be high-quality and thematic based on the prompt at the end. The following UI objects must be visually integrated into the scenery at these exact coordinates:\n\n";
+    promptInfo += "Create a high-fidelity, 16:9 background image for a child's reading app. The style must be high-quality and thematic based on the prompt at the end. The following UI objects must be visually integrated into the scenery at these exact coordinates:\n\n. CRITICAL RULE 1: Every text window and monitor listed below MUST be COMPLETELY EMPTY and blank. No placeholder text, no "Sector 7" labels, and no UI gibberish. They must be clean surfaces (glass, metal, or screens) ready for digital overlay.
+CRITICAL RULE 2: You must follow these exact pixel-perfect coordinates. Do not center objects where you think they look "cool"; use the mathematical centers provided.";
     
     // Mapping internal names to descriptive names for Gemini
     const names = {
