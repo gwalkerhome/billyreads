@@ -1,97 +1,124 @@
 :root {
-    --mc-font: 'Arial', sans-serif; /* We can use a pixel font later */
-    --mc-text-dark: #3F3F3F;
+    --mc-font: 'Arial Black', Gadget, sans-serif;
+    --xp-green: #76FF03;
 }
 
 body {
     margin: 0;
     padding: 0;
+    /* This points to the subfolder assets */
     background: #000 url('assets/minecraft.png') no-repeat center center fixed;
     background-size: cover;
-    /* ... rest of code ... */
-}
-
-/* The Master Overlay */
-.game-container {
-    position: relative;
-    width: 100vw;
     height: 100vh;
-    display: grid;
-    grid-template-rows: 15% 55% 15% 15%; /* Alignment for the 4 zones */
-    pointer-events: none; /* Let clicks pass through to child buttons only */
+    width: 100vw;
+    overflow: hidden;
+    font-family: var(--mc-font);
 }
 
-/* 1. The Birch Sign (Subject) */
-#subject-tag {
-    grid-row: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: var(--mc-text-dark);
-    text-transform: uppercase;
-    padding-top: 10px;
-}
-
-/* 2. The Stone Monitor (Target Sentence) */
-#target-sentence {
-    grid-row: 2;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px 15%; /* Keeps text inside the stone frame */
-    font-size: 2.2rem;
-    color: white;
-    text-shadow: 2px 2px 4px #000;
-    text-align: center;
-}
-
-/* 3. The Interactive Blocks (TNT / Megaphone) */
-.block-controls {
-    grid-row: 3;
-    display: flex;
-    justify-content: center;
-    gap: 40px;
-    pointer-events: auto;
-}
-
-.mc-btn {
-    width: 100px;
-    height: 100px;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    border-radius: 10px;
-}
-
-/* 4. The Bottom Console (Transcript) */
-#live-transcript {
-    grid-row: 4;
-    align-self: center;
-    justify-self: center;
-    width: 70%;
-    color: #4ADE80;
-    font-size: 1.1rem;
-    text-align: center;
-}
-
-/* Experience Bar Logic */
+/* XP Bar Alignment (Top Beam) */
 .xp-container {
     position: absolute;
-    top: 5px;
+    top: 10px;
     left: 50%;
     transform: translateX(-50%);
     width: 40%;
-    height: 10px;
+    height: 12px;
     background: #111;
     border: 2px solid #333;
+    z-index: 10;
 }
 
 #xp-bar {
     width: 0%;
     height: 100%;
-    background: #76FF03; /* Classic XP Green */
-    box-shadow: 0 0 10px #76FF03;
-    transition: width 0.3s;
+    background: var(--xp-green);
+    box-shadow: 0 0 10px var(--xp-green);
+    transition: width 0.4s ease;
+}
+
+/* Overlay Grid */
+.game-overlay {
+    display: grid;
+    grid-template-rows: 18% 52% 16% 14%; 
+    height: 100vh;
+    width: 100vw;
+    position: relative;
+}
+
+#subject-tag {
+    grid-row: 1;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    color: #3F3F3F; 
+    font-size: 1.4rem;
+    text-transform: uppercase;
+    padding-bottom: 12px;
+}
+
+#target-sentence {
+    grid-row: 2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0 18%; 
+    color: white;
+    font-size: 2.2rem;
+    text-align: center;
+    text-shadow: 2px 2px 0px #000;
+    line-height: 1.2;
+}
+
+.block-controls {
+    grid-row: 3;
+    display: flex;
+    justify-content: center;
+    gap: 30px; 
+    pointer-events: auto;
+}
+
+.mc-btn {
+    width: 95px;
+    height: 95px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    outline: none;
+}
+
+.recording-pulse {
+    background: rgba(255, 0, 0, 0.2) !important;
+    border-radius: 10px;
+}
+
+.console-area {
+    grid-row: 4;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#live-transcript {
+    color: var(--xp-green);
+    font-size: 1.1rem;
+    text-shadow: 1px 1px 0px #000;
+}
+
+#val-translation {
+    color: #AAAAAA;
+    font-size: 0.9rem;
+    margin-top: 5px;
+    font-style: italic;
+}
+
+.back-nav {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    width: 70px;
+    height: 70px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
 }
