@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WinAdjust: UI Calibrator</title>
+    <style>
+        :root { --mc-font: 'Arial Black', sans-serif; }
+        body {
+            margin: 0; padding: 0;
+            background: #000 url('assets/minecraft.png') no-repeat center center fixed;
+            background-size: 100% 100%; 
+            height: 100vh; width: 100vw;
+            overflow: hidden; font-family: var(--mc-font);
+        }
+        .pane {
+            position: absolute; border: 2px dashed rgba(255,255,255,0.5);
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; color: white; font-size: 12px; box-sizing: border-box;
+        }
+        .active { border: 4px solid #76FF03 !important; background: rgba(118, 255, 3, 0.2) !important; z-index: 100; }
+        
+        /* Control Panel */
+        #control-panel {
+            position: fixed; right: 20px; top: 20px; width: 260px;
+            background: rgba(0,0,0,0.9); color: #76FF03; padding: 20px;
+            border-radius: 15px; border: 2px solid #333; z-index: 1000;
+        }
+        input[type=range] { width: 100%; margin: 10px 0; }
+        button { 
+            width: 100%; padding: 12px; margin-top: 10px; border: none; 
+            border-radius: 5px; font-weight: bold; cursor: pointer;
+        }
+        #save-btn { background: #76FF03; color: black; }
+        #back-btn { background: #444; color: white; }
+    </style>
+</head>
+<body>
+
+    <div id="pane-back" class="pane" onclick="selectPane('pane-back')">BACK</div>
+    <div id="pane-birch" class="pane" onclick="selectPane('pane-birch')">SUBJECT</div>
+    <div id="pane-stone" class="pane" onclick="selectPane('pane-stone')">SENTENCE</div>
+    <div id="pane-buttons" class="pane" onclick="selectPane('pane-buttons')">CONTROLS</div>
+    <div id="pane-slab" class="pane" onclick="selectPane('pane-slab')">TRANSCRIPT</div>
+
+    <div id="control-panel">
+        <h3 id="panel-title">Select a Zone</h3>
+        <label>Top %</label><input type="range" id="val-top" min="0" max="100" oninput="updateUI()">
+        <label>Left %</label><input type="range" id="val-left" min="0" max="100" oninput="updateUI()">
+        <label>Width %</label><input type="range" id="val-width" min="1" max="100" oninput="updateUI()">
+        <label>Height %</label><input type="range" id="val-height" min="1" max="100" oninput="updateUI()">
+        
+        <button id="save-btn" onclick="savePositions()">SAVE CALIBRATION</button>
+        <button id="back-btn" onclick="window.location.href='settings.html'">BACK TO SETTINGS</button>
+    </div>
+
+    <script>
+        let activeId = null;
+        const defaultPos = {
+            'pane-back': {t:2, l:2, w:10, h:12},
+            'pane-birch': {t:10, l:30, w:40, h:10},
+            'pane-stone': {t:25, l:20, w:60, h:45},
+            'pane-buttons': {t:72, l:35, w:30, h:15},
+            'pane-slab': {t:88, l:25, w:50, h:10}
+        };
+
+        // Load existing or defaults
+        let positions = JSON.parse(localStorage.getItem('ui_positions')) || defaultPos;
+
+        function init() {
+            Object.keys(positions).forEach(id => {
+                const el = document.getElementById(id);
+                const p = positions[id];
+                el.style.top = p.t + '%'; el.style.left = p.l + '%';
+                el.style.width = p.w + '%'; el.style.height = p.h + '%';
+            });
+        }
+
+        function selectPane(id) {
+            if(activeId) document.getElementById(activeId).classList.remove('active');
+            activeId = id;
+            document.getElementById(id).classList.add('active');
+            document.getElementById('panel-title').innerText = id.replace('pane-', '').toUpperCase();
+            
+            const p = positions[id];
+            document.getElementById('val-top').value = p.t;
+            document.getElementById('val-left').value = p.l;
+            document.getElementById('val-width').value = p.w;
+            document.getElementById('val-height').value = p.h;
+        }
+
+        function updateUI() {
+            if(!activeId) return;
+            const t = parseInt(document.getElementById('val-top').value);
+            const l = parseInt(document.getElementById('val-left').value);
+            const w = parseInt(document.getElementById('val-width').value);
+            const h = parseInt(document.getElementById('val-height').value);
+            
+            const el = document.getElementById(activeId);
+            el.style.top = t+'%'; el.style.left = l+'%';
+            el.style.width = w+'%'; el.style.height = h+'%';
+            positions[activeId] = {t, l, w, h};
+        }
+
+        function savePositions() {
+            localStorage.setItem('ui_positions', JSON.stringify(positions));
+            alert("Calibration Saved! Flashcards will now use these positions.");
+        }
+
+        init();
+    </script>
+</body>
+</html>
