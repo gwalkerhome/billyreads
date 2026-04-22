@@ -9,19 +9,12 @@
         .dynamic-pane {
             position: absolute;
             display: flex;
-            justify-content: center; 
-            align-items: center;
-            text-align: center; 
-            box-sizing: border-box;
-            overflow: hidden;
+            justify-content: center; align-items: center;
+            text-align: center; box-sizing: border-box;
         }
         #val-translation {
-            color: #AACCFF; 
-            font-size: 1.2rem; 
-            font-style: italic;
-            opacity: 0; 
-            pointer-events: none;
-            transition: opacity 0.3s;
+            color: #AACCFF; font-size: 1.2rem; font-style: italic;
+            opacity: 0; transition: opacity 0.3s; pointer-events: none;
         }
         #val-translation.visible { opacity: 1; }
     </style>
@@ -31,7 +24,6 @@
     <div class="xp-container"><div id="energy-bar"></div></div>
 
     <button id="back-btn" class="dynamic-pane" onclick="window.location.href='index.html'"></button>
-    
     <div id="subject-tag" class="dynamic-pane">SINCRONIZANDO...</div>
     <div id="target-sentence" class="dynamic-pane">CARGANDO MISIÓN...</div>
     <div id="val-translation" class="dynamic-pane"></div>
@@ -44,7 +36,7 @@
 
     <script>
         function applyTheme() {
-            const themeId = localStorage.getItem('bg_flashcard');
+            const themeId = parseInt(localStorage.getItem('bg_flashcard'));
             if (!themeId) {
                 document.body.style.backgroundImage = "url('assets/minecraft.png')";
                 return;
@@ -52,21 +44,16 @@
             const request = indexedDB.open("ThemeDB", 1);
             request.onsuccess = e => {
                 const db = e.target.result;
-                const transaction = db.transaction("themes", "readonly");
-                const store = transaction.objectStore("themes");
-                const getRequest = store.get(parseInt(themeId));
+                const store = db.transaction("themes", "readonly").objectStore("themes");
+                const getRequest = store.get(themeId);
                 getRequest.onsuccess = () => {
-                    const theme = getRequest.result;
-                    if (theme && theme.data) document.body.style.backgroundImage = `url('${theme.data}')`;
+                    if (getRequest.result) document.body.style.backgroundImage = `url('${getRequest.result.data}')`;
                 };
             };
         }
 
         function applyCalibration() {
-            const savedData = localStorage.getItem('ui_positions');
-            if (!savedData) return;
-            const saved = JSON.parse(savedData);
-            
+            const saved = JSON.parse(localStorage.getItem('ui_positions') || '{}');
             const mapping = {
                 'pane-back': 'back-btn',
                 'pane-birch': 'subject-tag',
@@ -77,7 +64,6 @@
                 'pane-val-toggle': 'val-btn',
                 'pane-slab': 'live-transcript'
             };
-
             Object.keys(mapping).forEach(paneKey => {
                 const el = document.getElementById(mapping[paneKey]);
                 const pos = saved[paneKey];
@@ -91,8 +77,7 @@
         }
 
         function toggleValenciano() {
-            const trans = document.getElementById('val-translation');
-            if (trans) trans.classList.toggle('visible');
+            document.getElementById('val-translation').classList.toggle('visible');
         }
 
         window.onload = () => {
