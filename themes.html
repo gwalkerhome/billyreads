@@ -2,66 +2,130 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Theme Library</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Biblioteca de Temas</title>
     <style>
-        :root { --mc-font: 'Arial Black', sans-serif; --accent: #4a90e2; }
-        body { font-family: sans-serif; background: #f0f4f8; padding: 20px; text-align: center; }
-        h1 { font-family: var(--mc-font); color: #2c3e50; }
-        
-        .upload-zone {
-            background: white; border: 2px dashed var(--accent); padding: 30px;
-            border-radius: 15px; margin-bottom: 30px; cursor: pointer;
+        :root { 
+            --mc-font: 'Arial Black', Gadget, sans-serif; 
+            --accent: #4a90e2;
+            --flash-green: #76FF03;
+            --book-purple: #e2a0ff;
         }
+        body { 
+            font-family: sans-serif; 
+            background: #1a1a1a; 
+            color: white;
+            padding: 20px; 
+            text-align: center; 
+            margin: 0;
+        }
+        h1 { font-family: var(--mc-font); font-size: 1.5rem; margin-bottom: 20px; color: var(--accent); }
+        
+        /* Upload Area */
+        .upload-zone {
+            background: #2a2a2a; 
+            border: 3px dashed var(--accent); 
+            padding: 40px;
+            border-radius: 15px; 
+            margin-bottom: 30px; 
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .upload-zone:hover { background: #333; }
+        .upload-zone span { font-weight: bold; color: var(--accent); }
 
+        /* Grid Layout */
         .theme-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 20px; max-width: 1000px; margin: 0 auto;
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px; 
+            max-width: 1200px; 
+            margin: 0 auto;
         }
 
         .theme-card {
-            background: white; border-radius: 10px; padding: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: #333; 
+            border-radius: 12px; 
+            padding: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            border: 2px solid transparent;
         }
+        .theme-card.active-flash { border-color: var(--flash-green); }
+        .theme-card.active-book { border-color: var(--book-purple); }
 
         .thumb {
-            width: 100%; height: 120px; object-fit: cover;
-            border-radius: 5px; cursor: pointer;
+            width: 100%; 
+            height: 140px; 
+            object-fit: cover;
+            border-radius: 8px; 
+            margin-bottom: 10px;
         }
 
-        .controls { margin-top: 10px; display: flex; gap: 5px; flex-direction: column; }
+        .status-labels {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            min-height: 20px;
+        }
+
+        .badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: black;
+        }
+        .badge-flash { background: var(--flash-green); }
+        .badge-book { background: var(--book-purple); }
+
+        /* Control Buttons */
+        .controls { display: flex; flex-direction: column; gap: 8px; }
         button { 
-            padding: 8px; border: none; border-radius: 5px; cursor: pointer;
-            font-weight: bold; font-size: 0.7rem;
+            padding: 12px; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer;
+            font-family: var(--mc-font);
+            font-size: 10px;
+            text-transform: uppercase;
         }
-        .btn-flash { background: #76FF03; color: black; }
-        .btn-book { background: #e2a0ff; color: black; }
-        .btn-del { background: #ff4d4d; color: white; }
+        .btn-flash { background: var(--flash-green); color: black; }
+        .btn-book { background: var(--book-purple); color: black; }
+        .btn-del { background: #ff4d4d; color: white; margin-top: 5px; opacity: 0.7; }
+        .btn-del:hover { opacity: 1; }
 
-        .active-tag { font-size: 10px; color: var(--accent); margin-top: 5px; }
+        .back-nav {
+            margin-top: 50px;
+            background: #444;
+            color: white;
+            padding: 15px 40px;
+        }
     </style>
 </head>
 <body>
 
-    <h1>Theme Library</h1>
-    <p>Upload your Gemini-generated backgrounds here.</p>
+    <h1>BIBLIOTECA DE TEMAS</h1>
 
     <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
-        <span>Click to Upload PNG/JPG</span>
+        <span>+ SUBIR NUEVO FONDO (PNG/JPG)</span>
         <input type="file" id="fileInput" hidden accept="image/*" onchange="handleUpload(event)">
     </div>
 
     <div class="theme-grid" id="themeGrid"></div>
 
-    <button onclick="location.href='settings.html'" style="margin-top:40px; padding:15px 30px; background:#444; color:white; border-radius:10px;">BACK TO SETTINGS</button>
+    <button class="back-nav" onclick="location.href='settings.html'">VOLVER AL CONTROL</button>
 
     <script>
         let db;
         const request = indexedDB.open("ThemeDB", 1);
 
+        // Database setup for handling 1-2MB image files
         request.onupgradeneeded = e => {
             db = e.target.result;
-            db.createObjectStore("themes", { keyPath: "id", autoIncrement: true });
+            if (!db.objectStoreNames.contains("themes")) {
+                db.createObjectStore("themes", { keyPath: "id", autoIncrement: true });
+            }
         };
 
         request.onsuccess = e => {
@@ -69,6 +133,7 @@
             loadThemes();
         };
 
+        // Handle file reading and storage
         function handleUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -78,9 +143,13 @@
                 const transaction = db.transaction(["themes"], "readwrite");
                 transaction.objectStore("themes").add({
                     name: file.name,
-                    data: e.target.result
+                    data: e.target.result,
+                    timestamp: Date.now()
                 });
-                transaction.oncomplete = loadThemes;
+                transaction.oncomplete = () => {
+                    loadThemes();
+                    event.target.value = ''; // Reset input
+                };
             };
             reader.readAsDataURL(file);
         }
@@ -88,25 +157,34 @@
         function loadThemes() {
             const grid = document.getElementById('themeGrid');
             grid.innerHTML = '';
-            const flashBg = localStorage.getItem('bg_flashcards');
-            const bookBg = localStorage.getItem('bg_magicbook');
+            
+            // Reference correct singular filename/key
+            const flashBgId = localStorage.getItem('bg_flashcard');
+            const bookBgId = localStorage.getItem('bg_magicbook');
 
-            db.transaction("themes").objectStore("themes").getAll().onsuccess = e => {
-                e.target.result.forEach(theme => {
-                    const card = document.createElement('div');
-                    card.className = 'theme-card';
+            const transaction = db.transaction("themes", "readonly");
+            const store = transaction.objectStore("themes");
+            
+            store.getAll().onsuccess = e => {
+                const themes = e.target.result;
+                
+                themes.forEach(theme => {
+                    const isFlash = flashBgId == theme.id;
+                    const isBook = bookBgId == theme.id;
                     
-                    let tags = "";
-                    if (flashBg == theme.id) tags += "⭐ FLASHCARDS ";
-                    if (bookBg == theme.id) tags += "📖 MAGIC BOOK";
-
+                    const card = document.createElement('div');
+                    card.className = `theme-card ${isFlash ? 'active-flash' : ''} ${isBook ? 'active-book' : ''}`;
+                    
                     card.innerHTML = `
                         <img src="${theme.data}" class="thumb">
-                        <div class="active-tag">${tags}</div>
+                        <div class="status-labels">
+                            ${isFlash ? '<span class="badge badge-flash">FLASHCARD GAME</span>' : ''}
+                            ${isBook ? '<span class="badge badge-book">MAGIC BOOK</span>' : ''}
+                        </div>
                         <div class="controls">
-                            <button class="btn-flash" onclick="assignTheme(${theme.id}, 'flashcards')">USE FOR FLASHCARDS</button>
-                            <button class="btn-book" onclick="assignTheme(${theme.id}, 'book')">USE FOR MAGIC BOOK</button>
-                            <button class="btn-del" onclick="deleteTheme(${theme.id})">DELETE</button>
+                            <button class="btn-flash" onclick="assignTheme(${theme.id}, 'flashcard')">USAR EN FLASHCARDS</button>
+                            <button class="btn-book" onclick="assignTheme(${theme.id}, 'book')">USAR EN MAGIC BOOK</button>
+                            <button class="btn-del" onclick="deleteTheme(${theme.id})">ELIMINAR</button>
                         </div>
                     `;
                     grid.appendChild(card);
@@ -115,17 +193,26 @@
         }
 
         function assignTheme(id, type) {
-            if (type === 'flashcards') localStorage.setItem('bg_flashcards', id);
-            else localStorage.setItem('bg_magicbook', id);
+            if (type === 'flashcard') {
+                localStorage.setItem('bg_flashcard', id);
+            } else {
+                localStorage.setItem('bg_magicbook', id);
+            }
             loadThemes();
-            alert("Background assigned!");
+            alert("¡Fondo asignado correctamente!");
         }
 
         function deleteTheme(id) {
-            if(!confirm("Delete this theme?")) return;
+            if(!confirm("¿Seguro que quieres borrar este fondo?")) return;
+            
             const transaction = db.transaction(["themes"], "readwrite");
             transaction.objectStore("themes").delete(id);
-            transaction.oncomplete = loadThemes;
+            transaction.oncomplete = () => {
+                // Clear localStorage if the deleted theme was active
+                if(localStorage.getItem('bg_flashcard') == id) localStorage.removeItem('bg_flashcard');
+                if(localStorage.getItem('bg_magicbook') == id) localStorage.removeItem('bg_magicbook');
+                loadThemes();
+            };
         }
     </script>
 </body>
