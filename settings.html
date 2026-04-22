@@ -67,6 +67,12 @@
             box-sizing: border-box;
         }
 
+        .inner-save-btn {
+            background: var(--mc-green); color: #000; border: none; padding: 8px;
+            border-radius: 5px; font-weight: bold; margin-top: 10px; cursor: pointer;
+            font-size: 0.7rem; text-transform: uppercase; align-self: flex-end;
+        }
+
         .footer-actions {
             margin-top: 40px; display: flex; gap: 20px; width: 100%; max-width: 600px;
         }
@@ -121,6 +127,7 @@
             <div class="card-header">⚙️ System Core</div>
             <label>OpenAI API Key</label>
             <input type="password" id="gemini-key" placeholder="Enter sk-...">
+            <button class="inner-save-btn" onclick="saveKeyOnly()">Save Key</button>
             <p style="font-size: 0.7rem; color: #999; margin-top: 15px;">
                 This key enables dynamic curriculum generation via OpenAI.
             </p>
@@ -159,7 +166,6 @@
 
         window.onload = () => {
             loadVoices();
-            // Using 'gemini_key' as the ID to match your original script
             document.getElementById('gemini-key').value = localStorage.getItem('gemini_key') || '';
             document.getElementById('billy-dob').value = localStorage.getItem('billy_dob') || '';
             document.getElementById('rate').value = localStorage.getItem('billy_rate') || 1.0;
@@ -187,6 +193,13 @@
             msg.rate = document.getElementById('rate').value;
             msg.pitch = document.getElementById('pitch').value;
             window.speechSynthesis.speak(msg);
+        }
+
+        // New function to save just the key
+        function saveKeyOnly() {
+            const key = document.getElementById('gemini-key').value.trim();
+            localStorage.setItem('gemini_key', key);
+            alert("API Key Locked.");
         }
 
         function saveAll() {
