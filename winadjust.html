@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WinAdjust: UI Calibrator & Architect</title>
+    <title>WinAdjust: UI Architect</title>
     <style>
         :root { --mc-font: 'Arial Black', sans-serif; }
         body {
@@ -74,6 +74,8 @@
 
     <script>
         let activeId = null;
+
+        // Hardcoded fallbacks if no memory exists
         const defaultPos = {
             'pane-back': {t:2, l:2, w:10, h:12},
             'pane-birch': {t:10, l:30, w:40, h:10},
@@ -85,6 +87,7 @@
             'pane-slab': {t:92, l:25, w:50, h:6}
         };
 
+        // Load existing assets or use defaults
         let positions = JSON.parse(localStorage.getItem('ui_positions')) || defaultPos;
 
         function init() {
@@ -96,6 +99,7 @@
                     el.style.width = p.w + '%'; el.style.height = p.h + '%';
                 }
             });
+            console.log("WinAdjust: UI Calibration loaded from memory.");
         }
 
         function selectPane(id) {
@@ -133,51 +137,43 @@
 
         function savePositions() {
             localStorage.setItem('ui_positions', JSON.stringify(positions));
-            alert("System Calibrated!");
+            alert("System Calibrated! Memory updated.");
         }
 
         function generateBlueprint() {
-    const bBox = document.getElementById('blueprint-box');
-    bBox.style.display = 'block';
-    
-    // Header for the prompt
-    let promptInfo = "### SYSTEM INSTRUCTION: BACKGROUND GENERATION BRIEF ###\n";
-    promptInfo += "Create a high-fidelity, 16:9 background image for a child's reading app. The style must be high-quality and thematic based on the prompt at the end. The following UI objects must be visually integrated into the scenery at these exact coordinates:\n\n. CRITICAL RULE 1: Every text window and monitor listed below MUST be COMPLETELY EMPTY and blank. No placeholder text, no "Sector 7" labels, and no UI gibberish. They must be clean surfaces (glass, metal, or screens) ready for digital overlay.
-CRITICAL RULE 2: You must follow these exact pixel-perfect coordinates. Do not center objects where you think they look "cool"; use the mathematical centers provided.";
-    
-    // Mapping internal names to descriptive names for Gemini
-    const names = {
-        'pane-back': 'Thematic BACK BUTTON',
-        'pane-birch': 'SUBJECT/TITLE text display sign',
-        'pane-stone': 'MAIN FOCUS text display window (Monitor/Screen)',
-        'pane-record': 'RECORD ACTION button (e.g. TNT or mic)',
-        'pane-speech': 'LISTEN/AUDIO button (e.g. Megaphone)',
-        'pane-val-toggle': 'VALENCIANO TOGGLE button',
-        'pane-valenciano': 'TRANSLATED TEXT display window',
-        'pane-slab': 'TRANSCRIPT dynamic text area'
-    };
+            const bBox = document.getElementById('blueprint-box');
+            bBox.style.display = 'block';
+            
+            let promptInfo = "### SYSTEM INSTRUCTION: ARCHITECTURAL UI BACKGROUND ###\n";
+            promptInfo += "Create a high-fidelity, 16:9 background image for a child's reading app. All text windows MUST BE COMPLETELY EMPTY. Follow these exact coordinates:\n\n";
+            
+            const names = {
+                'pane-back': 'BACK BUTTON',
+                'pane-birch': 'TITLE SIGN',
+                'pane-stone': 'MAIN MONITOR',
+                'pane-record': 'RECORD BUTTON',
+                'pane-speech': 'AUDIO BUTTON',
+                'pane-val-toggle': 'TOGGLE SWITCH',
+                'pane-valenciano': 'TRANSLATION STRIP',
+                'pane-slab': 'TRANSCRIPT AREA'
+            };
 
-    Object.keys(positions).forEach(id => {
-        const p = positions[id];
-        const label = names[id] || id.toUpperCase();
-        
-        // Calculate center points for the AI artist
-        const centerX = p.l + (p.w / 2);
-        const centerY = p.t + (p.h / 2);
-        
-        promptInfo += `${label}:\n`;
-        promptInfo += `   - Center: ${centerX}% horizontal, ${centerY}% vertical\n`;
-        promptInfo += `   - Dimensions: ${p.w}% width, ${p.h}% height\n\n`;
-    });
-    
-    promptInfo += "The theme for this background image will be: [INSERT THEME HERE, e.g., MINECRAFT, SPACE, UNDERWATER]";
-    
-    bBox.value = promptInfo;
-    bBox.scrollIntoView({ behavior: 'smooth' });
-    bBox.select();
-}
+            Object.keys(positions).forEach(id => {
+                const p = positions[id];
+                const label = names[id] || id.toUpperCase();
+                const centerX = p.l + (p.w / 2);
+                const centerY = p.t + (p.h / 2);
+                
+                promptInfo += `${label}:\n   - Center: ${centerX}% H, ${centerY}% V\n   - Dimensions: ${p.w}% width, ${p.h}% height\n\n`;
+            });
+            
+            promptInfo += "The theme for this background image will be: [ENTER THEME]";
+            bBox.value = promptInfo;
+            bBox.scrollIntoView({ behavior: 'smooth' });
+            bBox.select();
+        }
 
-        init();
+        window.onload = init;
     </script>
 </body>
 </html>
