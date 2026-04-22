@@ -1,49 +1,30 @@
-// flashapp.js - Full Integrated Logic
+// flashapp.js - Bulletproof 2026 Version
 let flashcards = [];
 let currentIndex = 0;
 let isListening = false;
 
-function getSchoolYear() {
-    const dobValue = localStorage.getItem('billy_dob');
-    if (!dobValue) return "4º de Primaria"; 
-    const dob = new Date(dobValue);
-    const today = new Date();
-    let age = today.getFullYear() - dob.getFullYear();
-    const m = today.getMonth() - dob.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
-    const yearLevel = age - 5;
-    if (yearLevel < 1) return "1º de Primaria";
-    if (yearLevel > 6) return "6º de Primaria";
-    return `${yearLevel}º de Primaria`;
+function safeSetText(id, text) {
+    const el = document.getElementById(id);
+    if (el) el.innerText = text;
 }
 
 async function fetchJourneyCards() {
     const apiKey = localStorage.getItem('gemini_key');
     const difficulty = localStorage.getItem('billy_level') || 'NORMAL';
-    const schoolYear = getSchoolYear();
+    const dobValue = localStorage.getItem('billy_dob') || '2016-01-01';
     
-    const targetDisplay = document.getElementById('target-sentence');
-
     if (!apiKey) {
-        if (targetDisplay) targetDisplay.innerText = "Configura la API Key en Ajustes";
+        safeSetText('target-sentence', "ERROR: No API Key");
         return;
     }
 
-    const difficultyInstruction = difficulty === 'EXPERTO' 
-        ? "Usa vocabulario sofisticado y conceptos científicos detallados." 
-        : "Usa un lenguaje claro y adecuado para su edad.";
-
-    // THE VERIFIED 2026 ENDPOINT
+    // Verified 2026 Model
     const model = "gemini-3.1-flash-lite-preview";
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-    const prompt = `Actúa como un Director de Primaria en España. Genera 20 tarjetas de aprendizaje para un alumno de ${schoolYear}.
-    ${difficultyInstruction}
-    USA EL PROTOCOLO 'LEARNING JOURNEY':
-    - 70% contenido de ${schoolYear}.
-    - 10% contenido 'Ancla' del año anterior.
-    - 20% contenido 'Teaser' del año siguiente.
-    FORMATO JSON PURO: [{"es": "frase", "val": "traducción", "cat": "TEMA", "keywords": ["palabra"]}]`;
+    const prompt = `Actúa como un Director de Primaria. Genera 20 tarjetas JSON para un alumno nacido en ${dobValue}. 
+    Dificultad: ${difficulty}. 
+    Formato: [{"es": "frase", "val": "traducción", "cat": "TEMA", "keywords": ["palabra"]}]`;
 
     try {
         const response = await fetch(url, {
@@ -52,12 +33,10 @@ async function fetchJourneyCards() {
             body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
         });
         
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
         const data = await response.json();
         let rawText = data.candidates[0].content.parts[0].text;
         
-        // Extract JSON from potential AI markdown
+        // Clean JSON
         const start = rawText.indexOf('[');
         const end = rawText.lastIndexOf(']');
         if (start !== -1 && end !== -1) {
@@ -65,33 +44,28 @@ async function fetchJourneyCards() {
         }
         
         flashcards = JSON.parse(rawText);
-        currentIndex = 0;
         loadCard();
     } catch (err) {
-        console.error("API Error:", err);
-        if (targetDisplay) targetDisplay.innerText = "Error cargando la misión.";
+        safeSetText('target-sentence', "ERROR DE CONEXIÓN");
+        console.error(err);
     }
 }
 
 function loadCard() {
+    if (flashcards.length === 0) return;
     if (currentIndex >= flashcards.length) {
-        document.getElementById('target-sentence').innerText = "¡MISIÓN COMPLETADA!";
+        safeSetText('target-sentence', "¡MISIÓN COMPLETADA!");
         return;
     }
+    
     const card = flashcards[currentIndex];
+    safeSetText('target-sentence', card.es);
+    safeSetText('subject-tag', card.cat);
+    safeSetText('val-translation', card.val);
     
-    const target = document.getElementById('target-sentence');
-    const tag = document.getElementById('subject-tag');
-    const trans = document.getElementById('val-translation');
     const bar = document.getElementById('energy-bar');
-
-    if (target) target.innerText = card.es;
-    if (tag) tag.innerText = card.cat;
-    if (trans) trans.innerText = card.val;
-    
     if (bar) {
-        const progress = ((currentIndex) / flashcards.length) * 100;
-        bar.style.width = `${progress}%`;
+        bar.style.width = ((currentIndex / flashcards.length) * 100) + '%';
     }
 }
 
@@ -100,18 +74,18 @@ function playAudio() {
     window.speechSynthesis.cancel();
     const msg = new SpeechSynthesisUtterance(flashcards[currentIndex].es);
     
-    const savedVoice = localStorage.getItem('billy_voice');
     const voices = window.speechSynthesis.getVoices();
-    const voice = voices.find(v => v.name === savedVoice);
+    const savedVoiceName = localStorage.getItem('billy_voice');
+    const selectedVoice = voices.find(v => v.name === savedVoiceName);
     
-    if (voice) msg.voice = voice;
+    if (selectedVoice) msg.voice = selectedVoice;
     msg.rate = parseFloat(localStorage.getItem('billy_rate') || 1.0);
     msg.pitch = parseFloat(localStorage.getItem('billy_pitch') || 1.0);
     msg.lang = 'es-ES';
     window.speechSynthesis.speak(msg);
 }
 
-// Voice Recognition
+// Simple Recognition
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 if (SpeechRecognition) {
     const recognition = new SpeechRecognition();
@@ -124,40 +98,35 @@ if (SpeechRecognition) {
             if (!isListening) {
                 recognition.start();
                 isListening = true;
-                recordBtn.style.background = "rgba(255, 0, 0, 0.4)";
+                recordBtn.style.boxShadow = "0 0 20px red";
             } else {
                 recognition.stop();
                 isListening = false;
-                recordBtn.style.background = "rgba(255, 255, 255, 0.1)";
+                recordBtn.style.boxShadow = "none";
             }
         };
 
         recognition.onresult = (event) => {
-            let text = "";
-            for (let i = event.resultIndex; i < event.results.length; ++i) {
-                text = event.results[i][0].transcript;
-                if (event.results[i].isFinal) {
-                    const card = flashcards[currentIndex];
-                    const cleanText = text.toLowerCase();
-                    const isSuccess = card.keywords.some(k => cleanText.includes(k.toLowerCase()));
-                    if (isSuccess) {
-                        currentIndex++;
-                        setTimeout(loadCard, 1000);
-                    }
+            const result = event.results[event.results.length - 1];
+            const text = result[0].transcript;
+            safeSetText('live-transcript', text.toUpperCase());
+            
+            if (result.isFinal) {
+                const card = flashcards[currentIndex];
+                const match = card.keywords.some(k => text.toLowerCase().includes(k.toLowerCase()));
+                if (match) {
+                    currentIndex++;
+                    setTimeout(loadCard, 500);
                 }
             }
-            const liveDisplay = document.getElementById('live-transcript');
-            if (liveDisplay) liveDisplay.innerText = text.toUpperCase();
         };
 
         recognition.onend = () => {
             isListening = false;
-            recordBtn.style.background = "rgba(255, 255, 255, 0.1)";
+            if (recordBtn) recordBtn.style.boxShadow = "none";
         };
     }
 }
 
-// Start
-if (localStorage.getItem('gemini_key')) {
-    fetchJourneyCards();
-}
+// Run immediately
+fetchJourneyCards();
