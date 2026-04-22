@@ -1,201 +1,91 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Command Center: BillyReads</title>
+    <title>BillyReads: System Settings</title>
     <style>
-        :root {
-            --mc-font: 'Arial Black', Gadget, sans-serif;
-            --accent-blue: #4a90e2;
-            --mc-green: #76FF03;
-            --card-bg: #ffffff;
-            --body-bg: #f0f4f8;
+        :root { --mc-font: 'Arial Black', sans-serif; }
+        body { 
+            background: #1a1a1a; color: white; font-family: sans-serif; 
+            margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center;
         }
-
-        body {
-            margin: 0; padding: 20px;
-            background-color: var(--body-bg);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #333;
-            display: flex; flex-direction: column; align-items: center;
-        }
-
-        h1 { font-family: var(--mc-font); color: #2c3e50; margin-bottom: 5px; }
-        .subtitle { color: #7f8c8d; margin-bottom: 30px; font-size: 0.9rem; }
-
-        .settings-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 20px; width: 100%; max-width: 1100px;
-        }
-
         .card {
-            background: var(--card-bg); border-radius: 15px; padding: 25px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; flex-direction: column;
+            background: #2a2a2a; padding: 20px; border-radius: 15px; 
+            border: 2px solid #444; width: 100%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-
         .card-header {
+            font-family: var(--mc-font); font-size: 1.2rem; color: #76FF03; margin-bottom: 20px;
             display: flex; align-items: center; gap: 10px;
-            color: #7f8c8d; font-weight: bold; text-transform: uppercase;
-            font-size: 0.8rem; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;
         }
-
-        label { display: block; font-weight: bold; margin: 15px 0 5px; font-size: 0.85rem; color: #444; }
-
-        input[type="text"], input[type="password"], input[type="date"], select {
-            width: 100%; padding: 12px; border: 1px solid #e0e0e0;
-            border-radius: 8px; box-sizing: border-box; background: #fafafa;
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #aaa; font-size: 0.9rem; }
+        input {
+            width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444;
+            background: #111; color: white; font-size: 1rem; box-sizing: border-box;
+            margin-bottom: 10px;
         }
-
-        .slider-row { display: flex; justify-content: space-between; align-items: center; }
-        input[type="range"] { flex-grow: 1; margin: 0 15px; }
-        .val-display { font-weight: bold; color: var(--accent-blue); width: 30px; }
-
-        .level-selector { display: flex; gap: 10px; margin-top: 5px; }
-        .lvl-btn {
-            flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #e0e0e0;
-            background: #fff; cursor: pointer; font-weight: bold; font-size: 0.75rem;
+        .save-btn {
+            width: 100%; padding: 15px; background: #76FF03; color: black;
+            border: none; border-radius: 8px; font-weight: bold; cursor: pointer;
+            text-transform: uppercase; transition: all 0.2s; font-family: var(--mc-font);
         }
-        .lvl-btn.active { background: #eef6ff; border-color: var(--accent-blue); color: var(--accent-blue); }
-
-        .admin-btn {
-            background: #f8f9fa; border: 1px solid #ddd; padding: 15px;
-            border-radius: 8px; cursor: pointer; font-weight: bold; color: #555;
-            margin-top: 10px; text-transform: uppercase; font-size: 0.8rem;
-            width: 100%; text-align: center; text-decoration: none; display: block;
-            box-sizing: border-box;
-        }
-
-        .footer-actions {
-            margin-top: 40px; display: flex; gap: 20px; width: 100%; max-width: 600px;
-        }
-        .main-btn {
-            flex: 1; padding: 20px; border-radius: 12px; border: none;
-            font-family: var(--mc-font); font-size: 1rem; cursor: pointer;
-        }
-        #save-btn { background: var(--accent-blue); color: white; }
-        #cancel-btn { background: #cbd5e0; color: #4a5568; }
+        .save-btn:active { transform: scale(0.98); background: #fff; }
+        .footer-text { font-size: 0.7rem; color: #666; margin-top: 15px; text-align: center; }
+        .nav-link { margin-top: 25px; color: #4a90e2; text-decoration: none; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <h1>Command Center</h1>
-    <div class="subtitle">Mission Configuration & Student Profile</div>
-
-    <div class="settings-grid">
+    <div class="card">
+        <div class="card-header">⚙️ System Core</div>
         
-        <div class="card">
-            <div class="card-header">👤 Student Profile</div>
-            <label>Date of Birth</label>
-            <input type="date" id="billy-dob">
-
-            <label>Challenge Level</label>
-            <div class="level-selector">
-                <button class="lvl-btn active" id="lvl-normal" onclick="setLevel('NORMAL')">NORMAL</button>
-                <button class="lvl-btn" id="lvl-experto" onclick="setLevel('EXPERTO')">EXPERTO</button>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">🔊 Voice Calibration</div>
-            <label>Selected Voice</label>
-            <select id="voice-select"></select>
-
-            <label>Reading Speed</label>
-            <div class="slider-row">
-                <input type="range" id="rate" min="0.5" max="1.5" step="0.1" oninput="updateVals()">
-                <span class="val-display" id="rate-val">1.0</span>
-            </div>
-
-            <label>Tone (Pitch)</label>
-            <div class="slider-row">
-                <input type="range" id="pitch" min="0.5" max="2.0" step="0.1" oninput="updateVals()">
-                <span class="val-display" id="pitch-val">1.0</span>
-            </div>
-
-            <button class="admin-btn" style="margin-top:20px; color:var(--accent-blue);" onclick="testSpeech()">Test Settings</button>
-        </div>
-
-        <div class="card">
-    <div class="card-header">⚙️ System Core</div>
-    <label>OpenAI API Key</label>
-    <input type="password" id="gemini-key" placeholder="Enter sk-...">
-    <p style="font-size: 0.7rem; color: #999; margin-top: 15px;">
-        This key enables dynamic curriculum generation via OpenAI.
-    </p>
-</div>
-        <div class="card">
-            <div class="card-header">🛠️ Admin Tools</div>
-            <p style="font-size: 0.75rem; color: #888;">System diagnostics and interface calibration.</p>
-            <button class="admin-btn" onclick="location.href='winadjust.html'">Open winadjust.html</button>
-            <button class="admin-btn" onclick="location.href='themes.html'">🎨 MANAGE THEMES</button>
-            <button class="admin-btn" style="color: #d9534f;" onclick="location.href='testing.html'">🛠️ API TESTER</button>
-        </div>
-
+        <label>OpenAI API Key</label>
+        <input type="password" id="openai-key" placeholder="Paste sk-...">
+        
+        <button class="save-btn" id="save-btn" onclick="saveSettings()">Save System Core</button>
+        
+        <p class="footer-text">
+            This key enables dynamic curriculum generation via OpenAI's 2026 intelligence engine.
+        </p>
     </div>
 
-    <div class="footer-actions">
-        <button id="save-btn" class="main-btn" onclick="saveAll()">SAVE CHANGES</button>
-        <button id="cancel-btn" class="main-btn" onclick="location.href='index.html'">CANCEL</button>
-    </div>
+    <a href="testing.html" class="nav-link">Run Model Discovery →</a>
+    <a href="index.html" class="nav-link" style="color: #999; font-size: 0.8rem;">Exit to Menu</a>
 
     <script>
-        let currentLevel = 'NORMAL';
-
-        function loadVoices() {
-            const select = document.getElementById('voice-select');
-            const voices = window.speechSynthesis.getVoices();
-            select.innerHTML = voices
-                .filter(v => v.lang.includes('es') || v.lang.includes('en'))
-                .map(v => `<option value="${v.name}">${v.name}</option>`).join('');
-            
-            select.value = localStorage.getItem('billy_voice') || '';
-        }
-
-        window.speechSynthesis.onvoiceschanged = loadVoices;
-
-        window.onload = () => {
-            loadVoices();
-            document.getElementById('gemini-key').value = localStorage.getItem('gemini_key') || '';
-            document.getElementById('billy-dob').value = localStorage.getItem('billy_dob') || '';
-            document.getElementById('rate').value = localStorage.getItem('billy_rate') || 1.0;
-            document.getElementById('pitch').value = localStorage.getItem('billy_pitch') || 1.0;
-            
-            setLevel(localStorage.getItem('billy_level') || 'NORMAL');
-            updateVals();
+        // 1. Load the key from memory on startup
+        window.onload = function() {
+            const savedKey = localStorage.getItem('openai-key');
+            if (savedKey) {
+                document.getElementById('openai-key').value = savedKey;
+            }
         };
 
-        function updateVals() {
-            document.getElementById('rate-val').innerText = document.getElementById('rate').value;
-            document.getElementById('pitch-val').innerText = document.getElementById('pitch').value;
-        }
+        // 2. The explicit route to saving the key
+        function saveSettings() {
+            const keyInput = document.getElementById('openai-key');
+            const saveBtn = document.getElementById('save-btn');
+            const keyValue = keyInput.value.trim();
 
-        function setLevel(lvl) {
-            currentLevel = lvl;
-            document.getElementById('lvl-normal').classList.toggle('active', lvl === 'NORMAL');
-            document.getElementById('lvl-experto').classList.toggle('active', lvl === 'EXPERTO');
-        }
-
-        function testSpeech() {
-            const msg = new SpeechSynthesisUtterance("Hola Billy, mission check complete.");
-            msg.voice = window.speechSynthesis.getVoices().find(v => v.name === document.getElementById('voice-select').value);
-            msg.rate = document.getElementById('rate').value;
-            msg.pitch = document.getElementById('pitch').value;
-            window.speechSynthesis.speak(msg);
-        }
-
-        function saveAll() {
-            localStorage.setItem('gemini_key', document.getElementById('gemini-key').value.trim());
-            localStorage.setItem('billy_dob', document.getElementById('billy-dob').value);
-            localStorage.setItem('billy_rate', document.getElementById('rate').value);
-            localStorage.setItem('billy_pitch', document.getElementById('pitch').value);
-            localStorage.setItem('billy_voice', document.getElementById('voice-select').value);
-            localStorage.setItem('billy_level', currentLevel);
-            
-            alert("Settings Synchronized.");
-            location.href = 'index.html';
+            if (keyValue.startsWith('sk-')) {
+                // Save to LocalStorage
+                localStorage.setItem('openai-key', keyValue);
+                
+                // Visual feedback for iPad users
+                const originalText = saveBtn.innerText;
+                saveBtn.innerText = "✅ CORE UPDATED";
+                saveBtn.style.background = "#ffffff";
+                
+                setTimeout(() => {
+                    saveBtn.innerText = originalText;
+                    saveBtn.style.background = "#76FF03";
+                }, 2000);
+            } else {
+                alert("Please enter a valid OpenAI key starting with 'sk-'");
+                keyInput.style.borderColor = "red";
+            }
         }
     </script>
+
 </body>
 </html>
