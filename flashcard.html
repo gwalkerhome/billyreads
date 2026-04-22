@@ -13,7 +13,7 @@
             align-items: center;
             text-align: center; 
             box-sizing: border-box;
-            transition: opacity 0.3s;
+            overflow: hidden;
         }
         #val-translation {
             color: #AACCFF; 
@@ -36,9 +36,7 @@
     <div id="target-sentence" class="dynamic-pane">CARGANDO MISIÓN...</div>
     <div id="val-translation" class="dynamic-pane"></div>
     
-    <button id="record-btn" class="dynamic-pane mc-btn">
-        <span class="label" style="display:none">COMUNICAR</span>
-    </button>
+    <button id="record-btn" class="dynamic-pane mc-btn"></button>
     <button id="audio-btn" class="dynamic-pane mc-btn" onclick="playAudio()"></button>
     <button id="val-btn" class="dynamic-pane mc-btn" onclick="toggleValenciano()">V</button>
     
@@ -46,7 +44,7 @@
 
     <script>
         function applyTheme() {
-            const themeId = parseInt(localStorage.getItem('bg_flashcard'));
+            const themeId = localStorage.getItem('bg_flashcard');
             if (!themeId) {
                 document.body.style.backgroundImage = "url('assets/minecraft.png')";
                 return;
@@ -56,7 +54,7 @@
                 const db = e.target.result;
                 const transaction = db.transaction("themes", "readonly");
                 const store = transaction.objectStore("themes");
-                const getRequest = store.get(themeId);
+                const getRequest = store.get(parseInt(themeId));
                 getRequest.onsuccess = () => {
                     const theme = getRequest.result;
                     if (theme && theme.data) document.body.style.backgroundImage = `url('${theme.data}')`;
@@ -65,8 +63,10 @@
         }
 
         function applyCalibration() {
-            const saved = JSON.parse(localStorage.getItem('ui_positions'));
-            if (!saved) return;
+            const savedData = localStorage.getItem('ui_positions');
+            if (!savedData) return;
+            const saved = JSON.parse(savedData);
+            
             const mapping = {
                 'pane-back': 'back-btn',
                 'pane-birch': 'subject-tag',
@@ -77,6 +77,7 @@
                 'pane-val-toggle': 'val-btn',
                 'pane-slab': 'live-transcript'
             };
+
             Object.keys(mapping).forEach(paneKey => {
                 const el = document.getElementById(mapping[paneKey]);
                 const pos = saved[paneKey];
