@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -23,16 +23,6 @@
 
         h1 { font-family: var(--mc-font); color: #2c3e50; margin-bottom: 5px; }
         .subtitle { color: #7f8c8d; margin-bottom: 30px; font-size: 0.9rem; }
-
-        /* Language Toggle */
-        .lang-toggle {
-            display: flex; gap: 10px; margin-bottom: 30px;
-        }
-        .toggle-btn {
-            padding: 10px 25px; border-radius: 20px; border: 1px solid #ddd;
-            background: white; cursor: pointer; font-weight: bold; color: #999;
-        }
-        .toggle-btn.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
 
         .settings-grid {
             display: grid;
@@ -58,12 +48,10 @@
             border-radius: 8px; box-sizing: border-box; background: #fafafa;
         }
 
-        /* Sliders */
         .slider-row { display: flex; justify-content: space-between; align-items: center; }
         input[type="range"] { flex-grow: 1; margin: 0 15px; }
         .val-display { font-weight: bold; color: var(--accent-blue); width: 30px; }
 
-        /* Level Selector */
         .level-selector { display: flex; gap: 10px; margin-top: 5px; }
         .lvl-btn {
             flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #e0e0e0;
@@ -75,9 +63,10 @@
             background: #f8f9fa; border: 1px solid #ddd; padding: 15px;
             border-radius: 8px; cursor: pointer; font-weight: bold; color: #555;
             margin-top: 10px; text-transform: uppercase; font-size: 0.8rem;
+            width: 100%; text-align: center; text-decoration: none; display: block;
+            box-sizing: border-box;
         }
 
-        /* Bottom Actions */
         .footer-actions {
             margin-top: 40px; display: flex; gap: 20px; width: 100%; max-width: 600px;
         }
@@ -94,17 +83,12 @@
     <h1>Command Center</h1>
     <div class="subtitle">Mission Configuration & Student Profile</div>
 
-    <div class="lang-toggle">
-        <button class="toggle-btn active" id="btn-esp" onclick="setLang('ESP')">ESP</button>
-        <button class="toggle-btn" id="btn-eng" onclick="setLang('ENG')">ENG</button>
-    </div>
-
     <div class="settings-grid">
         
         <div class="card">
             <div class="card-header">👤 Student Profile</div>
             <label>Date of Birth</label>
-            <input type="date" id="dob">
+            <input type="date" id="billy-dob">
 
             <label>Challenge Level</label>
             <div class="level-selector">
@@ -136,7 +120,7 @@
         <div class="card">
             <div class="card-header">⚙️ System Core</div>
             <label>Gemini API Key</label>
-            <input type="password" id="api-key" placeholder="Enter Key...">
+            <input type="password" id="gemini-key" placeholder="Enter Key...">
             <p style="font-size: 0.7rem; color: #999; margin-top: 15px;">
                 This key enables dynamic curriculum generation.
             </p>
@@ -145,8 +129,9 @@
         <div class="card">
             <div class="card-header">🛠️ Admin Tools</div>
             <p style="font-size: 0.75rem; color: #888;">System diagnostics and interface calibration.</p>
-            <button class="admin-btn" onclick="location.href='winadjust.html'">Open WinAdjust.html</button>
+            <button class="admin-btn" onclick="location.href='winadjust.html'">Open winadjust.html</button>
             <button class="admin-btn" onclick="location.href='themes.html'">🎨 MANAGE THEMES</button>
+            <button class="admin-btn" style="color: #d9534f;" onclick="location.href='testing.html'">🛠️ API TESTER</button>
         </div>
 
     </div>
@@ -157,10 +142,8 @@
     </div>
 
     <script>
-        let currentLang = 'ESP';
         let currentLevel = 'NORMAL';
 
-        // Load Voices
         function loadVoices() {
             const select = document.getElementById('voice-select');
             const voices = window.speechSynthesis.getVoices();
@@ -175,12 +158,11 @@
 
         window.onload = () => {
             loadVoices();
-            document.getElementById('api-key').value = localStorage.getItem('gemini_key') || '';
-            document.getElementById('dob').value = localStorage.getItem('billy_dob') || '';
+            document.getElementById('gemini-key').value = localStorage.getItem('gemini_key') || '';
+            document.getElementById('billy-dob').value = localStorage.getItem('billy_dob') || '';
             document.getElementById('rate').value = localStorage.getItem('billy_rate') || 1.0;
             document.getElementById('pitch').value = localStorage.getItem('billy_pitch') || 1.0;
             
-            setLang(localStorage.getItem('billy_lang') || 'ESP');
             setLevel(localStorage.getItem('billy_level') || 'NORMAL');
             updateVals();
         };
@@ -190,12 +172,6 @@
             document.getElementById('pitch-val').innerText = document.getElementById('pitch').value;
         }
 
-        function setLang(lang) {
-            currentLang = lang;
-            document.getElementById('btn-esp').classList.toggle('active', lang === 'ESP');
-            document.getElementById('btn-eng').classList.toggle('active', lang === 'ENG');
-        }
-
         function setLevel(lvl) {
             currentLevel = lvl;
             document.getElementById('lvl-normal').classList.toggle('active', lvl === 'NORMAL');
@@ -203,7 +179,7 @@
         }
 
         function testSpeech() {
-            const msg = new SpeechSynthesisUtterance("Hola Billy, ¿estás listo para la misión?");
+            const msg = new SpeechSynthesisUtterance("Hola Billy, mission check complete.");
             msg.voice = window.speechSynthesis.getVoices().find(v => v.name === document.getElementById('voice-select').value);
             msg.rate = document.getElementById('rate').value;
             msg.pitch = document.getElementById('pitch').value;
@@ -211,12 +187,11 @@
         }
 
         function saveAll() {
-            localStorage.setItem('gemini_key', document.getElementById('api-key').value);
-            localStorage.setItem('billy_dob', document.getElementById('dob').value);
+            localStorage.setItem('gemini_key', document.getElementById('gemini-key').value.trim());
+            localStorage.setItem('billy_dob', document.getElementById('billy-dob').value);
             localStorage.setItem('billy_rate', document.getElementById('rate').value);
             localStorage.setItem('billy_pitch', document.getElementById('pitch').value);
             localStorage.setItem('billy_voice', document.getElementById('voice-select').value);
-            localStorage.setItem('billy_lang', currentLang);
             localStorage.setItem('billy_level', currentLevel);
             
             alert("Settings Synchronized.");
