@@ -11,6 +11,7 @@
             display: flex;
             justify-content: center; align-items: center;
             text-align: center; box-sizing: border-box;
+            overflow: hidden;
         }
         #val-translation {
             color: #AACCFF; font-size: 1.2rem; font-style: italic;
@@ -24,6 +25,7 @@
     <div class="xp-container"><div id="energy-bar"></div></div>
 
     <button id="back-btn" class="dynamic-pane" onclick="window.location.href='index.html'"></button>
+    
     <div id="subject-tag" class="dynamic-pane">SINCRONIZANDO...</div>
     <div id="target-sentence" class="dynamic-pane">CARGANDO MISIÓN...</div>
     <div id="val-translation" class="dynamic-pane"></div>
@@ -36,7 +38,7 @@
 
     <script>
         function applyTheme() {
-            const themeId = parseInt(localStorage.getItem('bg_flashcard'));
+            const themeId = localStorage.getItem('bg_flashcard');
             if (!themeId) {
                 document.body.style.backgroundImage = "url('assets/minecraft.png')";
                 return;
@@ -45,7 +47,7 @@
             request.onsuccess = e => {
                 const db = e.target.result;
                 const store = db.transaction("themes", "readonly").objectStore("themes");
-                const getRequest = store.get(themeId);
+                const getRequest = store.get(parseInt(themeId));
                 getRequest.onsuccess = () => {
                     if (getRequest.result) document.body.style.backgroundImage = `url('${getRequest.result.data}')`;
                 };
@@ -53,7 +55,9 @@
         }
 
         function applyCalibration() {
-            const saved = JSON.parse(localStorage.getItem('ui_positions') || '{}');
+            const savedData = localStorage.getItem('ui_positions');
+            if (!savedData) return;
+            const saved = JSON.parse(savedData);
             const mapping = {
                 'pane-back': 'back-btn',
                 'pane-birch': 'subject-tag',
@@ -64,20 +68,20 @@
                 'pane-val-toggle': 'val-btn',
                 'pane-slab': 'live-transcript'
             };
-            Object.keys(mapping).forEach(paneKey => {
-                const el = document.getElementById(mapping[paneKey]);
-                const pos = saved[paneKey];
-                if (el && pos) {
-                    el.style.top = pos.t + '%';
-                    el.style.left = pos.l + '%';
-                    el.style.width = pos.w + '%';
-                    el.style.height = pos.h + '%';
+            Object.keys(mapping).forEach(k => {
+                const el = document.getElementById(mapping[k]);
+                if (el && saved[k]) {
+                    el.style.top = saved[k].t + '%';
+                    el.style.left = saved[k].l + '%';
+                    el.style.width = saved[k].w + '%';
+                    el.style.height = saved[k].h + '%';
                 }
             });
         }
 
         function toggleValenciano() {
-            document.getElementById('val-translation').classList.toggle('visible');
+            const trans = document.getElementById('val-translation');
+            if (trans) trans.classList.toggle('visible');
         }
 
         window.onload = () => {
