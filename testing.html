@@ -1,169 +1,96 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DEBUG: Minecraft Asset Calibration</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Diagnostics: BillyReads</title>
     <style>
-        :root {
-            --mc-font: 'Arial Black', Gadget, sans-serif;
-            /* Debug Colors */
-            --pane-birch: rgba(255, 255, 0, 0.4);   /* Yellow */
-            --pane-stone: rgba(0, 255, 255, 0.4);   /* Cyan */
-            --pane-buttons: rgba(255, 0, 255, 0.4); /* Magenta */
-            --pane-slab: rgba(0, 255, 0, 0.4);      /* Green */
-            --pane-back: rgba(255, 0, 0, 0.5);      /* Red */
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-            /* Exact scaling to match your iPad view */
-            background: #000 url('assets/minecraft.png') no-repeat center center fixed;
-            background-size: 100% 100%; 
-            height: 100vh;
-            width: 100vw;
-            overflow: hidden;
-            font-family: var(--mc-font);
-        }
-
-        /* MASTER GRID (Matches flashstyle.css) */
-        .debug-overlay {
-            display: grid;
-            /* 1: Ceiling(10), 2: Birch(15), 3: Gap(5), 4: Stone(45), 5: Buttons(15), 6: Slab(10) */
-            grid-template-rows: 10% 15% 5% 45% 15% 10%; 
-            height: 100vh;
-            width: 100vw;
-            position: relative;
-        }
-
-        /* DEBUG LABELS */
-        .debug-label {
-            position: absolute;
-            top: 2px;
-            left: 5px;
-            font-size: 10px;
-            color: white;
-            background: black;
-            padding: 2px 5px;
-        }
-
-        /* ZONE 1: BIRCH SIGN */
-        .zone-birch {
-            grid-row: 2;
-            background: var(--pane-birch);
-            border: 2px dashed yellow;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-        }
-
-        /* ZONE 2: STONE FRAME */
-        .zone-stone {
-            grid-row: 4;
-            background: var(--pane-stone);
-            border: 2px dashed cyan;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            margin: 0 15%; /* Visualizing the horizontal padding */
-        }
-
-        /* ZONE 3: BUTTONS */
-        .zone-buttons {
-            grid-row: 5;
-            background: var(--pane-buttons);
-            border: 2px dashed magenta;
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            align-items: center;
-            position: relative;
-        }
-
-        .debug-btn {
-            width: 110px;
-            height: 110px;
-            border: 3px solid white;
-            background: rgba(255,255,255,0.2);
-        }
-
-        /* ZONE 4: BOTTOM SLAB */
-        .zone-slab {
-            grid-row: 6;
-            background: var(--pane-slab);
-            border: 2px dashed lime;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-        }
-
-        /* ZONE 5: BACK BUTTON */
-        .zone-back {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            width: 80px;
-            height: 80px;
-            background: var(--pane-back);
-            border: 2px solid red;
-            z-index: 100;
-        }
-
-        .coord-info {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            background: rgba(0,0,0,0.8);
-            color: #76FF03;
-            padding: 10px;
-            font-size: 12px;
-            border: 1px solid #333;
-            pointer-events: none;
-        }
+        body { font-family: sans-serif; padding: 20px; background: #f4f4f9; color: #333; line-height: 1.6; }
+        .test-box { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h2 { color: #4a90e2; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .status { padding: 15px; margin: 15px 0; border-radius: 8px; font-weight: bold; }
+        .idle { background: #eee; }
+        .working { background: #fff3cd; color: #856404; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        pre { background: #222; color: #0f0; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 13px; }
+        .btn-test { width: 100%; padding: 15px; background: #4a90e2; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .back-link { display: block; margin-top: 20px; text-align: center; color: #666; text-decoration: none; font-size: 14px; }
     </style>
 </head>
 <body>
 
-    <div class="zone-back">
-        <span class="debug-label">BACK BTN</span>
+<div class="test-box">
+    <h2>🛠️ API Connection Test</h2>
+    <p>This page tests if your <strong>Gemini API Key</strong> is valid and if the <strong>2026 Model</strong> is responding.</p>
+
+    <div id="status-box" class="status idle">Ready to test connection...</div>
+
+    <button class="btn-test" onclick="runTest()">RUN MISSION CHECK</button>
+
+    <div id="results" style="display:none; margin-top:20px;">
+        <label><strong>Server Response:</strong></label>
+        <pre id="raw-output">Waiting for data...</pre>
     </div>
 
-    <div class="debug-overlay">
-        <div class="zone-birch">
-            <span class="debug-label">BIRCH_SIGN (Subject/Materia)</span>
-            <div style="color: #3F3F3F;">TEST: LENGUA</div>
-        </div>
+    <a href="settings.html" class="back-link">⬅ Back to Command Center</a>
+</div>
 
-        <div></div>
+<script>
+    async function runTest() {
+        const statusBox = document.getElementById('status-box');
+        const resultsDiv = document.getElementById('results');
+        const output = document.getElementById('raw-output');
+        
+        // Handshake: Pulling the key you just saved in Settings
+        const apiKey = localStorage.getItem('gemini_key');
+        
+        if (!apiKey) {
+            statusBox.className = "status error";
+            statusBox.innerText = "❌ FAILED: No API Key found in storage.";
+            return;
+        }
 
-        <div class="zone-stone">
-            <span class="debug-label">STONE_FRAME (Main Sentence)</span>
-            <div style="color: white; text-align: center; font-size: 24px;">
-                ¿Cómo se dice "Apple" en español?
-            </div>
-        </div>
+        statusBox.className = "status working";
+        statusBox.innerText = "📡 CONTACTING GEMINI SERVERS...";
+        resultsDiv.style.display = "block";
+        output.innerText = "Sending request to: v1beta/models/gemini-3.1-flash-lite-preview...";
 
-        <div class="zone-buttons">
-            <span class="debug-label">CONTROLS (TNT / Megaphone)</span>
-            <div class="debug-btn"></div>
-            <div class="debug-btn"></div>
-        </div>
+        // The 2026 Frontier Endpoint
+        const model = "gemini-3.1-flash-lite-preview";
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-        <div class="zone-slab">
-            <span class="debug-label">BOTTOM_SLAB (Transcript)</span>
-            <div style="color: #76FF03;">Test: Escuchando Billy...</div>
-        </div>
-    </div>
+        const payload = {
+            contents: [{
+                parts: [{ text: "Respond with only one word: 'CONNECTED'" }]
+            }]
+        };
 
-    <div class="coord-info">
-        <strong>CALIBRATION MODE</strong><br>
-        Scaling: 100% Width / 100% Height<br>
-        iPad Aspect Ratio Check: ACTIVE
-    </div>
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                statusBox.className = "status success";
+                statusBox.innerText = "✅ SUCCESS: Connection Established!";
+                output.innerText = JSON.stringify(data, null, 2);
+            } else {
+                statusBox.className = "status error";
+                statusBox.innerText = `❌ ERROR ${response.status}: ${data.error ? data.error.message : 'Unknown Error'}`;
+                output.innerText = JSON.stringify(data, null, 2);
+            }
+        } catch (err) {
+            statusBox.className = "status error";
+            statusBox.innerText = "❌ NETWORK CRASH: Could not reach Google.";
+            output.innerText = err.toString();
+        }
+    }
+</script>
 
 </body>
 </html>
