@@ -1,4 +1,4 @@
-// flashapp.js - Final Verified Version
+// flashapp.js - Reverted to Verified 2.5 Model
 let flashcards = [];
 let currentIndex = 0;
 let isListening = false;
@@ -10,15 +10,15 @@ async function fetchJourneyCards() {
     const target = document.getElementById('target-sentence');
 
     if (!apiKey) {
-        if (target) target.innerText = "Check Settings: No API Key";
+        if (target) target.innerText = "Error: Falta API Key";
         return;
     }
 
-    // VERIFIED MODEL FROM YOUR DISCOVERY TEST
-    const model = "gemini-3.1-flash-lite-preview";
+    // USING GEMINI 2.5 FLASH AS VERIFIED LAST NIGHT
+    const model = "gemini-2.5-flash";
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-    const prompt = `Actúa como un Director de Primaria. Genera 20 tarjetas JSON para un alumno nacido en ${dob}.
+    const prompt = `Actúa como un profesor de primaria. Genera 20 tarjetas JSON para un alumno nacido en ${dob}.
     Dificultad: ${difficulty}. 
     FORMATO JSON PURO: [{"es": "frase", "val": "traducción", "cat": "TEMA", "keywords": ["palabra"]}]`;
 
@@ -32,7 +32,7 @@ async function fetchJourneyCards() {
         const data = await response.json();
         let rawText = data.candidates[0].content.parts[0].text;
         
-        // Clean potential AI chatter
+        // Ensure we only parse the JSON part
         const start = rawText.indexOf('[');
         const end = rawText.lastIndexOf(']');
         if (start !== -1 && end !== -1) {
@@ -42,8 +42,8 @@ async function fetchJourneyCards() {
         flashcards = JSON.parse(rawText);
         loadCard();
     } catch (err) {
-        console.error("Critical Failure:", err);
-        if (target) target.innerText = "Error: Misión fallida";
+        console.error(err);
+        if (target) target.innerText = "Error de conexión con 2.5";
     }
 }
 
@@ -51,11 +51,14 @@ function loadCard() {
     if (!flashcards[currentIndex]) return;
     const card = flashcards[currentIndex];
     
-    document.getElementById('target-sentence').innerText = card.es;
-    document.getElementById('subject-tag').innerText = card.cat;
-    document.getElementById('val-translation').innerText = card.val;
-    
+    const sentenceEl = document.getElementById('target-sentence');
+    const tagEl = document.getElementById('subject-tag');
+    const transEl = document.getElementById('val-translation');
     const bar = document.getElementById('energy-bar');
+
+    if (sentenceEl) sentenceEl.innerText = card.es;
+    if (tagEl) tagEl.innerText = card.cat;
+    if (transEl) transEl.innerText = card.val;
     if (bar) bar.style.width = ((currentIndex / flashcards.length) * 100) + '%';
 }
 
@@ -63,7 +66,8 @@ function playAudio() {
     if (!flashcards[currentIndex]) return;
     window.speechSynthesis.cancel();
     const msg = new SpeechSynthesisUtterance(flashcards[currentIndex].es);
-    msg.voice = window.speechSynthesis.getVoices().find(v => v.name === localStorage.getItem('billy_voice'));
+    const savedVoice = localStorage.getItem('billy_voice');
+    msg.voice = window.speechSynthesis.getVoices().find(v => v.name === savedVoice);
     msg.rate = parseFloat(localStorage.getItem('billy_rate') || 1.0);
     msg.pitch = parseFloat(localStorage.getItem('billy_pitch') || 1.0);
     msg.lang = 'es-ES';
@@ -75,10 +79,14 @@ if (SpeechRecognition) {
     const recognition = new SpeechRecognition();
     recognition.lang = 'es-ES';
     recognition.onresult = (event) => {
-        const text = event.results[event.results.length - 1][0].transcript.toLowerCase();
-        document.getElementById('live-transcript').innerText = text.toUpperCase();
-        if (event.results[event.results.length - 1].isFinal) {
-            if (flashcards[currentIndex].keywords.some(k => text.includes(k.toLowerCase()))) {
+        const result = event.results[event.results.length - 1];
+        const text = result[0].transcript;
+        const liveDisplay = document.getElementById('live-transcript');
+        if (liveDisplay) liveDisplay.innerText = text.toUpperCase();
+        
+        if (result.isFinal) {
+            const match = flashcards[currentIndex].keywords.some(k => text.toLowerCase().includes(k.toLowerCase()));
+            if (match) {
                 currentIndex++;
                 setTimeout(loadCard, 500);
             }
