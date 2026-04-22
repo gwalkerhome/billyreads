@@ -1,4 +1,4 @@
-// flashapp.js - Final 2026 Synchronized Version
+// flashapp.js - Full Integrated Logic
 let flashcards = [];
 let currentIndex = 0;
 let isListening = false;
@@ -22,8 +22,10 @@ async function fetchJourneyCards() {
     const difficulty = localStorage.getItem('billy_level') || 'NORMAL';
     const schoolYear = getSchoolYear();
     
+    const targetDisplay = document.getElementById('target-sentence');
+
     if (!apiKey) {
-        document.getElementById('target-sentence').innerText = "Configura la API Key en Ajustes";
+        if (targetDisplay) targetDisplay.innerText = "Configura la API Key en Ajustes";
         return;
     }
 
@@ -31,8 +33,9 @@ async function fetchJourneyCards() {
         ? "Usa vocabulario sofisticado y conceptos científicos detallados." 
         : "Usa un lenguaje claro y adecuado para su edad.";
 
-    // CORRECTED MODEL FOR 2026: gemini-3-flash-preview
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+    // THE VERIFIED 2026 ENDPOINT
+    const model = "gemini-3.1-flash-lite-preview";
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
     const prompt = `Actúa como un Director de Primaria en España. Genera 20 tarjetas de aprendizaje para un alumno de ${schoolYear}.
     ${difficultyInstruction}
@@ -49,16 +52,12 @@ async function fetchJourneyCards() {
             body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
         });
         
-        if (!response.ok) {
-            const errorBody = await response.json();
-            console.error("API Response Error:", errorBody);
-            throw new Error(`Status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
         const data = await response.json();
         let rawText = data.candidates[0].content.parts[0].text;
         
-        // Robust JSON extraction
+        // Extract JSON from potential AI markdown
         const start = rawText.indexOf('[');
         const end = rawText.lastIndexOf(']');
         if (start !== -1 && end !== -1) {
@@ -69,8 +68,8 @@ async function fetchJourneyCards() {
         currentIndex = 0;
         loadCard();
     } catch (err) {
-        console.error("Fetch Failure:", err);
-        document.getElementById('target-sentence').innerText = "Error cargando la misión. Revisa la clave API.";
+        console.error("API Error:", err);
+        if (targetDisplay) targetDisplay.innerText = "Error cargando la misión.";
     }
 }
 
@@ -80,29 +79,40 @@ function loadCard() {
         return;
     }
     const card = flashcards[currentIndex];
-    document.getElementById('target-sentence').innerText = card.es;
-    document.getElementById('subject-tag').innerText = card.cat;
-    document.getElementById('val-translation').innerText = card.val;
     
-    const progress = ((currentIndex) / flashcards.length) * 100;
-    // Handshake fix: Using the energy-bar ID we established in the CSS
+    const target = document.getElementById('target-sentence');
+    const tag = document.getElementById('subject-tag');
+    const trans = document.getElementById('val-translation');
     const bar = document.getElementById('energy-bar');
-    if (bar) bar.style.width = `${progress}%`;
+
+    if (target) target.innerText = card.es;
+    if (tag) tag.innerText = card.cat;
+    if (trans) trans.innerText = card.val;
+    
+    if (bar) {
+        const progress = ((currentIndex) / flashcards.length) * 100;
+        bar.style.width = `${progress}%`;
+    }
 }
 
 function playAudio() {
     if (!flashcards[currentIndex]) return;
     window.speechSynthesis.cancel();
     const msg = new SpeechSynthesisUtterance(flashcards[currentIndex].es);
-    msg.voice = window.speechSynthesis.getVoices().find(v => v.name === localStorage.getItem('billy_voice'));
+    
+    const savedVoice = localStorage.getItem('billy_voice');
+    const voices = window.speechSynthesis.getVoices();
+    const voice = voices.find(v => v.name === savedVoice);
+    
+    if (voice) msg.voice = voice;
     msg.rate = parseFloat(localStorage.getItem('billy_rate') || 1.0);
     msg.pitch = parseFloat(localStorage.getItem('billy_pitch') || 1.0);
     msg.lang = 'es-ES';
     window.speechSynthesis.speak(msg);
 }
 
-// Recognition Setup
-const SpeechRecognition = window.SpeechRecognition || window.webkitRecognition;
+// Voice Recognition
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 if (SpeechRecognition) {
     const recognition = new SpeechRecognition();
     recognition.lang = 'es-ES';
@@ -126,27 +136,28 @@ if (SpeechRecognition) {
             let text = "";
             for (let i = event.resultIndex; i < event.results.length; ++i) {
                 text = event.results[i][0].transcript;
-                if (event.results[i].isFinal) processResult(text.toLowerCase());
+                if (event.results[i].isFinal) {
+                    const card = flashcards[currentIndex];
+                    const cleanText = text.toLowerCase();
+                    const isSuccess = card.keywords.some(k => cleanText.includes(k.toLowerCase()));
+                    if (isSuccess) {
+                        currentIndex++;
+                        setTimeout(loadCard, 1000);
+                    }
+                }
             }
-            const transcriptDiv = document.getElementById('live-transcript');
-            if (transcriptDiv) transcriptDiv.innerText = text.toUpperCase();
+            const liveDisplay = document.getElementById('live-transcript');
+            if (liveDisplay) liveDisplay.innerText = text.toUpperCase();
+        };
+
+        recognition.onend = () => {
+            isListening = false;
+            recordBtn.style.background = "rgba(255, 255, 255, 0.1)";
         };
     }
 }
 
-function processResult(spokenText) {
-    const card = flashcards[currentIndex];
-    const isSuccess = card.keywords.some(k => spokenText.includes(k.toLowerCase()));
-    if (isSuccess) {
-        currentIndex++;
-        setTimeout(loadCard, 1000);
-    }
-    isListening = false;
-    const recordBtn = document.getElementById('record-btn');
-    if (recordBtn) recordBtn.style.background = "rgba(255, 255, 255, 0.1)";
-}
-
-// Initialize
+// Start
 if (localStorage.getItem('gemini_key')) {
     fetchJourneyCards();
 }
