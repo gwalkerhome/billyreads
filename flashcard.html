@@ -1,175 +1,22 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Misión: Minecraft Flashcards</title>
-    <style>
-        :root {
-            --mc-font: 'Arial Black', Gadget, sans-serif;
-            --mc-white: #ffffff;
-            --mc-green: #76FF03;
-        }
+function loadBackground() {
+    const themeId = parseInt(localStorage.getItem('bg_flashcards'));
+    if (!themeId) return;
 
-        body {
-            margin: 0; padding: 0;
-            background: #000 url('assets/minecraft.png') no-repeat center center fixed;
-            background-size: 100% 100%; 
-            height: 100vh; width: 100vw;
-            overflow: hidden; font-family: var(--mc-font);
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-        }
-
-        /* Dynamic Windows - Initially invisible until calibration applies */
-        .dynamic-pane {
-            position: absolute;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            box-sizing: border-box;
-            transition: opacity 0.3s;
-        }
-
-        #back-btn { cursor: pointer; border: none; background: transparent; }
-
-        #subject-tag {
-            color: #3F3F3F; /* Minecraft Sign Text Color */
-            font-size: 1.4rem;
-            text-transform: uppercase;
-        }
-
-        #target-sentence {
-            color: var(--mc-white);
-            font-size: 2rem;
-            padding: 20px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-        }
-
-        #val-text-box {
-            color: #AACCFF;
-            font-size: 1.2rem;
-            font-style: italic;
-            opacity: 0; /* Hidden until toggled */
-            transition: opacity 0.3s;
-        }
-
-        #val-text-box.visible { opacity: 1; }
-
-        /* Button Stage 1 Design */
-        .mc-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 3px solid var(--mc-white);
-            cursor: pointer;
-            border-radius: 4px;
-        }
-        .mc-btn:active { background: rgba(255, 255, 255, 0.4); }
-
-        #live-transcript {
-            color: var(--mc-green);
-            font-size: 1rem;
-            text-shadow: 1px 1px 2px black;
-        }
-
-        /* Error Message Style */
-        .error-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7); color: white;
-            display: none; justify-content: center; align-items: center; z-index: 1000;
-        }
-    </style>
-</head>
-<body>
-
-    <button id="back-btn" class="dynamic-pane" onclick="window.location.href='index.html'"></button>
-    
-    <div id="subject-tag" class="dynamic-pane">CARGANDO...</div>
-    
-    <div id="target-sentence" class="dynamic-pane">Sincronizando misión...</div>
-    
-    <div id="val-text-box" class="dynamic-pane"></div>
-    
-    <button id="record-btn" class="dynamic-pane mc-btn"></button>
-    <button id="audio-btn" class="dynamic-pane mc-btn" onclick="playCurrentAudio()"></button>
-    
-    <button id="val-btn" class="dynamic-pane mc-btn" onclick="toggleValenciano()">V</button>
-    
-    <div id="live-transcript" class="dynamic-pane">Esperando señal...</div>
-
-    <div id="error-screen" class="error-overlay">Error de Conexión</div>
-
-    <script>
-        let currentCard = null;
-
-        // 1. THE MASTER STROKE: Position Assets based on winadjust.html
-        function applyCalibration() {
-            const saved = JSON.parse(localStorage.getItem('ui_positions'));
-            if (!saved) {
-                console.warn("No calibration found. Using default layout.");
-                return;
+    const request = indexedDB.open("ThemeDB", 1);
+    request.onsuccess = e => {
+        const db = e.target.result;
+        db.transaction("themes").objectStore("themes").get(themeId).onsuccess = event => {
+            const theme = event.target.result;
+            if (theme) {
+                document.body.style.backgroundImage = `url('${theme.data}')`;
             }
-
-            const mapping = {
-                'pane-back': 'back-btn',
-                'pane-birch': 'subject-tag',
-                'pane-stone': 'target-sentence',
-                'pane-record': 'record-btn',
-                'pane-speech': 'audio-btn',
-                'pane-valenciano': 'val-text-box',
-                'pane-val-toggle': 'val-btn',
-                'pane-slab': 'live-transcript'
-            };
-
-            Object.keys(mapping).forEach(paneKey => {
-                const elementId = mapping[paneKey];
-                const el = document.getElementById(elementId);
-                const pos = saved[paneKey];
-                if (el && pos) {
-                    el.style.top = pos.t + '%';
-                    el.style.left = pos.l + '%';
-                    el.style.width = pos.w + '%';
-                    el.style.height = pos.h + '%';
-                }
-            });
-        }
-
-        // 2. Valenciano Toggle Logic
-        function toggleValenciano() {
-            const box = document.getElementById('val-text-box');
-            box.classList.toggle('visible');
-        }
-
-        // 3. Audio Engine
-        function playCurrentAudio() {
-            if (!currentCard) return;
-            const utterance = new SpeechSynthesisUtterance(currentCard.spanish);
-            utterance.voice = window.speechSynthesis.getVoices().find(v => v.name === localStorage.getItem('billy_voice'));
-            utterance.rate = localStorage.getItem('billy_rate') || 1.0;
-            utterance.pitch = localStorage.getItem('billy_pitch') || 1.0;
-            window.speechSynthesis.speak(utterance);
-        }
-
-        // 4. Initialize Page
-        window.onload = () => {
-            applyCalibration();
-            
-            // Temporary Placeholder for AI connection
-            setTimeout(() => {
-                currentCard = {
-                    subject: "Lengua",
-                    spanish: "¿Qué es un sustantivo?",
-                    valenciano: "Què és un substantiu?"
-                };
-                
-                document.getElementById('subject-tag').innerText = currentCard.subject;
-                document.getElementById('target-sentence').innerText = currentCard.spanish;
-                document.getElementById('val-text-box').innerText = currentCard.valenciano;
-            }, 1500);
         };
+    };
+}
 
-        // Listen for voice changed to ensure we have voices ready
-        window.speechSynthesis.onvoiceschanged = () => { console.log("Voices Loaded"); };
-    </script>
-</body>
-</html>
+// Call this inside your window.onload
+window.onload = () => {
+    applyCalibration();
+    loadBackground();
+    // ... existing mission logic
+};
