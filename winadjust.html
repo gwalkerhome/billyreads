@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WinAdjust: Professional Calibrator</title>
+    <title>WinAdjust: UI Calibrator & Architect</title>
     <style>
         :root { --mc-font: 'Arial Black', sans-serif; }
         body {
@@ -11,7 +11,7 @@
             background: #000 url('assets/minecraft.png') no-repeat center center fixed;
             background-size: 100% 100%; 
             height: 100vh; width: 100vw;
-            overflow: hidden; font-family: var(--mc-font);
+            overflow-x: hidden; font-family: var(--mc-font);
         }
         .pane {
             position: absolute; border: 2px dashed rgba(255,255,255,0.5);
@@ -21,20 +21,26 @@
         }
         .active { border: 4px solid #76FF03 !important; background: rgba(118, 255, 3, 0.2) !important; z-index: 100; }
         
-        /* Control Panel */
         #control-panel {
             position: fixed; right: 20px; top: 20px; width: 260px;
-            background: rgba(0,0,0,0.9); color: #76FF03; padding: 20px;
+            background: rgba(0,0,0,0.95); color: #76FF03; padding: 20px;
             border-radius: 15px; border: 2px solid #333; z-index: 1000;
         }
         input[type=range] { width: 100%; margin: 8px 0; }
         button { 
             width: 100%; padding: 12px; margin-top: 10px; border: none; 
-            border-radius: 5px; font-weight: bold; cursor: pointer;
+            border-radius: 5px; font-weight: bold; cursor: pointer; text-transform: uppercase;
         }
         #save-btn { background: #76FF03; color: black; }
+        #blueprint-btn { background: #4a90e2; color: white; }
         #back-btn { background: #444; color: white; }
         .pos-label { font-size: 11px; color: #aaa; margin-bottom: 10px; display: block; }
+        
+        #blueprint-box {
+            width: 90%; max-width: 800px; height: 150px; margin: 20px auto; 
+            display: none; background: #111; color: #76FF03; 
+            font-family: monospace; font-size: 12px; padding: 15px; border: 1px solid #4a90e2;
+        }
     </style>
 </head>
 <body>
@@ -42,13 +48,10 @@
     <div id="pane-back" class="pane" onclick="selectPane('pane-back')">BACK</div>
     <div id="pane-birch" class="pane" onclick="selectPane('pane-birch')">SUBJECT</div>
     <div id="pane-stone" class="pane" onclick="selectPane('pane-stone')">SENTENCE</div>
-    
     <div id="pane-record" class="pane" onclick="selectPane('pane-record')" style="background:rgba(255,0,0,0.2)">TNT (REC)</div>
     <div id="pane-speech" class="pane" onclick="selectPane('pane-speech')" style="background:rgba(255,255,0,0.2)">MEGA (VOICE)</div>
-    
     <div id="pane-valenciano" class="pane" onclick="selectPane('pane-valenciano')" style="background:rgba(0,0,255,0.2)">VAL TEXT</div>
     <div id="pane-val-toggle" class="pane" onclick="selectPane('pane-val-toggle')" style="background:rgba(255,255,255,0.2)">VAL TOGGLE</div>
-    
     <div id="pane-slab" class="pane" onclick="selectPane('pane-slab')">TRANSCRIPT</div>
 
     <div id="control-panel">
@@ -61,18 +64,22 @@
         <label>Height %</label><input type="range" id="val-height" min="1" max="100" oninput="updateUI()">
         
         <button id="save-btn" onclick="savePositions()">SAVE CALIBRATION</button>
+        <button id="blueprint-btn" onclick="generateBlueprint()">GET GEMINI PROMPT INFO</button>
         <button id="back-btn" onclick="window.location.href='settings.html'">BACK TO SETTINGS</button>
     </div>
 
+    <center>
+        <textarea id="blueprint-box" readonly placeholder="Blueprint data will appear here..."></textarea>
+    </center>
+
     <script>
         let activeId = null;
-        // Updated defaults for the new zones
         const defaultPos = {
             'pane-back': {t:2, l:2, w:10, h:12},
             'pane-birch': {t:10, l:30, w:40, h:10},
             'pane-stone': {t:25, l:20, w:60, h:45},
-            'pane-record': {t:72, l:43, w:7, h:12},   /* Default TNT spot */
-            'pane-speech': {t:72, l:50, w:7, h:12},   /* Default Mega spot */
+            'pane-record': {t:72, l:43, w:7, h:12},
+            'pane-speech': {t:72, l:50, w:7, h:12},
             'pane-valenciano': {t:83, l:30, w:40, h:8},
             'pane-val-toggle': {t:83, l:90, w:5, h:8},
             'pane-slab': {t:92, l:25, w:50, h:6}
@@ -126,7 +133,26 @@
 
         function savePositions() {
             localStorage.setItem('ui_positions', JSON.stringify(positions));
-            alert("System Calibrated! Assets are now locked to these coordinates.");
+            alert("System Calibrated!");
+        }
+
+        function generateBlueprint() {
+            const bBox = document.getElementById('blueprint-box');
+            bBox.style.display = 'block';
+            
+            let promptInfo = "### UI LAYOUT BLUEPRINT ###\n";
+            promptInfo += "Create a 16:9 Minecraft background with these object centers:\n\n";
+            
+            Object.keys(positions).forEach(id => {
+                const p = positions[id];
+                const name = id.replace('pane-', '').toUpperCase();
+                const centerX = p.l + (p.w / 2);
+                const centerY = p.t + (p.h / 2);
+                promptInfo += `- ${name}: ${centerX}% horizontal, ${centerY}% vertical.\n`;
+            });
+            
+            bBox.value = promptInfo;
+            bBox.select();
         }
 
         init();
