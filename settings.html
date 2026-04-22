@@ -3,89 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BillyReads: System Settings</title>
+    <title>BillyReads: Settings</title>
     <style>
-        :root { --mc-font: 'Arial Black', sans-serif; }
-        body { 
-            background: #1a1a1a; color: white; font-family: sans-serif; 
-            margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center;
-        }
-        .card {
-            background: #2a2a2a; padding: 20px; border-radius: 15px; 
-            border: 2px solid #444; width: 100%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        .card-header {
-            font-family: var(--mc-font); font-size: 1.2rem; color: #76FF03; margin-bottom: 20px;
-            display: flex; align-items: center; gap: 10px;
-        }
-        label { display: block; margin-bottom: 8px; font-weight: bold; color: #aaa; font-size: 0.9rem; }
-        input {
-            width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444;
-            background: #111; color: white; font-size: 1rem; box-sizing: border-box;
-            margin-bottom: 10px;
-        }
-        .save-btn {
-            width: 100%; padding: 15px; background: #76FF03; color: black;
-            border: none; border-radius: 8px; font-weight: bold; cursor: pointer;
-            text-transform: uppercase; transition: all 0.2s; font-family: var(--mc-font);
-        }
-        .save-btn:active { transform: scale(0.98); background: #fff; }
-        .footer-text { font-size: 0.7rem; color: #666; margin-top: 15px; text-align: center; }
-        .nav-link { margin-top: 25px; color: #4a90e2; text-decoration: none; font-weight: bold; }
+        body { font-family: sans-serif; padding: 20px; background-color: #f4f4f9; color: #333; }
+        .container { max-width: 500px; margin: 0 auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h2 { color: #4a90e2; margin-top: 0; }
+        .card { border: 1px solid #e0e0e0; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+        .card-header { font-weight: bold; color: #555; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        label { display: block; margin-top: 10px; font-size: 0.85rem; color: #666; }
+        input, select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        .save-btn { width: 100%; padding: 15px; background: #4a90e2; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 1rem; }
+        .save-btn:active { background: #357abd; }
+        .nav-links { margin-top: 25px; display: flex; flex-direction: column; gap: 12px; border-top: 1px solid #eee; padding-top: 20px; }
+        .nav-links a { color: #4a90e2; text-decoration: none; font-weight: bold; font-size: 0.9rem; }
+        .nav-links a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
 
+<div class="container">
+    <h2>Settings & Core</h2>
+
     <div class="card">
         <div class="card-header">⚙️ System Core</div>
-        
         <label>OpenAI API Key</label>
-        <input type="password" id="openai-key" placeholder="Paste sk-...">
-        
-        <button class="save-btn" id="save-btn" onclick="saveSettings()">Save System Core</button>
-        
-        <p class="footer-text">
-            This key enables dynamic curriculum generation via OpenAI's 2026 intelligence engine.
-        </p>
+        <input type="password" id="openai-key" placeholder="sk-...">
+        <p style="font-size: 0.7rem; color: #888; margin-top: 10px;">Enables curriculum generation via OpenAI.</p>
     </div>
 
-    <a href="testing.html" class="nav-link">Run Model Discovery →</a>
-    <a href="index.html" class="nav-link" style="color: #999; font-size: 0.8rem;">Exit to Menu</a>
+    <div class="card">
+        <div class="card-header">👦 Student Profile</div>
+        <label>Billy's Date of Birth</label>
+        <input type="date" id="billy_dob">
+        
+        <label>Learning Level</label>
+        <select id="billy_level">
+            <option value="NORMAL">NORMAL</option>
+            <option value="EXPERTO">EXPERTO</option>
+        </select>
+    </div>
 
-    <script>
-        // 1. Load the key from memory on startup
-        window.onload = function() {
-            const savedKey = localStorage.getItem('openai-key');
-            if (savedKey) {
-                document.getElementById('openai-key').value = savedKey;
-            }
-        };
+    <div class="card">
+        <div class="card-header">🗣️ Speech Engine</div>
+        <label>Voice</label>
+        <select id="billy_voice"></select>
+        
+        <label>Speed & Pitch</label>
+        <div style="display:flex; gap:10px;">
+            <input type="range" id="billy_rate" min="0.5" max="1.5" step="0.1" value="1">
+            <input type="range" id="billy_pitch" min="0.5" max="1.5" step="0.1" value="1">
+        </div>
+    </div>
 
-        // 2. The explicit route to saving the key
-        function saveSettings() {
-            const keyInput = document.getElementById('openai-key');
-            const saveBtn = document.getElementById('save-btn');
-            const keyValue = keyInput.value.trim();
+    <button class="save-btn" onclick="saveSettings()">SAVE ALL SETTINGS</button>
 
-            if (keyValue.startsWith('sk-')) {
-                // Save to LocalStorage
-                localStorage.setItem('openai-key', keyValue);
-                
-                // Visual feedback for iPad users
-                const originalText = saveBtn.innerText;
-                saveBtn.innerText = "✅ CORE UPDATED";
-                saveBtn.style.background = "#ffffff";
-                
-                setTimeout(() => {
-                    saveBtn.innerText = originalText;
-                    saveBtn.style.background = "#76FF03";
-                }, 2000);
-            } else {
-                alert("Please enter a valid OpenAI key starting with 'sk-'");
-                keyInput.style.borderColor = "red";
-            }
+    <div class="nav-links">
+        <a href="testing.html">📡 API Discovery & Testing</a>
+        <a href="winadjust.html">📐 WinAdjust: UI Architect</a>
+        <a href="index.html">🏠 Back to Main Menu</a>
+    </div>
+</div>
+
+<script>
+    function loadSettings() {
+        document.getElementById('openai-key').value = localStorage.getItem('openai-key') || '';
+        document.getElementById('billy_dob').value = localStorage.getItem('billy_dob') || '';
+        document.getElementById('billy_level').value = localStorage.getItem('billy_level') || 'NORMAL';
+        document.getElementById('billy_rate').value = localStorage.getItem('billy_rate') || 1;
+        document.getElementById('billy_pitch').value = localStorage.getItem('billy_pitch') || 1;
+
+        const voiceSelect = document.getElementById('billy_voice');
+        function populateVoices() {
+            const voices = window.speechSynthesis.getVoices();
+            voiceSelect.innerHTML = voices
+                .filter(v => v.lang.includes('es') || v.lang.includes('en'))
+                .map(v => `<option value="${v.name}" ${v.name === localStorage.getItem('billy_voice') ? 'selected' : ''}>${v.name}</option>`)
+                .join('');
         }
-    </script>
+        populateVoices();
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = populateVoices;
+        }
+    }
+
+    function saveSettings() {
+        localStorage.setItem('openai-key', document.getElementById('openai-key').value.trim());
+        localStorage.setItem('billy_dob', document.getElementById('billy_dob').value);
+        localStorage.setItem('billy_level', document.getElementById('billy_level').value);
+        localStorage.setItem('billy_voice', document.getElementById('billy_voice').value);
+        localStorage.setItem('billy_rate', document.getElementById('billy_rate').value);
+        localStorage.setItem('billy_pitch', document.getElementById('billy_pitch').value);
+
+        const btn = document.querySelector('.save-btn');
+        btn.innerText = "✅ SAVED!";
+        setTimeout(() => { btn.innerText = "SAVE ALL SETTINGS"; }, 2000);
+    }
+
+    window.onload = loadSettings;
+</script>
 
 </body>
 </html>
