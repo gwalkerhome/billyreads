@@ -29,35 +29,48 @@
 </div>
 
 <script>
-    async function listModels() {
-        const apiKey = localStorage.getItem('gemini_key');
-        const output = document.getElementById('output');
-        
-        if (!apiKey) {
-            output.innerText = "ERROR: No API Key found in storage. Please save it in Settings first.";
-            return;
-        }
-
-        output.innerText = "Querying Google for allowed models...";
-
-        const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
-
-        try {
-            const response = await fetch(url);
-            const data = await response.json();
-
-            if (response.ok) {
-                // We want to see the list of names
-                let modelNames = data.models.map(m => m.name.replace('models/', '')).join('\n');
-                output.innerText = "SUCCESS! AVAILABLE MODELS:\n\n" + modelNames;
-                console.log(data);
-            } else {
-                output.innerText = "API ERROR: " + JSON.stringify(data, null, 2);
-            }
-        } catch (err) {
-            output.innerText = "NETWORK ERROR: " + err.message;
-        }
+    async function testConnection() {
+    // We use the exact ID from your settings page
+    const apiKey = localStorage.getItem('gemini-key'); 
+    const statusBox = document.getElementById('status-box');
+    
+    if (!apiKey) {
+        statusBox.innerText = "Error: No se encontró ninguna clave en memoria.";
+        return;
     }
+
+    statusBox.innerText = "Conectando con la pasarela de OpenAI...";
+
+    try {
+        // We call the models list to verify the key and see the 2026 lineup
+        const response = await fetch('https://api.openai.com/v1/models', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`
+            }
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // Filter to show the relevant GPT-5 and GPT-4 models
+            const relevantModels = data.data
+                .map(m => m.id)
+                .filter(id => id.includes('gpt-5') || id.includes('gpt-4'))
+                .slice(0, 5)
+                .join(", ");
+
+            statusBox.style.color = "#76FF03";
+            statusBox.innerText = "¡CONEXIÓN EXITOSA!\nModelos detectados: " + relevantModels;
+        } else {
+            statusBox.style.color = "#ff4444";
+            statusBox.innerText = `ERROR ${data.error.code || 'API'}: ${data.error.message}`;
+        }
+    } catch (err) {
+        statusBox.style.color = "#ff4444";
+        statusBox.innerText = "Fallo de conexión: " + err.message;
+    }
+}
 </script>
 
 </body>
