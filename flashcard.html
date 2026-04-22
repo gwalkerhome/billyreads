@@ -1,53 +1,16 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Misión: Flashcards</title>
-    <link rel="stylesheet" href="flashstyle.css">
-</head>
-<body>
-    <div class="app-container">
-        <div class="header-status">
-            <div class="status-label">SINCRONIZACIÓN DE MISIÓN</div>
-            <div class="progress-container">
-                <div id="energy-bar" class="energy-fill"></div>
-            </div>
-        </div>
+<div class="xp-container">
+    <div id="xp-bar"></div>
+</div>
 
-        <main class="mission-card">
-            <div class="category-tag" id="subject-tag">SISTEMA LISTO</div>
-            
-            <div class="display-zone">
-                <h2 id="target-sentence">Iniciando protocolo...</h2>
-                
-                <button class="btn-audio-circle" onclick="playAudio()" aria-label="Escuchar">
-                    <span class="icon">🔊</span>
-                </button>
-            </div>
+<div class="game-container">
+    <div id="subject-tag">Iniciando...</div>
 
-            <details class="valenciano-bridge">
-                <summary>DESCIFRAR EN VALENCIANO</summary>
-                <div class="valenciano-content">
-                    <p id="val-translation">...</p>
-                </div>
-            </details>
-        </main>
+    <div id="target-sentence">Cargando Misión...</div>
 
-        <section class="action-zone">
-            <div id="live-transcript" class="transcript-preview">ESPERANDO SEÑAL...</div>
-            
-            <button class="btn-stage-1" id="record-btn">
-                <span class="icon">🎤</span>
-                <span class="label">COMUNICAR</span>
-            </button>
-        </section>
-
-        <footer>
-            <button class="btn-exit" onclick="window.location.href='index.html'">ABORTAR MISIÓN</button>
-        </footer>
+    <div class="block-controls">
+        <button id="record-btn" class="mc-btn" aria-label="Microphone"></button>
+        <button id="audio-btn" class="mc-btn" onclick="playAudio()" aria-label="Speaker"></button>
     </div>
-    
-    <script src="flashapp.js"></script>
-</body>
-</html>
+
+    <div id="live-transcript">Esperando señal...</div>
+</div>
