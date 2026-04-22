@@ -137,23 +137,44 @@
         }
 
         function generateBlueprint() {
-            const bBox = document.getElementById('blueprint-box');
-            bBox.style.display = 'block';
-            
-            let promptInfo = "### UI LAYOUT BLUEPRINT ###\n";
-            promptInfo += "Create a 16:9 Minecraft background with these object centers:\n\n";
-            
-            Object.keys(positions).forEach(id => {
-                const p = positions[id];
-                const name = id.replace('pane-', '').toUpperCase();
-                const centerX = p.l + (p.w / 2);
-                const centerY = p.t + (p.h / 2);
-                promptInfo += `- ${name}: ${centerX}% horizontal, ${centerY}% vertical.\n`;
-            });
-            
-            bBox.value = promptInfo;
-            bBox.select();
-        }
+    const bBox = document.getElementById('blueprint-box');
+    bBox.style.display = 'block';
+    
+    // Header for the prompt
+    let promptInfo = "### SYSTEM INSTRUCTION: BACKGROUND GENERATION BRIEF ###\n";
+    promptInfo += "Create a high-fidelity, 16:9 background image for a child's reading app. The style must be high-quality and thematic based on the prompt at the end. The following UI objects must be visually integrated into the scenery at these exact coordinates:\n\n";
+    
+    // Mapping internal names to descriptive names for Gemini
+    const names = {
+        'pane-back': 'Thematic BACK BUTTON',
+        'pane-birch': 'SUBJECT/TITLE text display sign',
+        'pane-stone': 'MAIN FOCUS text display window (Monitor/Screen)',
+        'pane-record': 'RECORD ACTION button (e.g. TNT or mic)',
+        'pane-speech': 'LISTEN/AUDIO button (e.g. Megaphone)',
+        'pane-val-toggle': 'VALENCIANO TOGGLE button',
+        'pane-valenciano': 'TRANSLATED TEXT display window',
+        'pane-slab': 'TRANSCRIPT dynamic text area'
+    };
+
+    Object.keys(positions).forEach(id => {
+        const p = positions[id];
+        const label = names[id] || id.toUpperCase();
+        
+        // Calculate center points for the AI artist
+        const centerX = p.l + (p.w / 2);
+        const centerY = p.t + (p.h / 2);
+        
+        promptInfo += `${label}:\n`;
+        promptInfo += `   - Center: ${centerX}% horizontal, ${centerY}% vertical\n`;
+        promptInfo += `   - Dimensions: ${p.w}% width, ${p.h}% height\n\n`;
+    });
+    
+    promptInfo += "The theme for this background image will be: [INSERT THEME HERE, e.g., MINECRAFT, SPACE, UNDERWATER]";
+    
+    bBox.value = promptInfo;
+    bBox.scrollIntoView({ behavior: 'smooth' });
+    bBox.select();
+}
 
         init();
     </script>
