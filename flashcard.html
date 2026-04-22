@@ -21,35 +21,40 @@
     </style>
 </head>
 <body>
+    <div id="game-container">
+        
+        <div class="xp-container"><div id="energy-bar"></div></div>
 
-    <div class="xp-container"><div id="energy-bar"></div></div>
+        <button id="back-btn" class="dynamic-pane" onclick="window.location.href='index.html'"></button>
+        
+        <div id="subject-tag" class="dynamic-pane">SINCRONIZANDO...</div>
+        <div id="target-sentence" class="dynamic-pane">CARGANDO MISIÓN...</div>
+        <div id="val-translation" class="dynamic-pane"></div>
+        
+        <button id="record-btn" class="dynamic-pane mc-btn"></button>
+        <button id="audio-btn" class="dynamic-pane mc-btn" onclick="playAudio()"></button>
+        <button id="val-btn" class="dynamic-pane mc-btn" onclick="toggleValenciano()">V</button>
+        
+        <div id="live-transcript" class="dynamic-pane">ESPERANDO SEÑAL...</div>
 
-    <button id="back-btn" class="dynamic-pane" onclick="window.location.href='index.html'"></button>
-    
-    <div id="subject-tag" class="dynamic-pane">SINCRONIZANDO...</div>
-    <div id="target-sentence" class="dynamic-pane">CARGANDO MISIÓN...</div>
-    <div id="val-translation" class="dynamic-pane"></div>
-    
-    <button id="record-btn" class="dynamic-pane mc-btn"></button>
-    <button id="audio-btn" class="dynamic-pane mc-btn" onclick="playAudio()"></button>
-    <button id="val-btn" class="dynamic-pane mc-btn" onclick="toggleValenciano()">V</button>
-    
-    <div id="live-transcript" class="dynamic-pane">ESPERANDO SEÑAL...</div>
-
-    <script>
+    </div> <script>
         function applyTheme() {
             const themeId = localStorage.getItem('bg_flashcard');
+            const container = document.getElementById('game-container'); // Apply to container, not body
+            
             if (!themeId) {
-                document.body.style.backgroundImage = "url('assets/minecraft.png')";
+                container.style.backgroundImage = "url('assets/minecraft.png')";
                 return;
             }
             const request = indexedDB.open("ThemeDB", 1);
             request.onsuccess = e => {
                 const db = e.target.result;
-                const store = db.transaction("themes", "readonly").objectStore("themes");
+                const transaction = db.transaction("themes", "readonly");
+                const store = transaction.objectStore("themes");
                 const getRequest = store.get(parseInt(themeId));
                 getRequest.onsuccess = () => {
-                    if (getRequest.result) document.body.style.backgroundImage = `url('${getRequest.result.data}')`;
+                    const theme = getRequest.result;
+                    if (theme && theme.data) container.style.backgroundImage = `url('${theme.data}')`;
                 };
             };
         }
@@ -58,6 +63,7 @@
             const savedData = localStorage.getItem('ui_positions');
             if (!savedData) return;
             const saved = JSON.parse(savedData);
+            
             const mapping = {
                 'pane-back': 'back-btn',
                 'pane-birch': 'subject-tag',
@@ -68,13 +74,15 @@
                 'pane-val-toggle': 'val-btn',
                 'pane-slab': 'live-transcript'
             };
-            Object.keys(mapping).forEach(k => {
-                const el = document.getElementById(mapping[k]);
-                if (el && saved[k]) {
-                    el.style.top = saved[k].t + '%';
-                    el.style.left = saved[k].l + '%';
-                    el.style.width = saved[k].w + '%';
-                    el.style.height = saved[k].h + '%';
+
+            Object.keys(mapping).forEach(paneKey => {
+                const el = document.getElementById(mapping[paneKey]);
+                const pos = saved[paneKey];
+                if (el && pos) {
+                    el.style.top = pos.t + '%';
+                    el.style.left = pos.l + '%';
+                    el.style.width = pos.w + '%';
+                    el.style.height = pos.h + '%';
                 }
             });
         }
