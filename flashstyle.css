@@ -8,7 +8,7 @@ body {
     padding: 0;
     /* FORCED SCALING: 100% 100% ensures the image fits the iPad screen exactly */
     background: #000 url('assets/minecraft.png') no-repeat center center fixed;
-    background-size: 100% 100%; 
+    background-size: 50% 50%; 
     height: 100vh;
     width: 100vw;
     overflow: hidden;
