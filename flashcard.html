@@ -4,7 +4,131 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Minecraft Mission: Flashcards</title>
-    <style>
+    <style<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Minecraft Mission: Flashcards</title>
+    <link rel="stylesheet" href="flashstyle.css">
+</head>
+<body>
+
+    <div class="xp-container">
+        <div id="xp-bar"></div>
+    </div>
+
+    <button class="back-nav" onclick="window.location.href='index.html'"></button>
+
+    <div class="game-overlay">
+        <div id="subject-tag">Sincronizando...</div>
+
+        <div id="target-sentence">Iniciando Protocolo...</div>
+
+        <div class="block-controls">
+            <button id="record-btn" class="mc-btn"></button>
+            <button id="audio-btn" class="mc-btn" onclick="playAudio()"></button>
+        </div>
+
+        <div class="console-area">
+            <div id="live-transcript">Esperando señal...</div>
+            <div id="val-translation">---</div>
+        </div>
+    </div>
+
+    <script>
+        let flashcards = [];
+        let currentIndex = 0;
+        let isListening = false;
+
+        function getSchoolYear() {
+            const dobValue = localStorage.getItem('billy_dob');
+            if (!dobValue) return "4º de Primaria";
+            const age = new Date().getFullYear() - new Date(dobValue).getFullYear();
+            return `${Math.max(1, Math.min(6, age - 5))}º de Primaria`;
+        }
+
+        async function fetchJourneyCards() {
+            const apiKey = localStorage.getItem('gemini_key');
+            if (!apiKey) {
+                document.getElementById('target-sentence').innerText = "Configura la API Key";
+                return;
+            }
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+            const prompt = `Actúa como un Director de Primaria en España. Genera 15 tarjetas de aprendizaje para un alumno de ${getSchoolYear()}. Responde solo con un array JSON: [{"es": "frase", "val": "traducción", "cat": "MATERIA", "keywords": ["palabra"]}]`;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
+                const data = await response.json();
+                let rawText = data.candidates[0].content.parts[0].text;
+                const start = rawText.indexOf('[');
+                const end = rawText.lastIndexOf(']');
+                flashcards = JSON.parse(rawText.substring(start, end + 1));
+                loadCard();
+            } catch (err) {
+                document.getElementById('target-sentence').innerText = "Error de Conexión";
+            }
+        }
+
+        function loadCard() {
+            if (currentIndex >= flashcards.length) {
+                document.getElementById('target-sentence').innerText = "¡MISIÓN COMPLETADA!";
+                document.getElementById('xp-bar').style.width = "100%";
+                return;
+            }
+            const card = flashcards[currentIndex];
+            document.getElementById('target-sentence').innerText = card.es;
+            document.getElementById('subject-tag').innerText = card.cat;
+            document.getElementById('val-translation').innerText = card.val;
+            document.getElementById('xp-bar').style.width = `${(currentIndex / flashcards.length) * 100}%`;
+        }
+
+        function playAudio() {
+            window.speechSynthesis.cancel();
+            const msg = new SpeechSynthesisUtterance(flashcards[currentIndex].es);
+            msg.lang = 'es-ES';
+            msg.pitch = 1.4;
+            window.speechSynthesis.speak(msg);
+        }
+
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'es-ES';
+        recognition.interimResults = true;
+
+        document.getElementById('record-btn').onclick = () => {
+            if (!isListening) {
+                recognition.start();
+                isListening = true;
+                document.getElementById('record-btn').classList.add('recording-pulse');
+            } else {
+                recognition.stop();
+                isListening = false;
+                document.getElementById('record-btn').classList.remove('recording-pulse');
+            }
+        };
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[event.results.length-1][0].transcript.toLowerCase();
+            document.getElementById('live-transcript').innerText = transcript;
+            if (event.results[event.results.length-1].isFinal) {
+                if (flashcards[currentIndex].keywords.some(k => transcript.includes(k.toLowerCase()))) {
+                    currentIndex++;
+                    setTimeout(loadCard, 1000);
+                }
+                isListening = false;
+                document.getElementById('record-btn').classList.remove('recording-pulse');
+            }
+        };
+
+        fetchJourneyCards();
+    </script>
+</body>
+</html>
         :root {
             --mc-font: 'Arial Black', Gadget, sans-serif;
             --xp-green: #76FF03;
