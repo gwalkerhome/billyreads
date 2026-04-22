@@ -1,125 +1,48 @@
 :root {
     --mc-font: 'Arial Black', Gadget, sans-serif;
-    --xp-green: #76FF03;
+    --mc-green: #76FF03;
 }
 
 body {
-    margin: 0;
-    padding: 0;
-    /* FORCED SCALING: 100% 100% ensures the image fits the iPad screen exactly */
-    background: #000 url('assets/minecraft.png') no-repeat center center fixed;
-    background-size: 50% 50%; 
-    height: 100vh;
-    width: 100vw;
+    margin: 0; padding: 0;
+    background-color: #000;
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-attachment: fixed;
+    background-size: 100% 100%;
+    height: 100vh; width: 100vw;
     overflow: hidden;
     font-family: var(--mc-font);
 }
 
 .xp-container {
     position: absolute;
-    top: 5px; /* Moved slightly up */
-    left: 50%;
+    top: 5px; left: 50%;
     transform: translateX(-50%);
-    width: 40%;
-    height: 10px;
+    width: 40%; height: 10px;
     background: #111;
     border: 2px solid #333;
-    z-index: 10;
+    z-index: 100;
 }
 
-#xp-bar {
-    width: 0%;
-    height: 100%;
-    background: var(--xp-green);
-    box-shadow: 0 0 10px var(--xp-green);
+#energy-bar {
+    width: 0%; height: 100%;
+    background: var(--mc-green);
+    box-shadow: 0 0 10px var(--mc-green);
     transition: width 0.4s ease;
 }
 
-/* THE MASTER GRID: Adjusted for the Minecraft Screenshot */
-.game-overlay {
-    display: grid;
-    /* 1: Ceiling, 2: Birch Sign, 3: Gap, 4: Stone Frame, 5: Buttons, 6: Bottom Slab */
-    grid-template-rows: 10% 15% 5% 45% 15% 10%; 
-    height: 100vh;
-    width: 100vw;
-    position: relative;
-}
-
-#subject-tag {
-    grid-row: 2; /* Birch Sign */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: #3F3F3F; 
-    font-size: 1.4rem;
-    text-transform: uppercase;
-    padding-top: 5px;
-}
-
-#target-sentence {
-    grid-row: 4; /* Stone Frame */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 0 18%; 
-    color: white;
-    font-size: 2.4rem;
-    text-align: center;
-    text-shadow: 3px 3px 0px #000;
-    line-height: 1.2;
-}
-
-.block-controls {
-    grid-row: 5; /* TNT / Megaphone area */
-    display: flex;
-    justify-content: center;
-    gap: 40px; 
-    pointer-events: auto;
-    align-items: center;
-}
-
 .mc-btn {
-    width: 110px; /* Slightly larger for easier tapping */
-    height: 110px;
-    background: transparent;
-    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    border: 3px solid white;
     cursor: pointer;
-    outline: none;
+    border-radius: 4px;
 }
-
-.recording-pulse {
-    background: rgba(255, 0, 0, 0.3) !important;
-    border-radius: 15px;
-}
-
-.console-area {
-    grid-row: 6; /* Dark Slab at bottom */
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+.mc-btn:active {
+    background: rgba(255, 255, 255, 0.4);
 }
 
 #live-transcript {
-    color: var(--xp-green);
-    font-size: 1.2rem;
-    text-shadow: 1px 1px 0px #000;
-}
-
-#val-translation {
-    color: #AAAAAA;
-    font-size: 1rem;
-    font-style: italic;
-}
-
-.back-nav {
-    position: absolute;
-    top: 15px;
-    left: 15px;
-    width: 80px;
-    height: 80px;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    z-index: 20;
+    color: var(--mc-green);
+    text-shadow: 1px 1px 2px black;
 }
