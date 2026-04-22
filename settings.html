@@ -57,21 +57,19 @@
 
         <button class="btn-stage-1" style="background: #f44336; box-shadow: 0 8px 0 #b71c1c;" onclick="location.href='testing.html'">
             <div class="icon">🛠️</div>
-            <div class="label">API TEST</div>
+            <div class="label">TEST API</div>
         </button>
     </div>
 
-    <button id="save-settings" class="btn-settings" onclick="saveAll()" style="margin-top: 30px;">GUARDAR TODO</button>
+    <button id="save-settings" class="btn-settings" onclick="saveAll()" style="margin-top: 30px;">GUARDAR CONFIGURACIÓN</button>
     <button class="btn-settings" onclick="location.href='index.html'">VOLVER AL MENÚ</button>
 </div>
 
 <script>
-    // Voice Population Logic
     function populateVoices() {
         const voiceSelect = document.getElementById('billy-voice');
         const voices = window.speechSynthesis.getVoices();
         voiceSelect.innerHTML = '';
-        
         voices.forEach(voice => {
             if (voice.lang.includes('es')) {
                 const option = document.createElement('option');
@@ -80,13 +78,10 @@
                 voiceSelect.appendChild(option);
             }
         });
-
-        // Set the saved voice if it exists
         const savedVoice = localStorage.getItem('billy_voice');
         if (savedVoice) voiceSelect.value = savedVoice;
     }
 
-    // Load all saved settings
     function loadSettings() {
         document.getElementById('gemini-key').value = localStorage.getItem('gemini_key') || '';
         document.getElementById('billy-dob').value = localStorage.getItem('billy_dob') || '2016-01-01';
@@ -94,7 +89,6 @@
         document.getElementById('billy-rate').value = localStorage.getItem('billy_rate') || 1.0;
         document.getElementById('billy-pitch').value = localStorage.getItem('billy_pitch') || 1.0;
         
-        // Ensure voices are loaded (some browsers need a delay)
         populateVoices();
         if (speechSynthesis.onvoiceschanged !== undefined) {
             speechSynthesis.onvoiceschanged = populateVoices;
@@ -108,8 +102,7 @@
         localStorage.setItem('billy_voice', document.getElementById('billy-voice').value);
         localStorage.setItem('billy_rate', document.getElementById('billy-rate').value);
         localStorage.setItem('billy_pitch', document.getElementById('billy-pitch').value);
-        
-        alert("¡Configuración guardada!");
+        alert("Configuración Guardada.");
     }
 
     window.onload = loadSettings;
