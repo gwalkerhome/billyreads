@@ -1,1 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Library</title>
+    <style>
+        :root { --mc-font: 'Arial Black', sans-serif; --accent: #4a90e2; }
+        body { font-family: sans-serif; background: #f0f4f8; padding: 20px; text-align: center; }
+        h1 { font-family: var(--mc-font); color: #2c3e50; }
+        
+        .upload-zone {
+            background: white; border: 2px dashed var(--accent); padding: 30px;
+            border-radius: 15px; margin-bottom: 30px; cursor: pointer;
+        }
 
+        .theme-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px; max-width: 1000px; margin: 0 auto;
+        }
+
+        .theme-card {
+            background: white; border-radius: 10px; padding: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .thumb {
+            width: 100%; height: 120px; object-fit: cover;
+            border-radius: 5px; cursor: pointer;
+        }
+
+        .controls { margin-top: 10px; display: flex; gap: 5px; flex-direction: column; }
+        button { 
+            padding: 8px; border: none; border-radius: 5px; cursor: pointer;
+            font-weight: bold; font-size: 0.7rem;
+        }
+        .btn-flash { background: #76FF03; color: black; }
+        .btn-book { background: #e2a0ff; color: black; }
+        .btn-del { background: #ff4d4d; color: white; }
+
+        .active-tag { font-size: 10px; color: var(--accent); margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+    <h1>Theme Library</h1>
+    <p>Upload your Gemini-generated backgrounds here.</p>
+
+    <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+        <span>Click to Upload PNG/JPG</span>
+        <input type="file" id="fileInput" hidden accept="image/*" onchange="handleUpload(event)">
+    </div>
+
+    <div class="theme-grid" id="themeGrid"></div>
+
+    <button onclick="location.href='settings.html'" style="margin-top:40px; padding:15px 30px; background:#444; color:white; border-radius:10px;">BACK TO SETTINGS</button>
+
+    <script>
+        let db;
+        const request = indexedDB.open("ThemeDB", 1);
+
+        request.onupgradeneeded = e => {
+            db = e.target.result;
+            db.createObjectStore("themes", { keyPath: "id", autoIncrement: true });
+        };
+
+        request.onsuccess = e => {
+            db = e.target.result;
+            loadThemes();
+        };
+
+        function handleUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = e => {
+                const transaction = db.transaction(["themes"], "readwrite");
+                transaction.objectStore("themes").add({
+                    name: file.name,
+                    data: e.target.result
+                });
+                transaction.oncomplete = loadThemes;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function loadThemes() {
+            const grid = document.getElementById('themeGrid');
+            grid.innerHTML = '';
+            const flashBg = localStorage.getItem('bg_flashcards');
+            const bookBg = localStorage.getItem('bg_magicbook');
+
+            db.transaction("themes").objectStore("themes").getAll().onsuccess = e => {
+                e.target.result.forEach(theme => {
+                    const card = document.createElement('div');
+                    card.className = 'theme-card';
+                    
+                    let tags = "";
+                    if (flashBg == theme.id) tags += "⭐ FLASHCARDS ";
+                    if (bookBg == theme.id) tags += "📖 MAGIC BOOK";
+
+                    card.innerHTML = `
+                        <img src="${theme.data}" class="thumb">
+                        <div class="active-tag">${tags}</div>
+                        <div class="controls">
+                            <button class="btn-flash" onclick="assignTheme(${theme.id}, 'flashcards')">USE FOR FLASHCARDS</button>
+                            <button class="btn-book" onclick="assignTheme(${theme.id}, 'book')">USE FOR MAGIC BOOK</button>
+                            <button class="btn-del" onclick="deleteTheme(${theme.id})">DELETE</button>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            };
+        }
+
+        function assignTheme(id, type) {
+            if (type === 'flashcards') localStorage.setItem('bg_flashcards', id);
+            else localStorage.setItem('bg_magicbook', id);
+            loadThemes();
+            alert("Background assigned!");
+        }
+
+        function deleteTheme(id) {
+            if(!confirm("Delete this theme?")) return;
+            const transaction = db.transaction(["themes"], "readwrite");
+            transaction.objectStore("themes").delete(id);
+            transaction.oncomplete = loadThemes;
+        }
+    </script>
+</body>
+</html>
