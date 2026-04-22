@@ -1,55 +1,169 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Model Handshake</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DEBUG: Minecraft Asset Calibration</title>
     <style>
-        body { background: #1A202C; color: #A0AEC0; font-family: monospace; padding: 20px; }
-        .console { 
-            background: #000; padding: 20px; border-radius: 12px; border: 1px solid #4A5568; 
-            min-height: 200px; color: #4ADE80; font-size: 14px; margin-bottom: 15px;
+        :root {
+            --mc-font: 'Arial Black', Gadget, sans-serif;
+            /* Debug Colors */
+            --pane-birch: rgba(255, 255, 0, 0.4);   /* Yellow */
+            --pane-stone: rgba(0, 255, 255, 0.4);   /* Cyan */
+            --pane-buttons: rgba(255, 0, 255, 0.4); /* Magenta */
+            --pane-slab: rgba(0, 255, 0, 0.4);      /* Green */
+            --pane-back: rgba(255, 0, 0, 0.5);      /* Red */
         }
-        .btn { background: #3182CE; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            /* Exact scaling to match your iPad view */
+            background: #000 url('assets/minecraft.png') no-repeat center center fixed;
+            background-size: 100% 100%; 
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            font-family: var(--mc-font);
+        }
+
+        /* MASTER GRID (Matches flashstyle.css) */
+        .debug-overlay {
+            display: grid;
+            /* 1: Ceiling(10), 2: Birch(15), 3: Gap(5), 4: Stone(45), 5: Buttons(15), 6: Slab(10) */
+            grid-template-rows: 10% 15% 5% 45% 15% 10%; 
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+        }
+
+        /* DEBUG LABELS */
+        .debug-label {
+            position: absolute;
+            top: 2px;
+            left: 5px;
+            font-size: 10px;
+            color: white;
+            background: black;
+            padding: 2px 5px;
+        }
+
+        /* ZONE 1: BIRCH SIGN */
+        .zone-birch {
+            grid-row: 2;
+            background: var(--pane-birch);
+            border: 2px dashed yellow;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* ZONE 2: STONE FRAME */
+        .zone-stone {
+            grid-row: 4;
+            background: var(--pane-stone);
+            border: 2px dashed cyan;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            margin: 0 15%; /* Visualizing the horizontal padding */
+        }
+
+        /* ZONE 3: BUTTONS */
+        .zone-buttons {
+            grid-row: 5;
+            background: var(--pane-buttons);
+            border: 2px dashed magenta;
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            align-items: center;
+            position: relative;
+        }
+
+        .debug-btn {
+            width: 110px;
+            height: 110px;
+            border: 3px solid white;
+            background: rgba(255,255,255,0.2);
+        }
+
+        /* ZONE 4: BOTTOM SLAB */
+        .zone-slab {
+            grid-row: 6;
+            background: var(--pane-slab);
+            border: 2px dashed lime;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* ZONE 5: BACK BUTTON */
+        .zone-back {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            width: 80px;
+            height: 80px;
+            background: var(--pane-back);
+            border: 2px solid red;
+            z-index: 100;
+        }
+
+        .coord-info {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            color: #76FF03;
+            padding: 10px;
+            font-size: 12px;
+            border: 1px solid #333;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
-    <h2>TESTING MODEL: gemini-2.5-flash</h2>
-    <div id="console-output" class="console">> Waiting for command...</div>
-    
-    <button class="btn" onclick="pingModel()">SEND PING</button>
-    <button class="btn" style="background:#4A5568;" onclick="window.location.href='settings.html'">BACK TO SETTINGS</button>
 
-    <script>
-        async function pingModel() {
-            const output = document.getElementById('console-output');
-            const apiKey = localStorage.getItem('gemini_key');
-            output.innerText = "> Sending request...";
+    <div class="zone-back">
+        <span class="debug-label">BACK BTN</span>
+    </div>
 
-            // Targeted URL based on your scan results
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    <div class="debug-overlay">
+        <div class="zone-birch">
+            <span class="debug-label">BIRCH_SIGN (Subject/Materia)</span>
+            <div style="color: #3F3F3F;">TEST: LENGUA</div>
+        </div>
 
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: "Respond with: SYSTEM ONLINE 2.5" }] }] })
-                });
+        <div></div>
 
-                const data = await response.json();
-                
-                if (data.candidates) {
-                    output.innerText = `> SUCCESS: ${data.candidates[0].content.parts[0].text}`;
-                    output.style.color = "#4ADE80";
-                } else {
-                    output.innerText = `> API ERROR: ${JSON.stringify(data.error)}`;
-                    output.style.color = "#F87171";
-                }
-            } catch (err) {
-                output.innerText = `> CONNECTION ERROR: ${err.message}`;
-                output.style.color = "#F87171";
-            }
-        }
-    </script>
+        <div class="zone-stone">
+            <span class="debug-label">STONE_FRAME (Main Sentence)</span>
+            <div style="color: white; text-align: center; font-size: 24px;">
+                ¿Cómo se dice "Apple" en español?
+            </div>
+        </div>
+
+        <div class="zone-buttons">
+            <span class="debug-label">CONTROLS (TNT / Megaphone)</span>
+            <div class="debug-btn"></div>
+            <div class="debug-btn"></div>
+        </div>
+
+        <div class="zone-slab">
+            <span class="debug-label">BOTTOM_SLAB (Transcript)</span>
+            <div style="color: #76FF03;">Test: Escuchando Billy...</div>
+        </div>
+    </div>
+
+    <div class="coord-info">
+        <strong>CALIBRATION MODE</strong><br>
+        Scaling: 100% Width / 100% Height<br>
+        iPad Aspect Ratio Check: ACTIVE
+    </div>
+
 </body>
 </html>
