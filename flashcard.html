@@ -9,13 +9,19 @@
         .dynamic-pane {
             position: absolute;
             display: flex;
-            justify-content: center; align-items: center;
-            text-align: center; box-sizing: border-box;
+            justify-content: center; 
+            align-items: center;
+            text-align: center; 
+            box-sizing: border-box;
             transition: opacity 0.3s;
         }
         #val-translation {
-            color: #AACCFF; font-size: 1.2rem; font-style: italic;
-            opacity: 0; transition: opacity 0.3s;
+            color: #AACCFF; 
+            font-size: 1.2rem; 
+            font-style: italic;
+            opacity: 0; 
+            pointer-events: none;
+            transition: opacity 0.3s;
         }
         #val-translation.visible { opacity: 1; }
     </style>
@@ -25,6 +31,7 @@
     <div class="xp-container"><div id="energy-bar"></div></div>
 
     <button id="back-btn" class="dynamic-pane" onclick="window.location.href='index.html'"></button>
+    
     <div id="subject-tag" class="dynamic-pane">SINCRONIZANDO...</div>
     <div id="target-sentence" class="dynamic-pane">CARGANDO MISIÓN...</div>
     <div id="val-translation" class="dynamic-pane"></div>
@@ -52,7 +59,7 @@
                 const getRequest = store.get(themeId);
                 getRequest.onsuccess = () => {
                     const theme = getRequest.result;
-                    if (theme) document.body.style.backgroundImage = `url('${theme.data}')`;
+                    if (theme && theme.data) document.body.style.backgroundImage = `url('${theme.data}')`;
                 };
             };
         }
@@ -83,7 +90,8 @@
         }
 
         function toggleValenciano() {
-            document.getElementById('val-translation').classList.toggle('visible');
+            const trans = document.getElementById('val-translation');
+            if (trans) trans.classList.toggle('visible');
         }
 
         window.onload = () => {
