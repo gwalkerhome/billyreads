@@ -1,48 +1,105 @@
-:root {
-    --mc-font: 'Arial Black', Gadget, sans-serif;
-    --mc-green: #76FF03;
-}
+/* flashstyle.css - The "Anchor" Edition */
 
-body {
-    margin: 0; padding: 0;
-    background-color: #000;
-    background-repeat: no-repeat;
-    background-position: center center;
-    background-attachment: fixed;
-    background-size: 100% 100%;
-    height: 100vh; width: 100vw;
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
     overflow: hidden;
-    font-family: var(--mc-font);
+    background-color: #000; /* Black bars if aspect ratio differs */
 }
 
+/* This container moves when the iPad nav bar pushes the content */
+#game-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    background-size: contain; /* Keeps the full monster image visible */
+    background-position: center;
+    background-repeat: no-repeat;
+    margin: 0 auto;
+}
+
+/* Asset Windows - Bolted to the game-container */
+.dynamic-pane {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    box-sizing: border-box;
+    overflow: hidden;
+    /* Testing Border - Remove when sync is confirmed */
+    border: 2px solid white; 
+}
+
+/* Button Styling (mc-btn) */
+.mc-btn {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.1); /* Slight tint to see the box */
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 2px solid white; /* Testing Border */
+    box-sizing: border-box;
+}
+
+/* Text Formatting */
+#target-sentence {
+    font-size: 2.2rem;
+    font-weight: bold;
+    color: #000; /* Black text for the white stone sign */
+    padding: 10px;
+}
+
+#subject-tag {
+    font-size: 1.2rem;
+    color: #333;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+#val-translation {
+    color: #2e7d32; /* Greenish for the valenciano shelf */
+    font-style: italic;
+    font-size: 1.5rem;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+#val-translation.visible {
+    opacity: 1;
+}
+
+#live-transcript {
+    color: #d32f2f; /* Red for the 'Esperando Señal' area */
+    font-size: 1.1rem;
+    font-family: monospace;
+}
+
+/* XP Bar Placement */
 .xp-container {
     position: absolute;
-    top: 5px; left: 50%;
-    transform: translateX(-50%);
-    width: 40%; height: 10px;
-    background: #111;
-    border: 2px solid #333;
+    top: 5px;
+    left: 20%;
+    width: 60%;
+    height: 10px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid #fff;
+    border-radius: 5px;
     z-index: 100;
 }
 
 #energy-bar {
-    width: 0%; height: 100%;
-    background: var(--mc-green);
-    box-shadow: 0 0 10px var(--mc-green);
-    transition: width 0.4s ease;
+    width: 0%;
+    height: 100%;
+    background: #4CAF50;
+    transition: width 0.3s ease;
 }
 
-.mc-btn {
-    background: rgba(255, 255, 255, 0.1);
-    border: 3px solid white;
-    cursor: pointer;
-    border-radius: 4px;
-}
-.mc-btn:active {
-    background: rgba(255, 255, 255, 0.4);
-}
-
-#live-transcript {
-    color: var(--mc-green);
-    text-shadow: 1px 1px 2px black;
+/* Hidden Utility */
+#back-btn {
+    background: transparent;
+    border: 2px solid white; /* Testing Border */
 }
