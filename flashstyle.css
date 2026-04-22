@@ -6,11 +6,9 @@
 body {
     margin: 0;
     padding: 0;
-    background: url('assets/minecraft.png') no-repeat center center fixed;
+    background: #000 url('assets/minecraft.png') no-repeat center center fixed;
     background-size: cover;
-    height: 100vh;
-    overflow: hidden;
-    font-family: var(--mc-font);
+    /* ... rest of code ... */
 }
 
 /* The Master Overlay */
