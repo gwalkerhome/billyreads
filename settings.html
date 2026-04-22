@@ -1,106 +1,205 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BillyReads: Settings</title>
+    <title>Command Center: BillyReads</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; background-color: #f4f4f9; color: #333; }
-        .container { max-width: 500px; margin: 0 auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        h2 { color: #4a90e2; margin-top: 0; }
-        .card { border: 1px solid #e0e0e0; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
-        .card-header { font-weight: bold; color: #555; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-        label { display: block; margin-top: 10px; font-size: 0.85rem; color: #666; }
-        input, select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
-        .save-btn { width: 100%; padding: 15px; background: #4a90e2; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 1rem; }
-        .save-btn:active { background: #357abd; }
-        .nav-links { margin-top: 25px; display: flex; flex-direction: column; gap: 12px; border-top: 1px solid #eee; padding-top: 20px; }
-        .nav-links a { color: #4a90e2; text-decoration: none; font-weight: bold; font-size: 0.9rem; }
-        .nav-links a:hover { text-decoration: underline; }
+        :root {
+            --mc-font: 'Arial Black', Gadget, sans-serif;
+            --accent-blue: #4a90e2;
+            --mc-green: #76FF03;
+            --card-bg: #ffffff;
+            --body-bg: #f0f4f8;
+        }
+
+        body {
+            margin: 0; padding: 20px;
+            background-color: var(--body-bg);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        h1 { font-family: var(--mc-font); color: #2c3e50; margin-bottom: 5px; }
+        .subtitle { color: #7f8c8d; margin-bottom: 30px; font-size: 0.9rem; }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px; width: 100%; max-width: 1100px;
+        }
+
+        .card {
+            background: var(--card-bg); border-radius: 15px; padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; flex-direction: column;
+        }
+
+        .card-header {
+            display: flex; align-items: center; gap: 10px;
+            color: #7f8c8d; font-weight: bold; text-transform: uppercase;
+            font-size: 0.8rem; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;
+        }
+
+        label { display: block; font-weight: bold; margin: 15px 0 5px; font-size: 0.85rem; color: #444; }
+
+        input[type="text"], input[type="password"], input[type="date"], select {
+            width: 100%; padding: 12px; border: 1px solid #e0e0e0;
+            border-radius: 8px; box-sizing: border-box; background: #fafafa;
+        }
+
+        .slider-row { display: flex; justify-content: space-between; align-items: center; }
+        input[type="range"] { flex-grow: 1; margin: 0 15px; }
+        .val-display { font-weight: bold; color: var(--accent-blue); width: 30px; }
+
+        .level-selector { display: flex; gap: 10px; margin-top: 5px; }
+        .lvl-btn {
+            flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #e0e0e0;
+            background: #fff; cursor: pointer; font-weight: bold; font-size: 0.75rem;
+        }
+        .lvl-btn.active { background: #eef6ff; border-color: var(--accent-blue); color: var(--accent-blue); }
+
+        .admin-btn {
+            background: #f8f9fa; border: 1px solid #ddd; padding: 15px;
+            border-radius: 8px; cursor: pointer; font-weight: bold; color: #555;
+            margin-top: 10px; text-transform: uppercase; font-size: 0.8rem;
+            width: 100%; text-align: center; text-decoration: none; display: block;
+            box-sizing: border-box;
+        }
+
+        .footer-actions {
+            margin-top: 40px; display: flex; gap: 20px; width: 100%; max-width: 600px;
+        }
+        .main-btn {
+            flex: 1; padding: 20px; border-radius: 12px; border: none;
+            font-family: var(--mc-font); font-size: 1rem; cursor: pointer;
+        }
+        #save-btn { background: var(--accent-blue); color: white; }
+        #cancel-btn { background: #cbd5e0; color: #4a5568; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>Settings & Core</h2>
+    <h1>Command Center</h1>
+    <div class="subtitle">Mission Configuration & Student Profile</div>
 
-    <div class="card">
-        <div class="card-header">⚙️ System Core</div>
-        <label>OpenAI API Key</label>
-        <input type="password" id="openai-key" placeholder="sk-...">
-        <p style="font-size: 0.7rem; color: #888; margin-top: 10px;">Enables curriculum generation via OpenAI.</p>
-    </div>
-
-    <div class="card">
-        <div class="card-header">👦 Student Profile</div>
-        <label>Billy's Date of Birth</label>
-        <input type="date" id="billy_dob">
+    <div class="settings-grid">
         
-        <label>Learning Level</label>
-        <select id="billy_level">
-            <option value="NORMAL">NORMAL</option>
-            <option value="EXPERTO">EXPERTO</option>
-        </select>
-    </div>
+        <div class="card">
+            <div class="card-header">👤 Student Profile</div>
+            <label>Date of Birth</label>
+            <input type="date" id="billy-dob">
 
-    <div class="card">
-        <div class="card-header">🗣️ Speech Engine</div>
-        <label>Voice</label>
-        <select id="billy_voice"></select>
-        
-        <label>Speed & Pitch</label>
-        <div style="display:flex; gap:10px;">
-            <input type="range" id="billy_rate" min="0.5" max="1.5" step="0.1" value="1">
-            <input type="range" id="billy_pitch" min="0.5" max="1.5" step="0.1" value="1">
+            <label>Challenge Level</label>
+            <div class="level-selector">
+                <button class="lvl-btn active" id="lvl-normal" onclick="setLevel('NORMAL')">NORMAL</button>
+                <button class="lvl-btn" id="lvl-experto" onclick="setLevel('EXPERTO')">EXPERTO</button>
+            </div>
         </div>
+
+        <div class="card">
+            <div class="card-header">🔊 Voice Calibration</div>
+            <label>Selected Voice</label>
+            <select id="voice-select"></select>
+
+            <label>Reading Speed</label>
+            <div class="slider-row">
+                <input type="range" id="rate" min="0.5" max="1.5" step="0.1" oninput="updateVals()">
+                <span class="val-display" id="rate-val">1.0</span>
+            </div>
+
+            <label>Tone (Pitch)</label>
+            <div class="slider-row">
+                <input type="range" id="pitch" min="0.5" max="2.0" step="0.1" oninput="updateVals()">
+                <span class="val-display" id="pitch-val">1.0</span>
+            </div>
+
+            <button class="admin-btn" style="margin-top:20px; color:var(--accent-blue);" onclick="testSpeech()">Test Settings</button>
+        </div>
+
+        <div class="card">
+            <div class="card-header">⚙️ System Core</div>
+            <label>OpenAI API Key</label>
+            <input type="password" id="gemini-key" placeholder="Enter sk-...">
+            <p style="font-size: 0.7rem; color: #999; margin-top: 15px;">
+                This key enables dynamic curriculum generation via OpenAI.
+            </p>
+        </div>
+
+        <div class="card">
+            <div class="card-header">🛠️ Admin Tools</div>
+            <p style="font-size: 0.75rem; color: #888;">System diagnostics and interface calibration.</p>
+            <button class="admin-btn" onclick="location.href='winadjust.html'">Open winadjust.html</button>
+            <button class="admin-btn" onclick="location.href='themes.html'">🎨 MANAGE THEMES</button>
+            <button class="admin-btn" style="color: #d9534f;" onclick="location.href='testing.html'">🛠️ API TESTER</button>
+        </div>
+
     </div>
 
-    <button class="save-btn" onclick="saveSettings()">SAVE ALL SETTINGS</button>
-
-    <div class="nav-links">
-        <a href="testing.html">📡 API Discovery & Testing</a>
-        <a href="winadjust.html">📐 WinAdjust: UI Architect</a>
-        <a href="index.html">🏠 Back to Main Menu</a>
+    <div class="footer-actions">
+        <button id="save-btn" class="main-btn" onclick="saveAll()">SAVE CHANGES</button>
+        <button id="cancel-btn" class="main-btn" onclick="location.href='index.html'">CANCEL</button>
     </div>
-</div>
 
-<script>
-    function loadSettings() {
-        document.getElementById('openai-key').value = localStorage.getItem('openai-key') || '';
-        document.getElementById('billy_dob').value = localStorage.getItem('billy_dob') || '';
-        document.getElementById('billy_level').value = localStorage.getItem('billy_level') || 'NORMAL';
-        document.getElementById('billy_rate').value = localStorage.getItem('billy_rate') || 1;
-        document.getElementById('billy_pitch').value = localStorage.getItem('billy_pitch') || 1;
+    <script>
+        let currentLevel = 'NORMAL';
 
-        const voiceSelect = document.getElementById('billy_voice');
-        function populateVoices() {
+        function loadVoices() {
+            const select = document.getElementById('voice-select');
             const voices = window.speechSynthesis.getVoices();
-            voiceSelect.innerHTML = voices
+            select.innerHTML = voices
                 .filter(v => v.lang.includes('es') || v.lang.includes('en'))
-                .map(v => `<option value="${v.name}" ${v.name === localStorage.getItem('billy_voice') ? 'selected' : ''}>${v.name}</option>`)
-                .join('');
+                .map(v => `<option value="${v.name}">${v.name}</option>`).join('');
+            
+            const savedVoice = localStorage.getItem('billy_voice');
+            if (savedVoice) select.value = savedVoice;
         }
-        populateVoices();
-        if (speechSynthesis.onvoiceschanged !== undefined) {
-            speechSynthesis.onvoiceschanged = populateVoices;
+
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+
+        window.onload = () => {
+            loadVoices();
+            // Using 'gemini_key' as the ID to match your original script
+            document.getElementById('gemini-key').value = localStorage.getItem('gemini_key') || '';
+            document.getElementById('billy-dob').value = localStorage.getItem('billy_dob') || '';
+            document.getElementById('rate').value = localStorage.getItem('billy_rate') || 1.0;
+            document.getElementById('pitch').value = localStorage.getItem('billy_pitch') || 1.0;
+            
+            setLevel(localStorage.getItem('billy_level') || 'NORMAL');
+            updateVals();
+        };
+
+        function updateVals() {
+            document.getElementById('rate-val').innerText = document.getElementById('rate').value;
+            document.getElementById('pitch-val').innerText = document.getElementById('pitch').value;
         }
-    }
 
-    function saveSettings() {
-        localStorage.setItem('openai-key', document.getElementById('openai-key').value.trim());
-        localStorage.setItem('billy_dob', document.getElementById('billy_dob').value);
-        localStorage.setItem('billy_level', document.getElementById('billy_level').value);
-        localStorage.setItem('billy_voice', document.getElementById('billy_voice').value);
-        localStorage.setItem('billy_rate', document.getElementById('billy_rate').value);
-        localStorage.setItem('billy_pitch', document.getElementById('billy_pitch').value);
+        function setLevel(lvl) {
+            currentLevel = lvl;
+            document.getElementById('lvl-normal').classList.toggle('active', lvl === 'NORMAL');
+            document.getElementById('lvl-experto').classList.toggle('active', lvl === 'EXPERTO');
+        }
 
-        const btn = document.querySelector('.save-btn');
-        btn.innerText = "✅ SAVED!";
-        setTimeout(() => { btn.innerText = "SAVE ALL SETTINGS"; }, 2000);
-    }
+        function testSpeech() {
+            const msg = new SpeechSynthesisUtterance("Hola Billy, mission check complete.");
+            const voiceName = document.getElementById('voice-select').value;
+            msg.voice = window.speechSynthesis.getVoices().find(v => v.name === voiceName);
+            msg.rate = document.getElementById('rate').value;
+            msg.pitch = document.getElementById('pitch').value;
+            window.speechSynthesis.speak(msg);
+        }
 
-    window.onload = loadSettings;
-</script>
-
+        function saveAll() {
+            localStorage.setItem('gemini_key', document.getElementById('gemini-key').value.trim());
+            localStorage.setItem('billy_dob', document.getElementById('billy-dob').value);
+            localStorage.setItem('billy_rate', document.getElementById('rate').value);
+            localStorage.setItem('billy_pitch', document.getElementById('pitch').value);
+            localStorage.setItem('billy_voice', document.getElementById('voice-select').value);
+            localStorage.setItem('billy_level', currentLevel);
+            
+            alert("Settings Synchronized.");
+            location.href = 'index.html';
+        }
+    </script>
 </body>
 </html>
