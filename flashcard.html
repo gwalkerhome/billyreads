@@ -1,16 +1,282 @@
-<div class="xp-container">
-    <div id="xp-bar"></div>
-</div>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Minecraft Mission: Flashcards</title>
+    <style>
+        :root {
+            --mc-font: 'Arial Black', Gadget, sans-serif;
+            --xp-green: #76FF03;
+            --text-shadow: 2px 2px 0px #000;
+        }
 
-<div class="game-container">
-    <div id="subject-tag">Iniciando...</div>
+        body {
+            margin: 0;
+            padding: 0;
+            /* Using your uploaded background */
+            background: url('image.png') no-repeat center center fixed;
+            background-size: cover;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            font-family: var(--mc-font);
+        }
 
-    <div id="target-sentence">Cargando Misión...</div>
+        /* XP BAR (Top Dark Beam) */
+        .xp-container {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40%;
+            height: 12px;
+            background: #111;
+            border: 2px solid #333;
+            z-index: 10;
+        }
 
-    <div class="block-controls">
-        <button id="record-btn" class="mc-btn" aria-label="Microphone"></button>
-        <button id="audio-btn" class="mc-btn" onclick="playAudio()" aria-label="Speaker"></button>
+        #xp-bar {
+            width: 0%;
+            height: 100%;
+            background: var(--xp-green);
+            box-shadow: 0 0 10px var(--xp-green);
+            transition: width 0.4s ease;
+        }
+
+        /* MASTER LAYOUT */
+        .game-overlay {
+            display: grid;
+            grid-template-rows: 18% 52% 16% 14%; 
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+        }
+
+        /* 1. BIRCH SIGN (Category) */
+        #subject-tag {
+            grid-row: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            color: #3F3F3F; /* Dark charcoal like text on wood */
+            font-size: 1.4rem;
+            text-transform: uppercase;
+            padding-bottom: 10px;
+        }
+
+        /* 2. STONE SCREEN (Spanish Phrase) */
+        #target-sentence {
+            grid-row: 2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0 18%; /* Keeps text inside the stone borders */
+            color: white;
+            font-size: 2.2rem;
+            text-align: center;
+            text-shadow: var(--text-shadow);
+            line-height: 1.2;
+        }
+
+        /* 3. INTERACTIVE BLOCKS (TNT / Megaphone) */
+        .block-controls {
+            grid-row: 3;
+            display: flex;
+            justify-content: center;
+            gap: 25px; /* Aligned to the TNT/Speaker blocks in the image */
+            pointer-events: auto;
+        }
+
+        .mc-btn {
+            width: 90px;
+            height: 90px;
+            background: rgba(255,255,255,0); /* Invisible */
+            border: none;
+            cursor: pointer;
+            outline: none;
+        }
+
+        /* Visual feedback for the recording state */
+        .recording-pulse {
+            background: rgba(255, 0, 0, 0.2) !important;
+            border-radius: 10px;
+            box-shadow: 0 0 20px red;
+        }
+
+        /* 4. BOTTOM CONSOLE (Transcript / Valenciano) */
+        .console-area {
+            grid-row: 4;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #live-transcript {
+            color: var(--xp-green);
+            font-size: 1.1rem;
+            text-shadow: 1px 1px 0px #000;
+        }
+
+        #val-translation {
+            color: #AAAAAA;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        /* Back Button (Top Left Overlay) */
+        .back-nav {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 60px;
+            height: 60px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="xp-container">
+        <div id="xp-bar"></div>
     </div>
 
-    <div id="live-transcript">Esperando señal...</div>
-</div>
+    <button class="back-nav" onclick="window.location.href='index.html'"></button>
+
+    <div class="game-overlay">
+        <div id="subject-tag">Sincronizando...</div>
+
+        <div id="target-sentence">Iniciando Protocolo...</div>
+
+        <div class="block-controls">
+            <button id="record-btn" class="mc-btn"></button>
+            <button id="audio-btn" class="mc-btn" onclick="playAudio()"></button>
+        </div>
+
+        <div class="console-area">
+            <div id="live-transcript">Esperando señal...</div>
+            <div id="val-translation">---</div>
+        </div>
+    </div>
+
+    <script>
+        let flashcards = [];
+        let currentIndex = 0;
+        let isListening = false;
+
+        // ACADEMIC LOGIC
+        function getSchoolYear() {
+            const dobValue = localStorage.getItem('billy_dob');
+            if (!dobValue) return "4º de Primaria";
+            const dob = new Date(dobValue);
+            const age = new Date().getFullYear() - dob.getFullYear();
+            const yearLevel = age - 5;
+            return `${Math.max(1, Math.min(6, yearLevel))}º de Primaria`;
+        }
+
+        // GEMINI 2.5 FLASH CONNECTION
+        async function fetchJourneyCards() {
+            const apiKey = localStorage.getItem('gemini_key');
+            const schoolYear = getSchoolYear();
+            
+            if (!apiKey) {
+                document.getElementById('target-sentence').innerText = "Configura la API Key";
+                return;
+            }
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+
+            const prompt = `Actúa como un Director de Primaria en España. Genera 15 tarjetas de aprendizaje para un alumno de ${schoolYear}.
+            REGLAS: Responde solo con un array JSON.
+            FORMATO: [{"es": "frase", "val": "traducción", "cat": "CIENCIAS", "keywords": ["palabra"]}]`;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
+                
+                const data = await response.json();
+                let rawText = data.candidates[0].content.parts[0].text;
+
+                // Sanitizer
+                const start = rawText.indexOf('[');
+                const end = rawText.lastIndexOf(']');
+                if (start !== -1 && end !== -1) rawText = rawText.substring(start, end + 1);
+                
+                flashcards = JSON.parse(rawText);
+                loadCard();
+            } catch (err) {
+                document.getElementById('target-sentence').innerText = "Error de Red";
+            }
+        }
+
+        function loadCard() {
+            if (currentIndex >= flashcards.length) {
+                document.getElementById('target-sentence').innerText = "¡MISIÓN COMPLETADA!";
+                document.getElementById('xp-bar').style.width = "100%";
+                return;
+            }
+
+            const card = flashcards[currentIndex];
+            document.getElementById('target-sentence').innerText = card.es;
+            document.getElementById('subject-tag').innerText = card.cat;
+            document.getElementById('val-translation').innerText = card.val;
+            
+            const progress = (currentIndex / flashcards.length) * 100;
+            document.getElementById('xp-bar').style.width = `${progress}%`;
+        }
+
+        // AUDIO & SPEECH
+        function playAudio() {
+            window.speechSynthesis.cancel();
+            const msg = new SpeechSynthesisUtterance(flashcards[currentIndex].es);
+            msg.lang = 'es-ES';
+            msg.pitch = 1.4; // Child-like tone
+            window.speechSynthesis.speak(msg);
+        }
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'es-ES';
+        recognition.interimResults = true;
+
+        document.getElementById('record-btn').onclick = () => {
+            if (!isListening) {
+                recognition.start();
+                isListening = true;
+                document.getElementById('record-btn').classList.add('recording-pulse');
+            } else {
+                recognition.stop();
+                isListening = false;
+                document.getElementById('record-btn').classList.remove('recording-pulse');
+            }
+        };
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[event.results.length-1][0].transcript.toLowerCase();
+            document.getElementById('live-transcript').innerText = transcript;
+            
+            if (event.results[event.results.length-1].isFinal) {
+                const card = flashcards[currentIndex];
+                const success = card.keywords.some(k => transcript.includes(k.toLowerCase()));
+                
+                if (success) {
+                    currentIndex++;
+                    setTimeout(loadCard, 1000);
+                }
+                isListening = false;
+                document.getElementById('record-btn').classList.remove('recording-pulse');
+            }
+        };
+
+        // RUN ON START
+        fetchJourneyCards();
+    </script>
+</body>
+</html>
