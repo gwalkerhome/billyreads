@@ -3,250 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Configuración del Sistema</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Ajustes: Misión Minecraft</title>
     <style>
         :root {
-            --panel-bg: #ffffff;
-            --accent-blue: #3182CE;
-            --border-color: #E2E8F0;
-            --text-main: #2D3748;
+            --mc-font: 'Arial Black', Gadget, sans-serif;
+            --mc-green: #76FF03;
+            --mc-bg: #1e1e1e;
+            --card-bg: #2d2d2d;
+            --text-color: #ffffff;
         }
 
-        body { background: #F7FAFC; padding: 20px; font-family: sans-serif; }
-
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 20px;
-            max-width: 1000px;
-            margin: 0 auto 40px auto;
-        }
-
-        .config-box {
-            background: var(--panel-bg);
-            padding: 24px;
-            border-radius: 24px;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.03);
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: var(--mc-bg);
+            color: var(--text-color);
+            font-family: var(--mc-font);
             display: flex;
             flex-direction: column;
+            align-items: center;
         }
 
-        .dashboard-header { grid-column: 1 / -1; text-align: center; margin-bottom: 10px; }
-
-        /* LANGUAGE TOGGLE STYLING */
-        .lang-control {
-            grid-column: 1 / -1;
+        .header {
+            width: 100%;
+            max-width: 600px;
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-top: 10px;
+        }
+
+        h1 {
+            font-size: 1.6rem;
+            margin: 0;
+            text-transform: uppercase;
+            color: var(--mc-green);
+            letter-spacing: 1px;
+        }
+
+        .back-btn {
+            background: #444;
+            color: white;
+            border: 2px solid #555;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: var(--mc-font);
+            font-size: 0.8rem;
+        }
+
+        .settings-container {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px; /* Plenty of space between cards */
+        }
+
+        .setting-card {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid #3d3d3d;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+        }
+
+        .setting-card h2 {
+            margin-top: 0;
+            font-size: 1.1rem;
+            color: #bbb;
+            text-transform: uppercase;
             margin-bottom: 10px;
         }
 
-        .config-box h3 {
-            margin: 0 0 20px 0;
+        .setting-card p {
             font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 25px;
+            line-height: 1.4;
+        }
+
+        input {
+            width: 100%;
+            padding: 18px;
+            box-sizing: border-box;
+            background: #1a1a1a;
+            border: 2px solid #444;
+            color: var(--mc-green);
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 1.2rem;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: var(--mc-green);
+        }
+
+        .action-btn {
+            width: 100%;
+            padding: 20px;
+            background-color: var(--mc-green);
+            color: black;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-family: var(--mc-font);
+            cursor: pointer;
+            transition: transform 0.1s, background 0.2s;
+            margin-top: 10px;
             text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: #718096;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
 
-        .row { margin-bottom: 20px; }
-        .row label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 0.9rem; color: var(--text-main); }
-
-        .input-field { 
-            width: 100%; 
-            padding: 14px; 
-            border-radius: 12px; 
-            border: 1.5px solid var(--border-color); 
-            box-sizing: border-box; 
-            background: #F8FAFC;
+        .action-btn:active {
+            transform: scale(0.97);
         }
 
-        .toggle-group { display: flex; background: #EDF2F7; border-radius: 12px; padding: 4px; }
-        .toggle-btn { flex: 1; border: none; padding: 12px; border-radius: 10px; cursor: pointer; background: transparent; font-weight: bold; transition: all 0.2s; }
-        .toggle-btn.active { background: white; color: var(--accent-blue); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .secondary-btn {
+            background-color: #555;
+            color: white;
+            margin-top: 0;
+        }
 
-        .slider-wrap { display: flex; align-items: center; gap: 15px; }
-        input[type="range"] { flex-grow: 1; accent-color: var(--accent-blue); }
-        .value-badge { font-weight: bold; color: var(--accent-blue); min-width: 30px; }
-
-        .btn-test { margin-top: auto; background: white; border: 2px solid var(--accent-blue); color: var(--accent-blue); padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; }
-        .action-footer { grid-column: 1 / -1; display: flex; gap: 20px; }
+        .status-msg {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 1rem;
+            min-height: 24px;
+            color: var(--mc-green);
+        }
     </style>
 </head>
 <body>
 
-    <div class="dashboard-grid">
-        <header class="dashboard-header">
-            <h2 id="main-title">Centro de Mando</h2>
-            <p id="sub-title">Configuración de la Misión y Perfil del Alumno</p>
-        </header>
+    <div class="header">
+        <h1>Configuración</h1>
+        <button class="back-btn" onclick="location.href='index.html'">VOLVER</button>
+    </div>
 
-        <div class="lang-control">
-            <div class="toggle-group" style="width: 200px;">
-                <button class="toggle-btn" id="lang-es" onclick="setLang('es')">ESP</button>
-                <button class="toggle-btn" id="lang-en" onclick="setLang('en')">ENG</button>
-            </div>
-        </div>
-
-        <div class="config-box">
-            <h3 id="head-profile">👤 Perfil del Alumno</h3>
-            <div class="row">
-                <label id="lbl-dob">Fecha de Nacimiento</label>
-                <input type="date" id="billy-dob" class="input-field">
-            </div>
-            <div class="row">
-                <label id="lbl-diff">Nivel de Desafío</label>
-                <div class="toggle-group">
-                    <button class="toggle-btn" id="btn-normal" onclick="setDiff('normal')">NORMAL</button>
-                    <button class="toggle-btn" id="btn-high" onclick="setDiff('high')">EXPERTO</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="config-box">
-            <h3 id="head-voice">🔊 Calibración de Voz</h3>
-            <div class="row">
-                <label id="lbl-voice">Voz Seleccionada</label>
-                <select id="voice-select" class="input-field"></select>
-            </div>
-            <div class="row">
-                <label id="lbl-speed">Velocidad</label>
-                <div class="slider-wrap">
-                    <input type="range" id="speech-rate" min="0.5" max="1.5" step="0.1" oninput="updateVal('speed-val', this.value)">
-                    <span class="value-badge" id="speed-val">1.0</span>
-                </div>
-            </div>
-            <div class="row">
-                <label id="lbl-pitch">Tono (Pitch)</label>
-                <div class="slider-wrap">
-                    <input type="range" id="speech-pitch" min="0.5" max="2.0" step="0.1" oninput="updateVal('pitch-val', this.value)">
-                    <span class="value-badge" id="pitch-val">1.0</span>
-                </div>
-            </div>
-            <button class="btn-test" id="btn-test-voice" onclick="testVoice()">PROBAR CONFIGURACIÓN</button>
-        </div>
-
-        <div class="config-box">
-            <h3 id="head-core">⚙️ Núcleo del Sistema</h3>
-            <div class="row">
-                <label id="lbl-key">Gemini API Key</label>
-                <input type="password" id="api-key" class="input-field" placeholder="...">
-            </div>
-            <p id="txt-key-desc" style="font-size: 0.8rem; color: #A0AEC0;">Esta clave permite la generación dinámica de contenido.</p>
-        </div>
-
-<div class="config-box" style="border-style: dashed; background: #EDF2F7;">
-            <h3 id="head-admin">🛠️ Admin Tools</h3>
-            <p id="txt-admin-desc" style="font-size: 0.8rem; color: #718096; margin-bottom: 15px;">
-                Use this zone for system diagnostics and script testing.
-            </p>
-            <button class="btn-test" style="width:100%; background: #CBD5E0; border-color: #718096; color: #2D3748;" 
-                    onclick="window.location.href='testing.html'">
-                OPEN TESTING.HTML
-            </button>
-        </div>
+    <div class="settings-container">
         
-        <footer class="action-footer">
-            <button class="btn-stage-1" style="flex: 2;" onclick="saveSettings()"><span class="label" id="btn-save">GUARDAR CAMBIOS</span></button>
-            <button class="btn-stage-1" style="flex: 1; background: #718096; box-shadow: 0 8px 0 #4A5568;" onclick="window.location.href='index.html'"><span class="label" id="btn-cancel">CANCELAR</span></button>
-        </footer>
+        <div class="setting-card">
+            <h2>Ajuste de Interfaz</h2>
+            <p>Entra en el modo visual para mover y redimensionar las ventanas de Minecraft en tu iPad.</p>
+            <button class="action-btn secondary-btn" onclick="location.href='winadjust.html'">CALIBRAR PANTALLA</button>
+        </div>
+
+        <div class="setting-card">
+            <h2>Gemini API Key</h2>
+            <p>Necesaria para generar las misiones personalizadas de Billy.</p>
+            <input type="password" id="api-key" placeholder="••••••••••••••••">
+        </div>
+
+        <div class="setting-card">
+            <h2>Perfil del Alumno</h2>
+            <p>Fecha de nacimiento para calcular el nivel escolar automáticamente.</p>
+            <input type="date" id="dob">
+        </div>
+
+        <button class="action-btn" onclick="saveSettings()">GUARDAR TODO</button>
+        <div id="status" class="status-msg"></div>
+
     </div>
 
     <script>
-        const i18n = {
-            es: {
-                title: "Centro de Mando", sub: "Configuración de la Misión y Perfil del Alumno",
-                profile: "👤 Perfil del Alumno", dob: "Fecha de Nacimiento", diff: "Nivel de Desafío",
-                voice: "🔊 Calibración de Voz", selVoice: "Voz Seleccionada", speed: "Velocidad", pitch: "Tono (Pitch)", test: "PROBAR CONFIGURACIÓN",
-                core: "⚙️ Núcleo del Sistema", key: "Gemini API Key", desc: "Clave para la generación dinámica.",
-                save: "GUARDAR CAMBIOS", cancel: "CANCELAR"
-            },
-            en: {
-                title: "Command Center", sub: "Mission Configuration & Student Profile",
-                profile: "👤 Student Profile", dob: "Date of Birth", diff: "Challenge Level",
-                voice: "🔊 Voice Calibration", selVoice: "Selected Voice", speed: "Reading Speed", pitch: "Tone (Pitch)", test: "TEST SETTINGS",
-                core: "⚙️ System Core", key: "Gemini API Key", desc: "This key enables dynamic curriculum generation.",
-                save: "SAVE CHANGES", cancel: "CANCEL"
-            }
+        window.onload = () => {
+            document.getElementById('api-key').value = localStorage.getItem('gemini_key') || '';
+            document.getElementById('dob').value = localStorage.getItem('billy_dob') || '';
         };
 
-        function setLang(lang) {
-            localStorage.setItem('admin_lang', lang);
-            document.getElementById('lang-es').className = lang === 'es' ? 'toggle-btn active' : 'toggle-btn';
-            document.getElementById('lang-en').className = lang === 'en' ? 'toggle-btn active' : 'toggle-btn';
-            
-            const t = i18n[lang];
-            document.getElementById('main-title').innerText = t.title;
-            document.getElementById('sub-title').innerText = t.sub;
-            document.getElementById('head-profile').innerText = t.profile;
-            document.getElementById('lbl-dob').innerText = t.dob;
-            document.getElementById('lbl-diff').innerText = t.diff;
-            document.getElementById('head-voice').innerText = t.voice;
-            document.getElementById('lbl-voice').innerText = t.selVoice;
-            document.getElementById('lbl-speed').innerText = t.speed;
-            document.getElementById('lbl-pitch').innerText = t.pitch;
-            document.getElementById('btn-test-voice').innerText = t.test;
-            document.getElementById('head-core').innerText = t.core;
-            document.getElementById('lbl-key').innerText = t.key;
-            document.getElementById('txt-key-desc').innerText = t.desc;
-            document.getElementById('btn-save').innerText = t.save;
-            document.getElementById('btn-cancel').innerText = t.cancel;
-        }
-
-        // Initialize Settings
-        document.getElementById('api-key').value = localStorage.getItem('gemini_key') || '';
-        document.getElementById('billy-dob').value = localStorage.getItem('billy_dob') || '';
-        document.getElementById('speech-rate').value = localStorage.getItem('speech_rate') || 1.0;
-        document.getElementById('speed-val').innerText = localStorage.getItem('speech_rate') || 1.0;
-        document.getElementById('speech-pitch').value = localStorage.getItem('speech_pitch') || 1.0;
-        document.getElementById('pitch-val').innerText = localStorage.getItem('speech_pitch') || 1.0;
-        
-        setLang(localStorage.getItem('admin_lang') || 'es');
-        setDiff(localStorage.getItem('difficulty') || 'normal');
-
-        function setDiff(val) {
-            localStorage.setItem('difficulty', val);
-            document.getElementById('btn-normal').className = val === 'normal' ? 'toggle-btn active' : 'toggle-btn';
-            document.getElementById('btn-high').className = val === 'high' ? 'toggle-btn active' : 'toggle-btn';
-        }
-
-        function updateVal(id, val) { document.getElementById(id).innerText = val; }
-
-        function populateVoices() {
-            let voices = window.speechSynthesis.getVoices();
-            const select = document.getElementById('voice-select');
-            select.innerHTML = '';
-            voices.filter(v => v.lang.includes('es')).forEach(v => {
-                const opt = document.createElement('option');
-                opt.value = v.name; opt.innerText = v.name;
-                if(v.name === localStorage.getItem('preferred_voice')) opt.selected = true;
-                select.appendChild(opt);
-            });
-        }
-        window.speechSynthesis.onvoiceschanged = populateVoices;
-        setTimeout(populateVoices, 500);
-
-        function testVoice() {
-            window.speechSynthesis.cancel();
-            const msg = new SpeechSynthesisUtterance(localStorage.getItem('admin_lang') === 'en' ? "Voice sync complete." : "Sincronización de voz lista.");
-            msg.voice = window.speechSynthesis.getVoices().find(v => v.name === document.getElementById('voice-select').value);
-            msg.pitch = document.getElementById('speech-pitch').value;
-            msg.rate = document.getElementById('speech-rate').value;
-            window.speechSynthesis.speak(msg);
-        }
-
         function saveSettings() {
-            localStorage.setItem('gemini_key', document.getElementById('api-key').value);
-            localStorage.setItem('billy_dob', document.getElementById('billy-dob').value);
-            localStorage.setItem('speech_rate', document.getElementById('speech-rate').value);
-            localStorage.setItem('speech_pitch', document.getElementById('speech-pitch').value);
-            localStorage.setItem('preferred_voice', document.getElementById('voice-select').value);
-            window.location.href = 'index.html';
+            const key = document.getElementById('api-key').value;
+            const dob = document.getElementById('dob').value;
+            
+            localStorage.setItem('gemini_key', key);
+            localStorage.setItem('billy_dob', dob);
+            
+            const status = document.getElementById('status');
+            status.innerText = "✔ CAMBIOS GUARDADOS";
+            
+            setTimeout(() => {
+                status.innerText = "";
+            }, 3000);
         }
     </script>
 </body>
