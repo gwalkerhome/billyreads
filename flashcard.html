@@ -4,24 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Misión: BillyReads</title>
+    <link rel="stylesheet" href="flashstyle.css">
     <style>
-        :root {
-            --mc-font: 'Arial Black', Gadget, sans-serif;
-            --mc-white: #ffffff;
-            --mc-green: #76FF03;
-        }
-
-        body {
-            margin: 0; padding: 0;
-            /* Fallback background if no theme is selected */
-            background: #000 no-repeat center center fixed;
-            background-size: 100% 100%; 
-            height: 100vh; width: 100vw;
-            overflow: hidden; font-family: var(--mc-font);
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-        }
-
         .dynamic-pane {
             position: absolute;
             display: flex;
@@ -29,93 +13,63 @@
             text-align: center; box-sizing: border-box;
             transition: opacity 0.3s;
         }
-
-        #back-btn { cursor: pointer; border: none; background: transparent; z-index: 10; }
-
-        #subject-tag { color: #3F3F3F; font-size: 1.4rem; text-transform: uppercase; }
-
-        #target-sentence {
-            color: var(--mc-white); font-size: 2rem; padding: 20px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-        }
-
-        #val-text-box {
+        #val-translation {
             color: #AACCFF; font-size: 1.2rem; font-style: italic;
             opacity: 0; transition: opacity 0.3s;
         }
-        #val-text-box.visible { opacity: 1; }
-
-        /* Button Stage 1 Design */
-        .mc-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 3px solid var(--mc-white);
-            cursor: pointer; border-radius: 4px;
-        }
-        .mc-btn:active { background: rgba(255, 255, 255, 0.4); }
-
-        #live-transcript {
-            color: var(--mc-green); font-size: 1rem;
-            text-shadow: 1px 1px 2px black;
-        }
+        #val-translation.visible { opacity: 1; }
     </style>
 </head>
 <body>
 
+    <div class="xp-container"><div id="energy-bar"></div></div>
+
     <button id="back-btn" class="dynamic-pane" onclick="window.location.href='index.html'"></button>
-    <div id="subject-tag" class="dynamic-pane">CARGANDO...</div>
-    <div id="target-sentence" class="dynamic-pane">Sincronizando misión...</div>
-    <div id="val-text-box" class="dynamic-pane"></div>
+    <div id="subject-tag" class="dynamic-pane">SINCRONIZANDO...</div>
+    <div id="target-sentence" class="dynamic-pane">CARGANDO MISIÓN...</div>
+    <div id="val-translation" class="dynamic-pane"></div>
     
-    <button id="record-btn" class="dynamic-pane mc-btn"></button>
-    <button id="audio-btn" class="dynamic-pane mc-btn" onclick="playCurrentAudio()"></button>
+    <button id="record-btn" class="dynamic-pane mc-btn">
+        <span class="label" style="display:none">COMUNICAR</span>
+    </button>
+    <button id="audio-btn" class="dynamic-pane mc-btn" onclick="playAudio()"></button>
     <button id="val-btn" class="dynamic-pane mc-btn" onclick="toggleValenciano()">V</button>
     
-    <div id="live-transcript" class="dynamic-pane">Esperando señal...</div>
+    <div id="live-transcript" class="dynamic-pane">ESPERANDO SEÑAL...</div>
 
     <script>
-        let currentCard = null;
-
-        // 1. Load Background from Theme Library
         function applyTheme() {
             const themeId = parseInt(localStorage.getItem('bg_flashcard'));
             if (!themeId) {
-                // If no theme, default to the original minecraft.png
                 document.body.style.backgroundImage = "url('assets/minecraft.png')";
                 return;
             }
-
             const request = indexedDB.open("ThemeDB", 1);
             request.onsuccess = e => {
                 const db = e.target.result;
                 const transaction = db.transaction("themes", "readonly");
                 const store = transaction.objectStore("themes");
                 const getRequest = store.get(themeId);
-
                 getRequest.onsuccess = () => {
                     const theme = getRequest.result;
-                    if (theme) {
-                        document.body.style.backgroundImage = `url('${theme.data}')`;
-                    }
+                    if (theme) document.body.style.backgroundImage = `url('${theme.data}')`;
                 };
             };
         }
 
-        // 2. Position Assets based on WinAdjust coordinates
         function applyCalibration() {
             const saved = JSON.parse(localStorage.getItem('ui_positions'));
             if (!saved) return;
-
             const mapping = {
                 'pane-back': 'back-btn',
                 'pane-birch': 'subject-tag',
                 'pane-stone': 'target-sentence',
                 'pane-record': 'record-btn',
                 'pane-speech': 'audio-btn',
-                'pane-valenciano': 'val-text-box',
+                'pane-valenciano': 'val-translation',
                 'pane-val-toggle': 'val-btn',
                 'pane-slab': 'live-transcript'
             };
-
             Object.keys(mapping).forEach(paneKey => {
                 const el = document.getElementById(mapping[paneKey]);
                 const pos = saved[paneKey];
@@ -129,34 +83,14 @@
         }
 
         function toggleValenciano() {
-            document.getElementById('val-text-box').classList.toggle('visible');
-        }
-
-        function playCurrentAudio() {
-            if (!currentCard) return;
-            const utterance = new SpeechSynthesisUtterance(currentCard.spanish);
-            utterance.voice = window.speechSynthesis.getVoices().find(v => v.name === localStorage.getItem('billy_voice'));
-            utterance.rate = localStorage.getItem('billy_rate') || 1.0;
-            utterance.pitch = localStorage.getItem('billy_pitch') || 1.0;
-            window.speechSynthesis.speak(utterance);
+            document.getElementById('val-translation').classList.toggle('visible');
         }
 
         window.onload = () => {
             applyTheme();
             applyCalibration();
-            
-            // Dummy content for testing
-            setTimeout(() => {
-                currentCard = {
-                    subject: "Misión",
-                    spanish: "¿Estás listo para despegar?",
-                    valenciano: "Estàs llest per a enlairar-te?"
-                };
-                document.getElementById('subject-tag').innerText = currentCard.subject;
-                document.getElementById('target-sentence').innerText = currentCard.spanish;
-                document.getElementById('val-text-box').innerText = currentCard.valenciano;
-            }, 1000);
         };
     </script>
+    <script src="flashapp.js"></script>
 </body>
 </html>
