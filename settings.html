@@ -3,189 +3,223 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ajustes: Misión Minecraft</title>
+    <title>Command Center: BillyReads</title>
     <style>
         :root {
             --mc-font: 'Arial Black', Gadget, sans-serif;
+            --accent-blue: #4a90e2;
             --mc-green: #76FF03;
-            --mc-bg: #1e1e1e;
-            --card-bg: #2d2d2d;
-            --text-color: #ffffff;
+            --card-bg: #ffffff;
+            --body-bg: #f0f4f8;
         }
 
         body {
-            margin: 0;
-            padding: 20px;
-            background-color: var(--mc-bg);
-            color: var(--text-color);
-            font-family: var(--mc-font);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            margin: 0; padding: 20px;
+            background-color: var(--body-bg);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+            display: flex; flex-direction: column; align-items: center;
         }
 
-        .header {
-            width: 100%;
-            max-width: 600px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 40px;
-            padding-top: 10px;
+        h1 { font-family: var(--mc-font); color: #2c3e50; margin-bottom: 5px; }
+        .subtitle { color: #7f8c8d; margin-bottom: 30px; font-size: 0.9rem; }
+
+        /* Language Toggle */
+        .lang-toggle {
+            display: flex; gap: 10px; margin-bottom: 30px;
+        }
+        .toggle-btn {
+            padding: 10px 25px; border-radius: 20px; border: 1px solid #ddd;
+            background: white; cursor: pointer; font-weight: bold; color: #999;
+        }
+        .toggle-btn.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px; width: 100%; max-width: 1100px;
         }
 
-        h1 {
-            font-size: 1.6rem;
-            margin: 0;
-            text-transform: uppercase;
-            color: var(--mc-green);
-            letter-spacing: 1px;
+        .card {
+            background: var(--card-bg); border-radius: 15px; padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; flex-direction: column;
         }
 
-        .back-btn {
-            background: #444;
-            color: white;
-            border: 2px solid #555;
-            padding: 12px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-family: var(--mc-font);
-            font-size: 0.8rem;
+        .card-header {
+            display: flex; align-items: center; gap: 10px;
+            color: #7f8c8d; font-weight: bold; text-transform: uppercase;
+            font-size: 0.8rem; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;
         }
 
-        .settings-container {
-            width: 100%;
-            max-width: 600px;
-            display: flex;
-            flex-direction: column;
-            gap: 25px; /* Plenty of space between cards */
+        label { display: block; font-weight: bold; margin: 15px 0 5px; font-size: 0.85rem; color: #444; }
+
+        input[type="text"], input[type="password"], input[type="date"], select {
+            width: 100%; padding: 12px; border: 1px solid #e0e0e0;
+            border-radius: 8px; box-sizing: border-box; background: #fafafa;
         }
 
-        .setting-card {
-            background-color: var(--card-bg);
-            padding: 30px;
-            border-radius: 15px;
-            border: 2px solid #3d3d3d;
-            box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+        /* Sliders */
+        .slider-row { display: flex; justify-content: space-between; align-items: center; }
+        input[type="range"] { flex-grow: 1; margin: 0 15px; }
+        .val-display { font-weight: bold; color: var(--accent-blue); width: 30px; }
+
+        /* Level Selector */
+        .level-selector { display: flex; gap: 10px; margin-top: 5px; }
+        .lvl-btn {
+            flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #e0e0e0;
+            background: #fff; cursor: pointer; font-weight: bold; font-size: 0.75rem;
+        }
+        .lvl-btn.active { background: #eef6ff; border-color: var(--accent-blue); color: var(--accent-blue); }
+
+        .admin-btn {
+            background: #f8f9fa; border: 1px solid #ddd; padding: 15px;
+            border-radius: 8px; cursor: pointer; font-weight: bold; color: #555;
+            margin-top: 10px; text-transform: uppercase; font-size: 0.8rem;
         }
 
-        .setting-card h2 {
-            margin-top: 0;
-            font-size: 1.1rem;
-            color: #bbb;
-            text-transform: uppercase;
-            margin-bottom: 10px;
+        /* Bottom Actions */
+        .footer-actions {
+            margin-top: 40px; display: flex; gap: 20px; width: 100%; max-width: 600px;
         }
-
-        .setting-card p {
-            font-size: 0.85rem;
-            color: #888;
-            margin-bottom: 25px;
-            line-height: 1.4;
+        .main-btn {
+            flex: 1; padding: 20px; border-radius: 12px; border: none;
+            font-family: var(--mc-font); font-size: 1rem; cursor: pointer;
         }
-
-        input {
-            width: 100%;
-            padding: 18px;
-            box-sizing: border-box;
-            background: #1a1a1a;
-            border: 2px solid #444;
-            color: var(--mc-green);
-            border-radius: 10px;
-            font-family: monospace;
-            font-size: 1.2rem;
-            outline: none;
-        }
-
-        input:focus {
-            border-color: var(--mc-green);
-        }
-
-        .action-btn {
-            width: 100%;
-            padding: 20px;
-            background-color: var(--mc-green);
-            color: black;
-            border: none;
-            border-radius: 10px;
-            font-size: 1.1rem;
-            font-family: var(--mc-font);
-            cursor: pointer;
-            transition: transform 0.1s, background 0.2s;
-            margin-top: 10px;
-            text-transform: uppercase;
-        }
-
-        .action-btn:active {
-            transform: scale(0.97);
-        }
-
-        .secondary-btn {
-            background-color: #555;
-            color: white;
-            margin-top: 0;
-        }
-
-        .status-msg {
-            text-align: center;
-            margin-top: 25px;
-            font-size: 1rem;
-            min-height: 24px;
-            color: var(--mc-green);
-        }
+        #save-btn { background: var(--accent-blue); color: white; }
+        #cancel-btn { background: #cbd5e0; color: #4a5568; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>Configuración</h1>
-        <button class="back-btn" onclick="location.href='index.html'">VOLVER</button>
+    <h1>Command Center</h1>
+    <div class="subtitle">Mission Configuration & Student Profile</div>
+
+    <div class="lang-toggle">
+        <button class="toggle-btn active" id="btn-esp" onclick="setLang('ESP')">ESP</button>
+        <button class="toggle-btn" id="btn-eng" onclick="setLang('ENG')">ENG</button>
     </div>
 
-    <div class="settings-container">
+    <div class="settings-grid">
         
-        <div class="setting-card">
-            <h2>Ajuste de Interfaz</h2>
-            <p>Entra en el modo visual para mover y redimensionar las ventanas de Minecraft en tu iPad.</p>
-            <button class="action-btn secondary-btn" onclick="location.href='winadjust.html'">CALIBRAR PANTALLA</button>
-        </div>
-
-        <div class="setting-card">
-            <h2>Gemini API Key</h2>
-            <p>Necesaria para generar las misiones personalizadas de Billy.</p>
-            <input type="password" id="api-key" placeholder="••••••••••••••••">
-        </div>
-
-        <div class="setting-card">
-            <h2>Perfil del Alumno</h2>
-            <p>Fecha de nacimiento para calcular el nivel escolar automáticamente.</p>
+        <div class="card">
+            <div class="card-header">👤 Student Profile</div>
+            <label>Date of Birth</label>
             <input type="date" id="dob">
+
+            <label>Challenge Level</label>
+            <div class="level-selector">
+                <button class="lvl-btn active" id="lvl-normal" onclick="setLevel('NORMAL')">NORMAL</button>
+                <button class="lvl-btn" id="lvl-experto" onclick="setLevel('EXPERTO')">EXPERTO</button>
+            </div>
         </div>
 
-        <button class="action-btn" onclick="saveSettings()">GUARDAR TODO</button>
-        <div id="status" class="status-msg"></div>
+        <div class="card">
+            <div class="card-header">🔊 Voice Calibration</div>
+            <label>Selected Voice</label>
+            <select id="voice-select"></select>
 
+            <label>Reading Speed</label>
+            <div class="slider-row">
+                <input type="range" id="rate" min="0.5" max="1.5" step="0.1" oninput="updateVals()">
+                <span class="val-display" id="rate-val">1.0</span>
+            </div>
+
+            <label>Tone (Pitch)</label>
+            <div class="slider-row">
+                <input type="range" id="pitch" min="0.5" max="2.0" step="0.1" oninput="updateVals()">
+                <span class="val-display" id="pitch-val">1.0</span>
+            </div>
+
+            <button class="admin-btn" style="margin-top:20px; color:var(--accent-blue);" onclick="testSpeech()">Test Settings</button>
+        </div>
+
+        <div class="card">
+            <div class="card-header">⚙️ System Core</div>
+            <label>Gemini API Key</label>
+            <input type="password" id="api-key" placeholder="Enter Key...">
+            <p style="font-size: 0.7rem; color: #999; margin-top: 15px;">
+                This key enables dynamic curriculum generation.
+            </p>
+        </div>
+
+        <div class="card">
+            <div class="card-header">🛠️ Admin Tools</div>
+            <p style="font-size: 0.75rem; color: #888;">System diagnostics and interface calibration.</p>
+            <button class="admin-btn" onclick="location.href='winadjust.html'">Open WinAdjust.html</button>
+        </div>
+
+    </div>
+
+    <div class="footer-actions">
+        <button id="save-btn" class="main-btn" onclick="saveAll()">SAVE CHANGES</button>
+        <button id="cancel-btn" class="main-btn" onclick="location.href='index.html'">CANCEL</button>
     </div>
 
     <script>
+        let currentLang = 'ESP';
+        let currentLevel = 'NORMAL';
+
+        // Load Voices
+        function loadVoices() {
+            const select = document.getElementById('voice-select');
+            const voices = window.speechSynthesis.getVoices();
+            select.innerHTML = voices
+                .filter(v => v.lang.includes('es') || v.lang.includes('en'))
+                .map(v => `<option value="${v.name}">${v.name}</option>`).join('');
+            
+            select.value = localStorage.getItem('billy_voice') || '';
+        }
+
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+
         window.onload = () => {
+            loadVoices();
             document.getElementById('api-key').value = localStorage.getItem('gemini_key') || '';
             document.getElementById('dob').value = localStorage.getItem('billy_dob') || '';
+            document.getElementById('rate').value = localStorage.getItem('billy_rate') || 1.0;
+            document.getElementById('pitch').value = localStorage.getItem('billy_pitch') || 1.0;
+            
+            setLang(localStorage.getItem('billy_lang') || 'ESP');
+            setLevel(localStorage.getItem('billy_level') || 'NORMAL');
+            updateVals();
         };
 
-        function saveSettings() {
-            const key = document.getElementById('api-key').value;
-            const dob = document.getElementById('dob').value;
+        function updateVals() {
+            document.getElementById('rate-val').innerText = document.getElementById('rate').value;
+            document.getElementById('pitch-val').innerText = document.getElementById('pitch').value;
+        }
+
+        function setLang(lang) {
+            currentLang = lang;
+            document.getElementById('btn-esp').classList.toggle('active', lang === 'ESP');
+            document.getElementById('btn-eng').classList.toggle('active', lang === 'ENG');
+        }
+
+        function setLevel(lvl) {
+            currentLevel = lvl;
+            document.getElementById('lvl-normal').classList.toggle('active', lvl === 'NORMAL');
+            document.getElementById('lvl-experto').classList.toggle('active', lvl === 'EXPERTO');
+        }
+
+        function testSpeech() {
+            const msg = new SpeechSynthesisUtterance("Hola Billy, ¿estás listo para la misión?");
+            msg.voice = window.speechSynthesis.getVoices().find(v => v.name === document.getElementById('voice-select').value);
+            msg.rate = document.getElementById('rate').value;
+            msg.pitch = document.getElementById('pitch').value;
+            window.speechSynthesis.speak(msg);
+        }
+
+        function saveAll() {
+            localStorage.setItem('gemini_key', document.getElementById('api-key').value);
+            localStorage.setItem('billy_dob', document.getElementById('dob').value);
+            localStorage.setItem('billy_rate', document.getElementById('rate').value);
+            localStorage.setItem('billy_pitch', document.getElementById('pitch').value);
+            localStorage.setItem('billy_voice', document.getElementById('voice-select').value);
+            localStorage.setItem('billy_lang', currentLang);
+            localStorage.setItem('billy_level', currentLevel);
             
-            localStorage.setItem('gemini_key', key);
-            localStorage.setItem('billy_dob', dob);
-            
-            const status = document.getElementById('status');
-            status.innerText = "✔ CAMBIOS GUARDADOS";
-            
-            setTimeout(() => {
-                status.innerText = "";
-            }, 3000);
+            alert("Settings Synchronized.");
+            location.href = 'index.html';
         }
     </script>
 </body>
