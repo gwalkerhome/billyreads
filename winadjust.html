@@ -7,23 +7,23 @@
     <style>
         :root { --mc-font: 'Arial Black', sans-serif; }
         
-        /* The body is now just a black stage for the container */
         body, html {
             margin: 0; padding: 0;
-            background: #000;
+            background: #000; /* Black bars if screen is not 16:9 */
             height: 100vh; width: 100vw;
             overflow: hidden; font-family: var(--mc-font);
         }
 
-        /* The Anchor: This moves with the iPad's nav bar */
+        /* The Anchor - Matching Flashcard Logic Exactly */
         #game-container {
             position: relative;
             width: 100vw;
             height: 100vh;
-            background-size: 100% 100%; /* Matches your original background-size */
+            background-size: contain; /* FIXED: No more stretching */
             background-position: center center;
             background-repeat: no-repeat;
             margin: 0 auto;
+            display: block;
         }
 
         .pane {
@@ -123,7 +123,6 @@
                 getRequest.onsuccess = () => {
                     const theme = getRequest.result;
                     if (theme && theme.data) {
-                        // Apply background to the Anchor Container
                         container.style.backgroundImage = `url('${theme.data}')`;
                     }
                 };
