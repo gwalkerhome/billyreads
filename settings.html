@@ -3,110 +3,225 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ajustes: BillyReads</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Command Center: BillyReads</title>
+    <style>
+        :root {
+            --mc-font: 'Arial Black', Gadget, sans-serif;
+            --accent-blue: #4a90e2;
+            --mc-green: #76FF03;
+            --card-bg: #ffffff;
+            --body-bg: #f0f4f8;
+        }
+
+        body {
+            margin: 0; padding: 20px;
+            background-color: var(--body-bg);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        h1 { font-family: var(--mc-font); color: #2c3e50; margin-bottom: 5px; }
+        .subtitle { color: #7f8c8d; margin-bottom: 30px; font-size: 0.9rem; }
+
+        /* Language Toggle */
+        .lang-toggle {
+            display: flex; gap: 10px; margin-bottom: 30px;
+        }
+        .toggle-btn {
+            padding: 10px 25px; border-radius: 20px; border: 1px solid #ddd;
+            background: white; cursor: pointer; font-weight: bold; color: #999;
+        }
+        .toggle-btn.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px; width: 100%; max-width: 1100px;
+        }
+
+        .card {
+            background: var(--card-bg); border-radius: 15px; padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; flex-direction: column;
+        }
+
+        .card-header {
+            display: flex; align-items: center; gap: 10px;
+            color: #7f8c8d; font-weight: bold; text-transform: uppercase;
+            font-size: 0.8rem; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;
+        }
+
+        label { display: block; font-weight: bold; margin: 15px 0 5px; font-size: 0.85rem; color: #444; }
+
+        input[type="text"], input[type="password"], input[type="date"], select {
+            width: 100%; padding: 12px; border: 1px solid #e0e0e0;
+            border-radius: 8px; box-sizing: border-box; background: #fafafa;
+        }
+
+        /* Sliders */
+        .slider-row { display: flex; justify-content: space-between; align-items: center; }
+        input[type="range"] { flex-grow: 1; margin: 0 15px; }
+        .val-display { font-weight: bold; color: var(--accent-blue); width: 30px; }
+
+        /* Level Selector */
+        .level-selector { display: flex; gap: 10px; margin-top: 5px; }
+        .lvl-btn {
+            flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #e0e0e0;
+            background: #fff; cursor: pointer; font-weight: bold; font-size: 0.75rem;
+        }
+        .lvl-btn.active { background: #eef6ff; border-color: var(--accent-blue); color: var(--accent-blue); }
+
+        .admin-btn {
+            background: #f8f9fa; border: 1px solid #ddd; padding: 15px;
+            border-radius: 8px; cursor: pointer; font-weight: bold; color: #555;
+            margin-top: 10px; text-transform: uppercase; font-size: 0.8rem;
+        }
+
+        /* Bottom Actions */
+        .footer-actions {
+            margin-top: 40px; display: flex; gap: 20px; width: 100%; max-width: 600px;
+        }
+        .main-btn {
+            flex: 1; padding: 20px; border-radius: 12px; border: none;
+            font-family: var(--mc-font); font-size: 1rem; cursor: pointer;
+        }
+        #save-btn { background: var(--accent-blue); color: white; }
+        #cancel-btn { background: #cbd5e0; color: #4a5568; }
+    </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>CENTRO DE CONTROL</h2>
+    <h1>Command Center</h1>
+    <div class="subtitle">Mission Configuration & Student Profile</div>
 
-    <div class="setting-group">
-        <label>GEMINI API KEY</label>
-        <input type="password" id="gemini-key" placeholder="Pega tu clave aquí...">
+    <div class="lang-toggle">
+        <button class="toggle-btn active" id="btn-esp" onclick="setLang('ESP')">ESP</button>
+        <button class="toggle-btn" id="btn-eng" onclick="setLang('ENG')">ENG</button>
     </div>
 
-    <div class="setting-group">
-        <label>FECHA DE NACIMIENTO (BILLY)</label>
-        <input type="date" id="billy-dob">
-    </div>
-
-    <div class="setting-group">
-        <label>NIVEL DE DESAFÍO</label>
-        <select id="billy-level">
-            <option value="NORMAL">NORMAL (70/10/20)</option>
-            <option value="EXPERTO">EXPERTO (SOPHISTICATED)</option>
-        </select>
-    </div>
-
-    <div class="setting-group">
-        <label>VOZ DE LECTURA</label>
-        <select id="billy-voice"></select>
-    </div>
-
-    <div class="setting-group">
-        <label>VELOCIDAD (RATE)</label>
-        <input type="range" id="billy-rate" min="0.5" max="1.5" step="0.1" value="1.0">
-    </div>
-
-    <div class="setting-group">
-        <label>TONO (PITCH)</label>
-        <input type="range" id="billy-pitch" min="0.5" max="1.5" step="0.1" value="1.0">
-    </div>
-
-    <div class="grid-choice" style="margin-top: 30px;">
-        <button class="btn-stage-1" onclick="location.href='winadjust.html'">
-            <div class="icon">📐</div>
-            <div class="label">CALIBRAR</div>
-        </button>
-
-        <button class="btn-stage-1" onclick="location.href='themes.html'">
-            <div class="icon">🎨</div>
-            <div class="label">TEMAS</div>
-        </button>
-
-        <button class="btn-stage-1" style="background: #f44336; box-shadow: 0 8px 0 #b71c1c;" onclick="location.href='testing.html'">
-            <div class="icon">🛠️</div>
-            <div class="label">TEST API</div>
-        </button>
-    </div>
-
-    <button id="save-settings" class="btn-settings" onclick="saveAll()" style="margin-top: 30px;">GUARDAR CONFIGURACIÓN</button>
-    <button class="btn-settings" onclick="location.href='index.html'">VOLVER AL MENÚ</button>
-</div>
-
-<script>
-    function populateVoices() {
-        const voiceSelect = document.getElementById('billy-voice');
-        const voices = window.speechSynthesis.getVoices();
-        voiceSelect.innerHTML = '';
-        voices.forEach(voice => {
-            if (voice.lang.includes('es')) {
-                const option = document.createElement('option');
-                option.value = voice.name;
-                option.textContent = `${voice.name} (${voice.lang})`;
-                voiceSelect.appendChild(option);
-            }
-        });
-        const savedVoice = localStorage.getItem('billy_voice');
-        if (savedVoice) voiceSelect.value = savedVoice;
-    }
-
-    function loadSettings() {
-        document.getElementById('gemini-key').value = localStorage.getItem('gemini_key') || '';
-        document.getElementById('billy-dob').value = localStorage.getItem('billy_dob') || '2016-01-01';
-        document.getElementById('billy-level').value = localStorage.getItem('billy_level') || 'NORMAL';
-        document.getElementById('billy-rate').value = localStorage.getItem('billy_rate') || 1.0;
-        document.getElementById('billy-pitch').value = localStorage.getItem('billy_pitch') || 1.0;
+    <div class="settings-grid">
         
-        populateVoices();
-        if (speechSynthesis.onvoiceschanged !== undefined) {
-            speechSynthesis.onvoiceschanged = populateVoices;
+        <div class="card">
+            <div class="card-header">👤 Student Profile</div>
+            <label>Date of Birth</label>
+            <input type="date" id="dob">
+
+            <label>Challenge Level</label>
+            <div class="level-selector">
+                <button class="lvl-btn active" id="lvl-normal" onclick="setLevel('NORMAL')">NORMAL</button>
+                <button class="lvl-btn" id="lvl-experto" onclick="setLevel('EXPERTO')">EXPERTO</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">🔊 Voice Calibration</div>
+            <label>Selected Voice</label>
+            <select id="voice-select"></select>
+
+            <label>Reading Speed</label>
+            <div class="slider-row">
+                <input type="range" id="rate" min="0.5" max="1.5" step="0.1" oninput="updateVals()">
+                <span class="val-display" id="rate-val">1.0</span>
+            </div>
+
+            <label>Tone (Pitch)</label>
+            <div class="slider-row">
+                <input type="range" id="pitch" min="0.5" max="2.0" step="0.1" oninput="updateVals()">
+                <span class="val-display" id="pitch-val">1.0</span>
+            </div>
+
+            <button class="admin-btn" style="margin-top:20px; color:var(--accent-blue);" onclick="testSpeech()">Test Settings</button>
+        </div>
+
+        <div class="card">
+            <div class="card-header">⚙️ System Core</div>
+            <label>Gemini API Key</label>
+            <input type="password" id="api-key" placeholder="Enter Key...">
+            <p style="font-size: 0.7rem; color: #999; margin-top: 15px;">
+                This key enables dynamic curriculum generation.
+            </p>
+        </div>
+
+        <div class="card">
+            <div class="card-header">🛠️ Admin Tools</div>
+            <p style="font-size: 0.75rem; color: #888;">System diagnostics and interface calibration.</p>
+            <button class="admin-btn" onclick="location.href='winadjust.html'">Open WinAdjust.html</button>
+            <button class="admin-btn" onclick="location.href='themes.html'">🎨 MANAGE THEMES</button>
+        </div>
+
+    </div>
+
+    <div class="footer-actions">
+        <button id="save-btn" class="main-btn" onclick="saveAll()">SAVE CHANGES</button>
+        <button id="cancel-btn" class="main-btn" onclick="location.href='index.html'">CANCEL</button>
+    </div>
+
+    <script>
+        let currentLang = 'ESP';
+        let currentLevel = 'NORMAL';
+
+        // Load Voices
+        function loadVoices() {
+            const select = document.getElementById('voice-select');
+            const voices = window.speechSynthesis.getVoices();
+            select.innerHTML = voices
+                .filter(v => v.lang.includes('es') || v.lang.includes('en'))
+                .map(v => `<option value="${v.name}">${v.name}</option>`).join('');
+            
+            select.value = localStorage.getItem('billy_voice') || '';
         }
-    }
 
-    function saveAll() {
-        localStorage.setItem('gemini_key', document.getElementById('gemini-key').value.trim());
-        localStorage.setItem('billy_dob', document.getElementById('billy-dob').value);
-        localStorage.setItem('billy_level', document.getElementById('billy-level').value);
-        localStorage.setItem('billy_voice', document.getElementById('billy-voice').value);
-        localStorage.setItem('billy_rate', document.getElementById('billy-rate').value);
-        localStorage.setItem('billy_pitch', document.getElementById('billy-pitch').value);
-        alert("Configuración Guardada.");
-    }
+        window.speechSynthesis.onvoiceschanged = loadVoices;
 
-    window.onload = loadSettings;
-</script>
+        window.onload = () => {
+            loadVoices();
+            document.getElementById('api-key').value = localStorage.getItem('gemini_key') || '';
+            document.getElementById('dob').value = localStorage.getItem('billy_dob') || '';
+            document.getElementById('rate').value = localStorage.getItem('billy_rate') || 1.0;
+            document.getElementById('pitch').value = localStorage.getItem('billy_pitch') || 1.0;
+            
+            setLang(localStorage.getItem('billy_lang') || 'ESP');
+            setLevel(localStorage.getItem('billy_level') || 'NORMAL');
+            updateVals();
+        };
 
+        function updateVals() {
+            document.getElementById('rate-val').innerText = document.getElementById('rate').value;
+            document.getElementById('pitch-val').innerText = document.getElementById('pitch').value;
+        }
+
+        function setLang(lang) {
+            currentLang = lang;
+            document.getElementById('btn-esp').classList.toggle('active', lang === 'ESP');
+            document.getElementById('btn-eng').classList.toggle('active', lang === 'ENG');
+        }
+
+        function setLevel(lvl) {
+            currentLevel = lvl;
+            document.getElementById('lvl-normal').classList.toggle('active', lvl === 'NORMAL');
+            document.getElementById('lvl-experto').classList.toggle('active', lvl === 'EXPERTO');
+        }
+
+        function testSpeech() {
+            const msg = new SpeechSynthesisUtterance("Hola Billy, ¿estás listo para la misión?");
+            msg.voice = window.speechSynthesis.getVoices().find(v => v.name === document.getElementById('voice-select').value);
+            msg.rate = document.getElementById('rate').value;
+            msg.pitch = document.getElementById('pitch').value;
+            window.speechSynthesis.speak(msg);
+        }
+
+        function saveAll() {
+            localStorage.setItem('gemini_key', document.getElementById('api-key').value);
+            localStorage.setItem('billy_dob', document.getElementById('dob').value);
+            localStorage.setItem('billy_rate', document.getElementById('rate').value);
+            localStorage.setItem('billy_pitch', document.getElementById('pitch').value);
+            localStorage.setItem('billy_voice', document.getElementById('voice-select').value);
+            localStorage.setItem('billy_lang', currentLang);
+            localStorage.setItem('billy_level', currentLevel);
+            
+            alert("Settings Synchronized.");
+            location.href = 'index.html';
+        }
+    </script>
 </body>
 </html>
