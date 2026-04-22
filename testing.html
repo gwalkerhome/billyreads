@@ -1,96 +1,148 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>API Diagnostics: BillyReads</title>
-    <style>
-        body { font-family: sans-serif; padding: 20px; background: #f4f4f9; color: #333; line-height: 1.6; }
-        .test-box { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        h2 { color: #4a90e2; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        .status { padding: 15px; margin: 15px 0; border-radius: 8px; font-weight: bold; }
-        .idle { background: #eee; }
-        .working { background: #fff3cd; color: #856404; }
-        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        pre { background: #222; color: #0f0; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 13px; }
-        .btn-test { width: 100%; padding: 15px; background: #4a90e2; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .back-link { display: block; margin-top: 20px; text-align: center; color: #666; text-decoration: none; font-size: 14px; }
-    </style>
-</head>
-<body>
+// flashapp.js - 2026 Synchronized Version
+let flashcards = [];
+let currentIndex = 0;
+let isListening = false;
 
-<div class="test-box">
-    <h2>🛠️ API Connection Test</h2>
-    <p>This page tests if your <strong>Gemini API Key</strong> is valid and if the <strong>2026 Model</strong> is responding.</p>
+function getSchoolYear() {
+    const dobValue = localStorage.getItem('billy_dob');
+    if (!dobValue) return "4º de Primaria"; 
+    const dob = new Date(dobValue);
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const m = today.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+    const yearLevel = age - 5;
+    if (yearLevel < 1) return "1º de Primaria";
+    if (yearLevel > 6) return "6º de Primaria";
+    return `${yearLevel}º de Primaria`;
+}
 
-    <div id="status-box" class="status idle">Ready to test connection...</div>
+async function fetchJourneyCards() {
+    const apiKey = localStorage.getItem('gemini_key');
+    const difficulty = localStorage.getItem('billy_level') || 'NORMAL';
+    const schoolYear = getSchoolYear();
+    
+    if (!apiKey) {
+        document.getElementById('target-sentence').innerText = "Configura la API Key en Ajustes";
+        return;
+    }
 
-    <button class="btn-test" onclick="runTest()">RUN MISSION CHECK</button>
+    const difficultyInstruction = difficulty === 'EXPERTO' 
+        ? "Usa vocabulario sofisticado y conceptos científicos detallados." 
+        : "Usa un lenguaje claro y adecuado para su edad.";
 
-    <div id="results" style="display:none; margin-top:20px;">
-        <label><strong>Server Response:</strong></label>
-        <pre id="raw-output">Waiting for data...</pre>
-    </div>
+    // VERIFIED 2026 ENDPOINT
+    const model = "gemini-3.1-flash-lite-preview";
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-    <a href="settings.html" class="back-link">⬅ Back to Command Center</a>
-</div>
+    const prompt = `Actúa como un Director de Primaria en España. Genera 20 tarjetas de aprendizaje para un alumno de ${schoolYear}.
+    ${difficultyInstruction}
+    USA EL PROTOCOLO 'LEARNING JOURNEY':
+    - 70% contenido de ${schoolYear}.
+    - 10% contenido 'Ancla' del año anterior.
+    - 20% contenido 'Teaser' del año siguiente.
+    FORMATO JSON PURO: [{"es": "frase", "val": "traducción", "cat": "TEMA", "keywords": ["palabra"]}]`;
 
-<script>
-    async function runTest() {
-        const statusBox = document.getElementById('status-box');
-        const resultsDiv = document.getElementById('results');
-        const output = document.getElementById('raw-output');
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+        });
         
-        // Handshake: Pulling the key you just saved in Settings
-        const apiKey = localStorage.getItem('gemini_key');
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        const data = await response.json();
+        let rawText = data.candidates[0].content.parts[0].text;
         
-        if (!apiKey) {
-            statusBox.className = "status error";
-            statusBox.innerText = "❌ FAILED: No API Key found in storage.";
-            return;
+        // Clean any Markdown or conversational text from the AI
+        const start = rawText.indexOf('[');
+        const end = rawText.lastIndexOf(']');
+        if (start !== -1 && end !== -1) {
+            rawText = rawText.substring(start, end + 1);
         }
+        
+        flashcards = JSON.parse(rawText);
+        currentIndex = 0;
+        loadCard();
+    } catch (err) {
+        console.error("Critical Failure:", err);
+        document.getElementById('target-sentence').innerText = "Error cargando la misión.";
+    }
+}
 
-        statusBox.className = "status working";
-        statusBox.innerText = "📡 CONTACTING GEMINI SERVERS...";
-        resultsDiv.style.display = "block";
-        output.innerText = "Sending request to: v1beta/models/gemini-3.1-flash-lite-preview...";
+function loadCard() {
+    if (currentIndex >= flashcards.length) {
+        document.getElementById('target-sentence').innerText = "¡MISIÓN COMPLETADA!";
+        return;
+    }
+    const card = flashcards[currentIndex];
+    document.getElementById('target-sentence').innerText = card.es;
+    document.getElementById('subject-tag').innerText = card.cat;
+    document.getElementById('val-translation').innerText = card.val;
+    
+    const progress = ((currentIndex) / flashcards.length) * 100;
+    const bar = document.getElementById('energy-bar');
+    if (bar) bar.style.width = `${progress}%`;
+}
 
-        // The 2026 Frontier Endpoint
-        const model = "gemini-3.1-flash-lite-preview";
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+function playAudio() {
+    if (!flashcards[currentIndex]) return;
+    window.speechSynthesis.cancel();
+    const msg = new SpeechSynthesisUtterance(flashcards[currentIndex].es);
+    
+    // Pulling voice settings from our restored Settings IDs
+    msg.voice = window.speechSynthesis.getVoices().find(v => v.name === localStorage.getItem('billy_voice'));
+    msg.rate = parseFloat(localStorage.getItem('billy_rate') || 1.0);
+    msg.pitch = parseFloat(localStorage.getItem('billy_pitch') || 1.0);
+    msg.lang = 'es-ES';
+    window.speechSynthesis.speak(msg);
+}
 
-        const payload = {
-            contents: [{
-                parts: [{ text: "Respond with only one word: 'CONNECTED'" }]
-            }]
+// Recognition logic
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+if (SpeechRecognition) {
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'es-ES';
+    recognition.interimResults = true;
+
+    const recordBtn = document.getElementById('record-btn');
+    if (recordBtn) {
+        recordBtn.onclick = () => {
+            if (!isListening) {
+                recognition.start();
+                isListening = true;
+                recordBtn.style.background = "rgba(255, 0, 0, 0.4)";
+            } else {
+                recognition.stop();
+                isListening = false;
+                recordBtn.style.background = "rgba(255, 255, 255, 0.1)";
+            }
         };
 
-        try {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                statusBox.className = "status success";
-                statusBox.innerText = "✅ SUCCESS: Connection Established!";
-                output.innerText = JSON.stringify(data, null, 2);
-            } else {
-                statusBox.className = "status error";
-                statusBox.innerText = `❌ ERROR ${response.status}: ${data.error ? data.error.message : 'Unknown Error'}`;
-                output.innerText = JSON.stringify(data, null, 2);
+        recognition.onresult = (event) => {
+            let text = "";
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                text = event.results[i][0].transcript;
+                if (event.results[i].isFinal) processResult(text.toLowerCase());
             }
-        } catch (err) {
-            statusBox.className = "status error";
-            statusBox.innerText = "❌ NETWORK CRASH: Could not reach Google.";
-            output.innerText = err.toString();
-        }
+            const liveDisplay = document.getElementById('live-transcript');
+            if (liveDisplay) liveDisplay.innerText = text.toUpperCase();
+        };
     }
-</script>
+}
 
-</body>
-</html>
+function processResult(spokenText) {
+    const card = flashcards[currentIndex];
+    const isSuccess = card.keywords.some(k => spokenText.includes(k.toLowerCase()));
+    if (isSuccess) {
+        currentIndex++;
+        setTimeout(loadCard, 1000);
+    }
+    isListening = false;
+    const recordBtn = document.getElementById('record-btn');
+    if (recordBtn) recordBtn.style.background = "rgba(255, 255, 255, 0.1)";
+}
+
+// Kickoff
+if (localStorage.getItem('gemini_key')) fetchJourneyCards();
