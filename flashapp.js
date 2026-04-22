@@ -1,4 +1,4 @@
-// flashapp.js - Synchronized Version
+// flashapp.js - Final 2026 Synchronized Version
 let flashcards = [];
 let currentIndex = 0;
 let isListening = false;
@@ -31,7 +31,8 @@ async function fetchJourneyCards() {
         ? "Usa vocabulario sofisticado y conceptos científicos detallados." 
         : "Usa un lenguaje claro y adecuado para su edad.";
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    // CORRECTED MODEL FOR 2026: gemini-3-flash-preview
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
 
     const prompt = `Actúa como un Director de Primaria en España. Genera 20 tarjetas de aprendizaje para un alumno de ${schoolYear}.
     ${difficultyInstruction}
@@ -48,17 +49,28 @@ async function fetchJourneyCards() {
             body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
         });
         
+        if (!response.ok) {
+            const errorBody = await response.json();
+            console.error("API Response Error:", errorBody);
+            throw new Error(`Status: ${response.status}`);
+        }
+
         const data = await response.json();
         let rawText = data.candidates[0].content.parts[0].text;
+        
+        // Robust JSON extraction
         const start = rawText.indexOf('[');
         const end = rawText.lastIndexOf(']');
-        if (start !== -1 && end !== -1) rawText = rawText.substring(start, end + 1);
+        if (start !== -1 && end !== -1) {
+            rawText = rawText.substring(start, end + 1);
+        }
         
         flashcards = JSON.parse(rawText);
         currentIndex = 0;
         loadCard();
     } catch (err) {
-        document.getElementById('target-sentence').innerText = "Error cargando la misión.";
+        console.error("Fetch Failure:", err);
+        document.getElementById('target-sentence').innerText = "Error cargando la misión. Revisa la clave API.";
     }
 }
 
@@ -73,7 +85,9 @@ function loadCard() {
     document.getElementById('val-translation').innerText = card.val;
     
     const progress = ((currentIndex) / flashcards.length) * 100;
-    document.getElementById('energy-bar').style.width = `${progress}%`;
+    // Handshake fix: Using the energy-bar ID we established in the CSS
+    const bar = document.getElementById('energy-bar');
+    if (bar) bar.style.width = `${progress}%`;
 }
 
 function playAudio() {
@@ -88,32 +102,37 @@ function playAudio() {
 }
 
 // Recognition Setup
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-const recognition = new SpeechRecognition();
-recognition.lang = 'es-ES';
-recognition.interimResults = true;
+const SpeechRecognition = window.SpeechRecognition || window.webkitRecognition;
+if (SpeechRecognition) {
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'es-ES';
+    recognition.interimResults = true;
 
-const recordBtn = document.getElementById('record-btn');
-recordBtn.onclick = () => {
-    if (!isListening) {
-        recognition.start();
-        isListening = true;
-        recordBtn.style.background = "rgba(255, 0, 0, 0.4)";
-    } else {
-        recognition.stop();
-        isListening = false;
-        recordBtn.style.background = "rgba(255, 255, 255, 0.1)";
-    }
-};
+    const recordBtn = document.getElementById('record-btn');
+    if (recordBtn) {
+        recordBtn.onclick = () => {
+            if (!isListening) {
+                recognition.start();
+                isListening = true;
+                recordBtn.style.background = "rgba(255, 0, 0, 0.4)";
+            } else {
+                recognition.stop();
+                isListening = false;
+                recordBtn.style.background = "rgba(255, 255, 255, 0.1)";
+            }
+        };
 
-recognition.onresult = (event) => {
-    let text = "";
-    for (let i = event.resultIndex; i < event.results.length; ++i) {
-        text = event.results[i][0].transcript;
-        if (event.results[i].isFinal) processResult(text.toLowerCase());
+        recognition.onresult = (event) => {
+            let text = "";
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                text = event.results[i][0].transcript;
+                if (event.results[i].isFinal) processResult(text.toLowerCase());
+            }
+            const transcriptDiv = document.getElementById('live-transcript');
+            if (transcriptDiv) transcriptDiv.innerText = text.toUpperCase();
+        };
     }
-    document.getElementById('live-transcript').innerText = text.toUpperCase();
-};
+}
 
 function processResult(spokenText) {
     const card = flashcards[currentIndex];
@@ -123,7 +142,11 @@ function processResult(spokenText) {
         setTimeout(loadCard, 1000);
     }
     isListening = false;
-    recordBtn.style.background = "rgba(255, 255, 255, 0.1)";
+    const recordBtn = document.getElementById('record-btn');
+    if (recordBtn) recordBtn.style.background = "rgba(255, 255, 255, 0.1)";
 }
 
-if (localStorage.getItem('gemini_key')) fetchJourneyCards();
+// Initialize
+if (localStorage.getItem('gemini_key')) {
+    fetchJourneyCards();
+}
