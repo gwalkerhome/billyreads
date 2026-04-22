@@ -75,7 +75,6 @@
     <script>
         let activeId = null;
 
-        // Hardcoded fallbacks if no memory exists
         const defaultPos = {
             'pane-back': {t:2, l:2, w:10, h:12},
             'pane-birch': {t:10, l:30, w:40, h:10},
@@ -87,10 +86,32 @@
             'pane-slab': {t:92, l:25, w:50, h:6}
         };
 
-        // Load existing assets or use defaults
         let positions = JSON.parse(localStorage.getItem('ui_positions')) || defaultPos;
 
+        // NEW: Function to sync background with Theme Library
+        function loadThemeBackground() {
+            const themeId = parseInt(localStorage.getItem('bg_flashcard'));
+            if (!themeId) return; // Keep default if nothing is set
+
+            const request = indexedDB.open("ThemeDB", 1);
+            request.onsuccess = e => {
+                const db = e.target.result;
+                const transaction = db.transaction("themes", "readonly");
+                const store = transaction.objectStore("themes");
+                const getRequest = store.get(themeId);
+
+                getRequest.onsuccess = () => {
+                    const theme = getRequest.result;
+                    if (theme && theme.data) {
+                        document.body.style.backgroundImage = `url('${theme.data}')`;
+                        console.log("WinAdjust: Background synced to Flashcard theme.");
+                    }
+                };
+            };
+        }
+
         function init() {
+            // 1. Position the boxes
             Object.keys(positions).forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
@@ -99,7 +120,9 @@
                     el.style.width = p.w + '%'; el.style.height = p.h + '%';
                 }
             });
-            console.log("WinAdjust: UI Calibration loaded from memory.");
+            
+            // 2. Load the actual theme background
+            loadThemeBackground();
         }
 
         function selectPane(id) {
@@ -137,7 +160,7 @@
 
         function savePositions() {
             localStorage.setItem('ui_positions', JSON.stringify(positions));
-            alert("System Calibrated! Memory updated.");
+            alert("Calibration Saved!");
         }
 
         function generateBlueprint() {
@@ -145,7 +168,7 @@
             bBox.style.display = 'block';
             
             let promptInfo = "### SYSTEM INSTRUCTION: ARCHITECTURAL UI BACKGROUND ###\n";
-            promptInfo += "Create a high-fidelity, 16:9 background image for a child's reading app. All text windows MUST BE COMPLETELY EMPTY. Follow these exact coordinates:\n\n";
+            promptInfo += "Create a high-fidelity, 16:9 background image. All text windows MUST BE COMPLETELY EMPTY. Follow these exact coordinates:\n\n";
             
             const names = {
                 'pane-back': 'BACK BUTTON',
@@ -167,9 +190,7 @@
                 promptInfo += `${label}:\n   - Center: ${centerX}% H, ${centerY}% V\n   - Dimensions: ${p.w}% width, ${p.h}% height\n\n`;
             });
             
-            promptInfo += "The theme for this background image will be: [ENTER THEME]";
             bBox.value = promptInfo;
-            bBox.scrollIntoView({ behavior: 'smooth' });
             bBox.select();
         }
 
