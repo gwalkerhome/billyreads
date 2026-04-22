@@ -29,7 +29,22 @@
         </select>
     </div>
 
-    <div class="grid-choice">
+    <div class="setting-group">
+        <label>VOZ DE LECTURA</label>
+        <select id="billy-voice"></select>
+    </div>
+
+    <div class="setting-group">
+        <label>VELOCIDAD (RATE)</label>
+        <input type="range" id="billy-rate" min="0.5" max="1.5" step="0.1" value="1.0">
+    </div>
+
+    <div class="setting-group">
+        <label>TONO (PITCH)</label>
+        <input type="range" id="billy-pitch" min="0.5" max="1.5" step="0.1" value="1.0">
+    </div>
+
+    <div class="grid-choice" style="margin-top: 30px;">
         <button class="btn-stage-1" onclick="location.href='winadjust.html'">
             <div class="icon">📐</div>
             <div class="label">CALIBRAR</div>
@@ -39,30 +54,61 @@
             <div class="icon">🎨</div>
             <div class="label">TEMAS</div>
         </button>
-    </div>
 
-    <div style="margin-top: 20px;">
         <button class="btn-stage-1" style="background: #f44336; box-shadow: 0 8px 0 #b71c1c;" onclick="location.href='testing.html'">
             <div class="icon">🛠️</div>
-            <div class="label">API TESTER</div>
+            <div class="label">API TEST</div>
         </button>
     </div>
 
-    <button id="save-settings" class="btn-settings" onclick="saveAll()">GUARDAR TODO</button>
-    <button class="btn-settings" onclick="location.href='index.html'">VOLVER</button>
+    <button id="save-settings" class="btn-settings" onclick="saveAll()" style="margin-top: 30px;">GUARDAR TODO</button>
+    <button class="btn-settings" onclick="location.href='index.html'">VOLVER AL MENÚ</button>
 </div>
 
 <script>
+    // Voice Population Logic
+    function populateVoices() {
+        const voiceSelect = document.getElementById('billy-voice');
+        const voices = window.speechSynthesis.getVoices();
+        voiceSelect.innerHTML = '';
+        
+        voices.forEach(voice => {
+            if (voice.lang.includes('es')) {
+                const option = document.createElement('option');
+                option.value = voice.name;
+                option.textContent = `${voice.name} (${voice.lang})`;
+                voiceSelect.appendChild(option);
+            }
+        });
+
+        // Set the saved voice if it exists
+        const savedVoice = localStorage.getItem('billy_voice');
+        if (savedVoice) voiceSelect.value = savedVoice;
+    }
+
+    // Load all saved settings
     function loadSettings() {
         document.getElementById('gemini-key').value = localStorage.getItem('gemini_key') || '';
         document.getElementById('billy-dob').value = localStorage.getItem('billy_dob') || '2016-01-01';
         document.getElementById('billy-level').value = localStorage.getItem('billy_level') || 'NORMAL';
+        document.getElementById('billy-rate').value = localStorage.getItem('billy_rate') || 1.0;
+        document.getElementById('billy-pitch').value = localStorage.getItem('billy_pitch') || 1.0;
+        
+        // Ensure voices are loaded (some browsers need a delay)
+        populateVoices();
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = populateVoices;
+        }
     }
 
     function saveAll() {
         localStorage.setItem('gemini_key', document.getElementById('gemini-key').value.trim());
         localStorage.setItem('billy_dob', document.getElementById('billy-dob').value);
         localStorage.setItem('billy_level', document.getElementById('billy-level').value);
+        localStorage.setItem('billy_voice', document.getElementById('billy-voice').value);
+        localStorage.setItem('billy_rate', document.getElementById('billy-rate').value);
+        localStorage.setItem('billy_pitch', document.getElementById('billy-pitch').value);
+        
         alert("¡Configuración guardada!");
     }
 
