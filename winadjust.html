@@ -6,19 +6,33 @@
     <title>WinAdjust: UI Architect</title>
     <style>
         :root { --mc-font: 'Arial Black', sans-serif; }
-        body {
+        
+        /* The body is now just a black stage for the container */
+        body, html {
             margin: 0; padding: 0;
-            background: #000 url('assets/minecraft.png') no-repeat center center fixed;
-            background-size: 100% 100%; 
+            background: #000;
             height: 100vh; width: 100vw;
-            overflow-x: hidden; font-family: var(--mc-font);
+            overflow: hidden; font-family: var(--mc-font);
         }
+
+        /* The Anchor: This moves with the iPad's nav bar */
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background-size: 100% 100%; /* Matches your original background-size */
+            background-position: center center;
+            background-repeat: no-repeat;
+            margin: 0 auto;
+        }
+
         .pane {
             position: absolute; border: 2px dashed rgba(255,255,255,0.5);
             display: flex; justify-content: center; align-items: center;
             cursor: pointer; color: white; font-size: 10px; box-sizing: border-box;
             text-shadow: 1px 1px 2px black;
         }
+
         .active { border: 4px solid #76FF03 !important; background: rgba(118, 255, 3, 0.2) !important; z-index: 100; }
         
         #control-panel {
@@ -45,14 +59,16 @@
 </head>
 <body>
 
-    <div id="pane-back" class="pane" onclick="selectPane('pane-back')">BACK</div>
-    <div id="pane-birch" class="pane" onclick="selectPane('pane-birch')">SUBJECT</div>
-    <div id="pane-stone" class="pane" onclick="selectPane('pane-stone')">SENTENCE</div>
-    <div id="pane-record" class="pane" onclick="selectPane('pane-record')" style="background:rgba(255,0,0,0.2)">TNT (REC)</div>
-    <div id="pane-speech" class="pane" onclick="selectPane('pane-speech')" style="background:rgba(255,255,0,0.2)">MEGA (VOICE)</div>
-    <div id="pane-valenciano" class="pane" onclick="selectPane('pane-valenciano')" style="background:rgba(0,0,255,0.2)">VAL TEXT</div>
-    <div id="pane-val-toggle" class="pane" onclick="selectPane('pane-val-toggle')" style="background:rgba(255,255,255,0.2)">VAL TOGGLE</div>
-    <div id="pane-slab" class="pane" onclick="selectPane('pane-slab')">TRANSCRIPT</div>
+    <div id="game-container">
+        <div id="pane-back" class="pane" onclick="selectPane('pane-back')">BACK</div>
+        <div id="pane-birch" class="pane" onclick="selectPane('pane-birch')">SUBJECT</div>
+        <div id="pane-stone" class="pane" onclick="selectPane('pane-stone')">SENTENCE</div>
+        <div id="pane-record" class="pane" onclick="selectPane('pane-record')" style="background:rgba(255,0,0,0.2)">TNT (REC)</div>
+        <div id="pane-speech" class="pane" onclick="selectPane('pane-speech')" style="background:rgba(255,255,0,0.2)">MEGA (VOICE)</div>
+        <div id="pane-valenciano" class="pane" onclick="selectPane('pane-valenciano')" style="background:rgba(0,0,255,0.2)">VAL TEXT</div>
+        <div id="pane-val-toggle" class="pane" onclick="selectPane('pane-val-toggle')" style="background:rgba(255,255,255,0.2)">VAL TOGGLE</div>
+        <div id="pane-slab" class="pane" onclick="selectPane('pane-slab')">TRANSCRIPT</div>
+    </div>
 
     <div id="control-panel">
         <h3 id="panel-title" style="margin:0">Select a Zone</h3>
@@ -88,10 +104,14 @@
 
         let positions = JSON.parse(localStorage.getItem('ui_positions')) || defaultPos;
 
-        // NEW: Function to sync background with Theme Library
         function loadThemeBackground() {
             const themeId = parseInt(localStorage.getItem('bg_flashcard'));
-            if (!themeId) return; // Keep default if nothing is set
+            const container = document.getElementById('game-container');
+            
+            if (!themeId) {
+                container.style.backgroundImage = "url('assets/minecraft.png')";
+                return;
+            }
 
             const request = indexedDB.open("ThemeDB", 1);
             request.onsuccess = e => {
@@ -103,15 +123,14 @@
                 getRequest.onsuccess = () => {
                     const theme = getRequest.result;
                     if (theme && theme.data) {
-                        document.body.style.backgroundImage = `url('${theme.data}')`;
-                        console.log("WinAdjust: Background synced to Flashcard theme.");
+                        // Apply background to the Anchor Container
+                        container.style.backgroundImage = `url('${theme.data}')`;
                     }
                 };
             };
         }
 
         function init() {
-            // 1. Position the boxes
             Object.keys(positions).forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
@@ -120,8 +139,6 @@
                     el.style.width = p.w + '%'; el.style.height = p.h + '%';
                 }
             });
-            
-            // 2. Load the actual theme background
             loadThemeBackground();
         }
 
