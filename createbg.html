@@ -3,109 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Create Blueprint: BillyReads</title>
+    <title>Blueprint Architect: 3:2 Lock</title>
     <style>
         :root { 
             --mc-font: 'Arial Black', sans-serif; 
             --accent: #4a90e2;
-            --canvas-green: #00FF00; /* Green Screen for visualization */
+            --canvas-green: #00FF00;
         }
         
         body, html {
-            margin: 0; padding: 0;
-            background: #000;
-            height: 100vh; width: 100vw;
-            overflow: hidden; font-family: var(--mc-font);
+            margin: 0; padding: 0; background: #111;
+            height: 100vh; width: 100vw; overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+            font-family: var(--mc-font);
         }
 
-        #canvas-container {
+        /* The 3:2 iPad Container Lock */
+        #canvas-viewport {
             position: relative;
-            width: 100vw; height: 100vh;
+            width: 100vw;
+            height: 66.66vw; /* Maintain 3:2 ratio */
+            max-height: 100vh;
+            max-width: 150vh; /* Prevents overflow on tall screens */
             background: var(--canvas-green);
-            display: block;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            overflow: hidden;
         }
 
         .blueprint-pane {
-            position: absolute; border: 2px dashed rgba(0,0,0,0.5);
+            position: absolute; border: 2px dashed rgba(0,0,0,0.4);
             display: flex; justify-content: center; align-items: center;
-            cursor: pointer; color: black; font-size: 10px; box-sizing: border-box;
-            background: rgba(255,255,255,0.4);
-            text-align: center; font-weight: bold;
+            cursor: pointer; color: black; font-size: 9px; box-sizing: border-box;
+            background: rgba(255,255,255,0.3);
+            text-align: center; font-weight: bold; transition: background 0.2s;
         }
 
         .active { 
-            border: 4px solid #000 !important; 
-            background: rgba(255, 255, 255, 0.8) !important; 
+            border: 3px solid #000 !important; 
+            background: rgba(255, 255, 255, 0.7) !important; 
             z-index: 100; 
         }
         
         #control-panel {
-            position: fixed; right: 20px; top: 20px; width: 260px;
-            background: rgba(0,0,0,0.9); color: white; padding: 20px;
-            border-radius: 15px; border: 2px solid #333; z-index: 1000;
+            position: fixed; right: 20px; top: 20px; width: 240px;
+            background: rgba(0,0,0,0.85); color: white; padding: 15px;
+            border-radius: 12px; border: 1px solid #444; z-index: 1000;
+            backdrop-filter: blur(10px);
         }
         
-        input[type=range] { width: 100%; margin: 8px 0; }
+        input[type=range] { width: 100%; margin: 5px 0 12px 0; accent-color: var(--accent); }
         
         button { 
-            width: 100%; padding: 12px; margin-top: 10px; border: none; 
-            border-radius: 5px; font-weight: bold; cursor: pointer; text-transform: uppercase;
-            font-size: 10px;
+            width: 100%; padding: 10px; margin-top: 8px; border: none; 
+            border-radius: 6px; font-weight: bold; cursor: pointer; 
+            text-transform: uppercase; font-size: 10px;
         }
         #gen-btn { background: var(--accent); color: white; }
-        #back-btn { background: #444; color: white; }
-        .pos-label { font-size: 11px; color: #76FF03; margin-bottom: 10px; display: block; }
+        #back-btn { background: #333; color: white; }
+        .pos-label { font-size: 10px; color: #76FF03; margin-bottom: 8px; display: block; }
         
-        /* Modal for Prompt */
+        /* Prompt Modal */
         #modal-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0,0,0,0.9); display: none; 
             justify-content: center; align-items: center; z-index: 2000;
         }
         .modal {
-            background: #1a1a1a; padding: 25px; border-radius: 15px;
-            width: 85%; max-width: 600px; border: 2px solid var(--accent);
+            background: #1a1a1a; padding: 20px; border-radius: 12px;
+            width: 90%; max-width: 550px; border: 2px solid var(--accent);
         }
         #prompt-output {
-            width: 100%; height: 350px; background: #000; color: #76FF03; 
-            font-family: monospace; font-size: 11px; padding: 15px; 
+            width: 100%; height: 300px; background: #000; color: #76FF03; 
+            font-family: monospace; font-size: 11px; padding: 12px; 
             border: 1px solid #333; box-sizing: border-box; resize: none;
         }
     </style>
 </head>
 <body>
 
-    <div id="canvas-container">
+    <div id="canvas-viewport">
         <div id="pane-back" class="blueprint-pane" onclick="selectPane('pane-back')">EXIT</div>
         <div id="pane-birch" class="blueprint-pane" onclick="selectPane('pane-birch')">TITLE</div>
         <div id="pane-stone" class="blueprint-pane" onclick="selectPane('pane-stone')">PRIMARY TEXT</div>
-        <div id="pane-record" class="blueprint-pane" onclick="selectPane('pane-record')">REC (MIC)</div>
-        <div id="pane-speech" class="blueprint-pane" onclick="selectPane('pane-speech')">AUDIO (SPK)</div>
-        <div id="pane-valenciano" class="blueprint-pane" onclick="selectPane('pane-valenciano')">TRANSLATION</div>
+        <div id="pane-record" class="blueprint-pane" onclick="selectPane('pane-record')">REC</div>
+        <div id="pane-speech" class="blueprint-pane" onclick="selectPane('pane-speech')">AUDIO</div>
+        <div id="pane-valenciano" class="blueprint-pane" onclick="selectPane('pane-valenciano')">TRANS</div>
         <div id="pane-val-toggle" class="blueprint-pane" onclick="selectPane('pane-val-toggle')">TOGGLE</div>
-        <div id="pane-slab" class="blueprint-pane" onclick="selectPane('pane-slab')">TRANSCRIPT</div>
+        <div id="pane-slab" class="blueprint-pane" onclick="selectPane('pane-slab')">SUBS</div>
     </div>
 
     <div id="control-panel">
-        <h3 id="panel-title" style="margin:0; color:var(--accent)">DESIGN BLUEPRINT</h3>
-        <span id="pos-info" class="pos-label">Select a zone to move</span>
+        <h3 id="panel-title" style="margin:0 0 10px 0; color:var(--accent); font-size: 14px;">BLUEPRINT EDITOR</h3>
+        <span id="pos-info" class="pos-label">Select asset...</span>
 
-        <label>Top %</label><input type="range" id="val-top" min="0" max="100" value="10" oninput="updateUI()">
-        <label>Left %</label><input type="range" id="val-left" min="0" max="100" value="10" oninput="updateUI()">
-        <label>Width %</label><input type="range" id="val-width" min="1" max="100" value="20" oninput="updateUI()">
-        <label>Height %</label><input type="range" id="val-height" min="1" max="100" value="10" oninput="updateUI()">
+        <label style="font-size: 9px; color:#888;">TOP %</label><input type="range" id="val-top" min="0" max="100" oninput="updateUI()">
+        <label style="font-size: 9px; color:#888;">LEFT %</label><input type="range" id="val-left" min="0" max="100" oninput="updateUI()">
+        <label style="font-size: 9px; color:#888;">WIDTH %</label><input type="range" id="val-width" min="1" max="100" oninput="updateUI()">
+        <label style="font-size: 9px; color:#888;">HEIGHT %</label><input type="range" id="val-height" min="1" max="100" oninput="updateUI()">
         
-        <button id="gen-btn" onclick="generateStrictPrompt()">GENERATE STRICT PROMPT</button>
+        <button id="gen-btn" onclick="generateStrictPrompt()">GENERATE BLUEPRINT PROMPT</button>
         <button id="back-btn" onclick="window.location.href='themes.html'">BACK TO THEMES</button>
     </div>
 
     <div id="modal-overlay">
         <div class="modal">
-            <h2 style="color: var(--accent); margin-top:0;">Blueprint-First Prompt</h2>
-            <p style="color: #ccc; font-size: 0.75rem;">This prompt uses your specific layout as an immovable foundation.</p>
+            <h2 style="color: var(--accent); margin-top:0; font-size: 18px;">Blueprint-First Prompt</h2>
             <textarea id="prompt-output" readonly></textarea>
             <div style="display:flex; gap:10px; margin-top:10px;">
-                <button onclick="copyToClipboard()" style="background:#76FF03; color:black; flex:1">COPY PROMPT</button>
+                <button onclick="copyToClipboard()" style="background:#76FF03; color:black; flex:1">COPY</button>
                 <button onclick="document.getElementById('modal-overlay').style.display='none'" style="background:#444; color:white; flex:1">CLOSE</button>
             </div>
         </div>
@@ -114,6 +119,7 @@
     <script>
         let activeId = 'pane-stone';
 
+        // Same default layout used across all pages
         let layout = {
             'pane-back': {t:12, l:3, w:9, h:15},
             'pane-birch': {t:5, l:30, w:41, h:9},
@@ -164,7 +170,7 @@
         }
 
         function updatePosLabel(p) {
-            document.getElementById('pos-info').innerText = `L:${p.l}% T:${p.t}% | W:${p.w}% H:${p.h}%`;
+            document.getElementById('pos-info').innerText = `T:${p.t}% L:${p.l}% | W:${p.w}% H:${p.h}%`;
         }
 
         function generateStrictPrompt() {
@@ -175,13 +181,10 @@
             let prompt = "Role: Architectural UI Illustrator.\n";
             prompt += "Task: Design a thematic environment AROUND a pre-existing 3:2 structural blueprint.\n\n";
             prompt += "STRICT OPERATING PROTOCOL:\n";
-            prompt += "1. FOUNDATION FIRST: The following elements are already FIXED in 3D space. You must NOT move, shift, or ignore these coordinates.\n";
-            prompt += "2. ILLUSTRATE AROUND: Design the theme so the environment naturally incorporates these zones as physical parts of the scene.\n";
-            prompt += "3. ZERO INTERFERENCE: Text windows must remain FLAT and EMPTY. No focal points inside these zones.\n";
-            prompt += "4. NO TEXT: No labels or words on buttons. Use only physical 3D symbols.\n\n";
-            
-            prompt += "[STRUCTURED ANCHORS]\n\n";
-            prompt += "Clear Windows (Leave Empty/Flat):\n";
+            prompt += "1. FOUNDATION FIRST: Elements are FIXED in 3D space. Do NOT move or ignore coordinates.\n";
+            prompt += "2. ILLUSTRATE AROUND: Environment must incorporate these zones as physical parts of the architecture.\n";
+            prompt += "3. ZERO INTERFERENCE: Windows must remain FLAT and EMPTY. No focal points inside.\n";
+            prompt += "4. NO TEXT: No labels. Use only physical 3D symbols.\n\n";
             
             const names = {
                 'pane-stone': 'PRIMARY TEXT FIELD',
@@ -197,19 +200,19 @@
                 'pane-speech': 'AUDIO SPEAKER'
             };
 
+            prompt += "[CLEAR WINDOWS]\n";
             Object.keys(names).forEach(id => {
                 const p = layout[id];
                 prompt += `- ${names[id]}: Fixed at ${p.l}% Left, ${p.t}% Top. Size: ${p.w}% Width, ${p.h}% Height.\n`;
             });
 
-            prompt += "\nThematic Features (Design as physical objects):\n";
+            prompt += "\n[THEMATIC FEATURES]\n";
             Object.keys(features).forEach(id => {
                 const p = layout[id];
                 prompt += `- ${features[id]}: Fixed at ${p.l}% Left, ${p.t}% Top. Size: ${p.w}% Width, ${p.h}% Height.\n`;
             });
 
-            prompt += "\nFINAL AESTHETIC: The theme must wrap around these anchors. They must appear as part of the architecture.\n\nTheme/Mood = ";
-            
+            prompt += "\nFINAL RULES: No text. 3D Style. Theme must wrap around anchors.\n\nTheme/Mood = ";
             output.value = prompt;
         }
 
@@ -217,7 +220,7 @@
             const box = document.getElementById('prompt-output');
             box.select();
             navigator.clipboard.writeText(box.value);
-            alert("Blueprint-First Prompt Copied!");
+            alert("Blueprint Prompt Copied!");
         }
 
         window.onload = init;
