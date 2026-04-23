@@ -23,6 +23,7 @@
             background-repeat: no-repeat;
             margin: 0 auto;
             display: block;
+            background-color: #1a1a1a; /* Visual feedback if image fails */
         }
 
         .pane {
@@ -113,18 +114,27 @@
 
         async function init() {
             const cloudState = await getGlobalTheme();
+            const container = document.getElementById('game-container');
             
-            if (cloudState) {
+            if (cloudState && cloudState.activeThemeUrl) {
                 currentThemeId = cloudState.activeThemeId;
                 currentThemeUrl = cloudState.activeThemeUrl;
-                positions = cloudState.layout;
-                document.getElementById('game-container').style.backgroundImage = `url('${currentThemeUrl}')`;
+                positions = cloudState.layout || {};
             } else {
-                // Fallback if cloud is empty
-                document.getElementById('game-container').style.backgroundImage = "url('assets/minecraft.png')";
+                // Fallback to local keys if cloud is not initialized yet
+                currentThemeId = localStorage.getItem('active_theme_id');
+                currentThemeUrl = localStorage.getItem('bg_url_cloud');
                 positions = JSON.parse(localStorage.getItem('ui_positions')) || {};
             }
 
+            // Apply Background
+            if (currentThemeUrl) {
+                container.style.backgroundImage = `url('${currentThemeUrl}')`;
+            } else {
+                container.style.backgroundImage = "url('assets/minecraft.png')";
+            }
+
+            // Position all panes
             Object.keys(positions).forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
@@ -139,17 +149,21 @@
         window.selectPane = (id) => {
             if(activeId) document.getElementById(activeId).classList.remove('active');
             activeId = id;
-            document.getElementById(id).classList.add('active');
+            const el = document.getElementById(id);
+            el.classList.add('active');
             document.getElementById('panel-title').innerText = id.replace('pane-', '').toUpperCase();
             
-            const p = positions[id];
-            if (p) {
-                document.getElementById('val-top').value = p.t;
-                document.getElementById('val-left').value = p.l;
-                document.getElementById('val-width').value = p.w;
-                document.getElementById('val-height').value = p.h;
-                updatePosLabel(p);
+            // Ensure position object exists for this pane
+            if (!positions[id]) {
+                positions[id] = { t: 10, l: 10, w: 20, h: 10 };
             }
+
+            const p = positions[id];
+            document.getElementById('val-top').value = p.t;
+            document.getElementById('val-left').value = p.l;
+            document.getElementById('val-width').value = p.w;
+            document.getElementById('val-height').value = p.h;
+            updatePosLabel(p);
         };
 
         window.updateUI = () => {
@@ -174,6 +188,7 @@
         window.savePositions = async () => {
             const btn = document.getElementById('save-btn');
             btn.innerText = "SAVING...";
+            // Use current state variables
             const success = await saveGlobalTheme(currentThemeId, currentThemeUrl, positions);
             if (success) {
                 btn.innerText = "SAVE TO CLOUD";
@@ -207,8 +222,8 @@
             bBox.value = promptInfo;
         };
 
-        // Initialize on load
-        init();
+        // Standard init
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
