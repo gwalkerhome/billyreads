@@ -7,30 +7,32 @@
     <style>
         :root { --mc-font: 'Arial Black', sans-serif; }
         
+        /* Synchronized with flashcard.html base styles */
         body, html {
-            margin: 0; padding: 0; background: #000;
-            height: 100vh; width: 100vw; overflow: hidden; font-family: var(--mc-font);
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background: #000; font-family: var(--mc-font);
         }
 
-        /* GOLD STANDARD CONTAINER */
         #game-container {
-            position: relative;
             width: 100vw; height: 100vh;
             background-size: cover; background-position: center;
-            margin: 0 auto; display: block;
+            position: relative;
         }
 
-        /* UNIFIED ASSET CLASS */
+        /* Updated to match flashcard.html .dynamic-pane logic */
         .dynamic-pane {
             position: absolute;
-            display: flex; justify-content: center; align-items: center;
-            text-align: center; box-sizing: border-box; overflow: hidden;
-            background: rgba(255,255,255,0.1); /* Subtle visibility for editing */
-            border: 1px dashed rgba(255,255,255,0.3);
+            display: flex;
+            justify-content: center; align-items: center;
+            text-align: center; box-sizing: border-box;
+            overflow: hidden;
+            background: transparent; border: none; outline: none;
             cursor: pointer; color: white; font-size: 10px;
             text-shadow: 1px 1px 2px black;
         }
 
+        /* Calibration visual aids - kept for winadjust functionality */
+        .pane-outline { border: 2px dashed rgba(255,255,255,0.4) !important; background: rgba(255,255,255,0.05) !important; }
         .active { border: 4px solid #76FF03 !important; background: rgba(118, 255, 3, 0.2) !important; z-index: 100; }
         
         #control-panel {
@@ -46,32 +48,59 @@
             border-radius: 5px; font-weight: bold; cursor: pointer; text-transform: uppercase;
         }
         #save-btn { background: #76FF03; color: black; }
+        #blueprint-btn { background: #4a90e2; color: white; }
         #back-btn { background: #444; color: white; }
         .pos-label { font-size: 11px; color: #aaa; margin-bottom: 10px; display: block; }
+        
+        #blueprint-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.85); display: none; 
+            justify-content: center; align-items: center; z-index: 2000;
+        }
+        .modal {
+            background: #1a1a1a; padding: 25px; border-radius: 15px;
+            width: 80%; max-width: 600px; border: 2px solid #4a90e2;
+        }
+        #blueprint-box {
+            width: 100%; height: 300px; background: #000; color: #76FF03; 
+            font-family: monospace; font-size: 12px; padding: 15px; 
+            border: 1px solid #333; box-sizing: border-box; resize: none;
+        }
     </style>
 </head>
 <body>
 
     <div id="game-container">
-        <div id="pane-back" class="dynamic-pane" onclick="selectPane('pane-back')">BACK</div>
-        <div id="pane-birch" class="dynamic-pane" onclick="selectPane('pane-birch')">SUBJECT</div>
-        <div id="pane-stone" class="dynamic-pane" onclick="selectPane('pane-stone')">SENTENCE</div>
-        <div id="pane-record" class="dynamic-pane" onclick="selectPane('pane-record')">REC</div>
-        <div id="pane-speech" class="dynamic-pane" onclick="selectPane('pane-speech')">VOICE</div>
-        <div id="pane-valenciano" class="dynamic-pane" onclick="selectPane('pane-valenciano')">VAL TEXT</div>
-        <div id="pane-val-toggle" class="dynamic-pane" onclick="selectPane('pane-val-toggle')">V</div>
-        <div id="pane-slab" class="dynamic-pane" onclick="selectPane('pane-slab')">TRANSCRIPT</div>
+        <div id="pane-back" class="dynamic-pane pane-outline" onclick="selectPane('pane-back')">BACK</div>
+        <div id="pane-birch" class="dynamic-pane pane-outline" onclick="selectPane('pane-birch')">SUBJECT</div>
+        <div id="pane-stone" class="dynamic-pane pane-outline" onclick="selectPane('pane-stone')">SENTENCE</div>
+        <div id="pane-record" class="dynamic-pane pane-outline" onclick="selectPane('pane-record')" style="background:rgba(255,0,0,0.2) !important">TNT (REC)</div>
+        <div id="pane-speech" class="dynamic-pane pane-outline" onclick="selectPane('pane-speech')" style="background:rgba(255,255,0,0.2) !important">MEGA (VOICE)</div>
+        <div id="pane-valenciano" class="dynamic-pane pane-outline" onclick="selectPane('pane-valenciano')" style="background:rgba(0,0,255,0.2) !important">VAL TEXT</div>
+        <div id="pane-val-toggle" class="dynamic-pane pane-outline" onclick="selectPane('pane-val-toggle')" style="background:rgba(255,255,255,0.2) !important">VAL TOGGLE</div>
+        <div id="pane-slab" class="dynamic-pane pane-outline" onclick="selectPane('pane-slab')">TRANSCRIPT</div>
     </div>
 
     <div id="control-panel">
-        <h3 id="panel-title" style="margin:0">SELECT ZONE</h3>
+        <h3 id="panel-title" style="margin:0">Cargando Nube...</h3>
         <span id="pos-info" class="pos-label">T:0% L:0% W:0% H:0%</span>
+
         <label>Top %</label><input type="range" id="val-top" min="0" max="100" oninput="updateUI()">
         <label>Left %</label><input type="range" id="val-left" min="0" max="100" oninput="updateUI()">
         <label>Width %</label><input type="range" id="val-width" min="1" max="100" oninput="updateUI()">
         <label>Height %</label><input type="range" id="val-height" min="1" max="100" oninput="updateUI()">
+        
         <button id="save-btn" onclick="savePositions()">SAVE TO CLOUD</button>
+        <button id="blueprint-btn" onclick="generateBlueprint()">GET ARCHITECT BLUEPRINT</button>
         <button id="back-btn" onclick="window.location.href='themes.html'">BACK TO THEMES</button>
+    </div>
+
+    <div id="blueprint-overlay">
+        <div class="modal">
+            <h2 style="color: #4a90e2; margin-top:0;">Blueprint for Image Gen</h2>
+            <textarea id="blueprint-box" readonly></textarea>
+            <button onclick="document.getElementById('blueprint-overlay').style.display='none'" style="background:#444; color:white;">CLOSE</button>
+        </div>
     </div>
 
     <script type="module">
@@ -86,11 +115,21 @@
             const cloudState = await getGlobalTheme();
             const container = document.getElementById('game-container');
             
-            if (cloudState) {
+            if (cloudState && cloudState.activeThemeUrl) {
                 currentThemeId = cloudState.activeThemeId;
                 currentThemeUrl = cloudState.activeThemeUrl;
                 positions = cloudState.layout || {};
-                if (currentThemeUrl) container.style.backgroundImage = `url('${currentThemeUrl}')`;
+            } else {
+                currentThemeId = localStorage.getItem('active_theme_id');
+                currentThemeUrl = localStorage.getItem('bg_url_cloud');
+                positions = JSON.parse(localStorage.getItem('ui_positions')) || {};
+            }
+
+            // Bind asset to #game-container to match flashcard.html logic
+            if (currentThemeUrl) {
+                container.style.backgroundImage = `url('${currentThemeUrl}')`;
+            } else {
+                container.style.backgroundImage = "url('assets/minecraft.png')";
             }
 
             Object.keys(positions).forEach(id => {
@@ -101,13 +140,20 @@
                     el.style.width = p.w + '%'; el.style.height = p.h + '%';
                 }
             });
+            document.getElementById('panel-title').innerText = "SELECT A ZONE";
         }
 
         window.selectPane = (id) => {
             if(activeId) document.getElementById(activeId).classList.remove('active');
             activeId = id;
             document.getElementById(id).classList.add('active');
-            const p = positions[id] || {t:0, l:0, w:10, h:10};
+            document.getElementById('panel-title').innerText = id.replace('pane-', '').toUpperCase();
+            
+            if (!positions[id]) {
+                positions[id] = { t: 10, l: 10, w: 20, h: 10 };
+            }
+
+            const p = positions[id];
             document.getElementById('val-top').value = p.t;
             document.getElementById('val-left').value = p.l;
             document.getElementById('val-width').value = p.w;
@@ -121,9 +167,11 @@
             const l = parseInt(document.getElementById('val-left').value);
             const w = parseInt(document.getElementById('val-width').value);
             const h = parseInt(document.getElementById('val-height').value);
+            
             const el = document.getElementById(activeId);
             el.style.top = t+'%'; el.style.left = l+'%';
             el.style.width = w+'%'; el.style.height = h+'%';
+            
             positions[activeId] = {t, l, w, h};
             updatePosLabel(positions[activeId]);
         };
@@ -136,10 +184,34 @@
             const btn = document.getElementById('save-btn');
             btn.innerText = "SAVING...";
             const success = await saveGlobalTheme(currentThemeId, currentThemeUrl, positions);
-            btn.innerText = success ? "SAVE TO CLOUD" : "FAILED";
+            if (success) {
+                btn.innerText = "SAVE TO CLOUD";
+                alert("Calibration Synced Globally!");
+            } else {
+                btn.innerText = "SAVE TO CLOUD";
+                alert("Cloud Sync Failed.");
+            }
         };
 
-        init();
+        window.generateBlueprint = () => {
+            const overlay = document.getElementById('blueprint-overlay');
+            const bBox = document.getElementById('blueprint-box');
+            overlay.style.display = 'flex';
+            
+            let promptInfo = "### UI BLUEPRINT ###\n";
+            const names = { 
+                'pane-back': 'EXIT', 'pane-birch': 'SUBJECT', 'pane-stone': 'SENTENCE', 
+                'pane-record': 'REC', 'pane-speech': 'AUDIO', 'pane-val-toggle': 'LANG', 
+                'pane-valenciano': 'TRANS', 'pane-slab': 'SUBTITLE' 
+            };
+            Object.keys(positions).forEach(id => {
+                const p = positions[id];
+                promptInfo += `${names[id] || id}: L:${p.l}%, T:${p.t}%, W:${p.w}%, H:${p.h}%\n`;
+            });
+            bBox.value = promptInfo;
+        };
+
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
