@@ -52,12 +52,13 @@
         input[type="range"] { flex-grow: 1; margin: 0 15px; }
         .val-display { font-weight: bold; color: var(--accent-blue); width: 30px; }
 
-        .level-selector { display: flex; gap: 10px; margin-top: 5px; }
+        .level-selector { display: flex; gap: 8px; margin-top: 5px; }
         .lvl-btn {
-            flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #e0e0e0;
-            background: #fff; cursor: pointer; font-weight: bold; font-size: 0.75rem;
+            flex: 1; padding: 10px 5px; border-radius: 8px; border: 1px solid #e0e0e0;
+            background: #fff; cursor: pointer; font-weight: bold; font-size: 0.65rem;
+            transition: all 0.2s;
         }
-        .lvl-btn.active { background: #eef6ff; border-color: var(--accent-blue); color: var(--accent-blue); }
+        .lvl-btn.active { background: var(--accent-blue); border-color: var(--accent-blue); color: #fff; }
 
         .admin-btn {
             background: #f8f9fa; border: 1px solid #ddd; padding: 15px;
@@ -96,10 +97,12 @@
             <label>Date of Birth</label>
             <input type="date" id="billy-dob">
 
-            <label>Challenge Level</label>
+            <label>Reading Tier</label>
             <div class="level-selector">
-                <button class="lvl-btn active" id="lvl-normal" onclick="setLevel('NORMAL')">NORMAL</button>
-                <button class="lvl-btn" id="lvl-experto" onclick="setLevel('EXPERTO')">EXPERTO</button>
+                <button class="lvl-btn" id="lvl-1" onclick="setLevel('1')">T1: FONÉTICO</button>
+                <button class="lvl-btn" id="lvl-2" onclick="setLevel('2')">T2: FLUIDEZ</button>
+                <button class="lvl-btn" id="lvl-3" onclick="setLevel('3')">T3: AVANZADO</button>
+                <button class="lvl-btn" id="lvl-4" onclick="setLevel('4')">T4: EXPERTO</button>
             </div>
         </div>
 
@@ -152,7 +155,7 @@
     </div>
 
     <script>
-        let currentLevel = 'NORMAL';
+        let currentLevel = '2';
 
         function loadVoices() {
             const select = document.getElementById('voice-select');
@@ -174,7 +177,7 @@
             document.getElementById('rate').value = localStorage.getItem('billy_rate') || 1.0;
             document.getElementById('pitch').value = localStorage.getItem('billy_pitch') || 1.0;
             
-            setLevel(localStorage.getItem('billy_level') || 'NORMAL');
+            setLevel(localStorage.getItem('billy_level') || '2');
             updateVals();
         };
 
@@ -185,12 +188,13 @@
 
         function setLevel(lvl) {
             currentLevel = lvl;
-            document.getElementById('lvl-normal').classList.toggle('active', lvl === 'NORMAL');
-            document.getElementById('lvl-experto').classList.toggle('active', lvl === 'EXPERTO');
+            document.querySelectorAll('.lvl-btn').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.getElementById('lvl-' + lvl);
+            if (activeBtn) activeBtn.classList.add('active');
         }
 
         function testSpeech() {
-            const msg = new SpeechSynthesisUtterance("Hola Billy, mission check complete.");
+            const msg = new SpeechSynthesisUtterance("Hola Billy, misión de prueba completada.");
             const voiceName = document.getElementById('voice-select').value;
             msg.voice = window.speechSynthesis.getVoices().find(v => v.name === voiceName);
             msg.rate = document.getElementById('rate').value;
