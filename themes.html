@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Biblioteca de Temas: BillyReads Cloud</title>
+    <title>BillyReads | Biblioteca Cloud</title>
     <style>
         :root { 
             --mc-font: 'Arial Black', Gadget, sans-serif; 
@@ -43,7 +43,6 @@
         .btn-use { background: var(--flash-green); color: black; font-weight: bold; font-size: 10px; padding: 8px; border:none; border-radius:4px; cursor:pointer;}
         .btn-del { background: #ff4d4d; color: white; font-size: 10px; opacity: 0.7; padding: 5px; border-radius: 4px; border:none; cursor:pointer;}
 
-        /* Modal Styles */
         .modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 1000;
@@ -76,7 +75,7 @@
         <button onclick="document.getElementById('fileInput').click()">+ SUBIR A LA NUBE</button>
     </div>
     
-    <div id="status-msg">Cargando...</div>
+    <div id="status-msg">Iniciando conexión...</div>
 
     <div class="theme-grid" id="themeGrid"></div>
 
@@ -87,7 +86,7 @@
             <h3 style="margin-top:0; color: var(--accent);">V4 Architectural Prompt</h3>
             <div style="margin-bottom:10px;">
                 <label style="color:var(--flash-green); font-size: 0.8rem; font-family: var(--mc-font);">MOOD / THEME:</label>
-                <input type="text" id="moodInput" placeholder="e.g. Underwater Science Lab, Mars Colony..." 
+                <input type="text" id="moodInput" placeholder="e.g. Science Lab, Ancient Rome, Deep Sea..." 
                        style="width:100%; padding:10px; background:#222; border:1px solid #444; color:white; border-radius:5px;"
                        oninput="updatePromptText()">
             </div>
@@ -102,7 +101,6 @@
     <input type="file" id="fileInput" hidden accept="image/*" onchange="handleUpload(event)">
 
     <script type="module">
-        // Firebase Integration
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
@@ -120,9 +118,8 @@
         const db = getFirestore(app);
         const storage = getStorage(app);
 
-        const BASE_PROMPT = `Role & Context: Act as an Architectural Illustrator specializing in children's educational interface design. You are creating a high-fidelity, polished thematic background for a learning application. It must be rendered in a professional 3D style (3:2 aspect ratio). The Functional Constraint: This image is a functional framework. It is CRITICAL that the specified Text Windows are completely empty, flat, non-distracting zones where dynamic text will be placed. Do not place any characters, text, or focal points inside these specific zones. Do not label the windows. It is also CRITICAL that the Illustrated Features (buttons and toggles) are beautifully designed directly into the art. They must look like physical parts of the environment. Required Layout: There must be NO text/labelling anywhere in the image. [Layout Specs: Primary Field 45x27, Subject 41x9, Translation 53x6, Transcript 57x6]. Theme/mood = `;
+        const BASE_PROMPT = `Role & Context: Act as an Architectural Illustrator specializing in children's educational interface design. 3D style (3:2 aspect ratio). Functional Constraint: Text Windows must be empty. Illustrated features (buttons/toggles) must be physical parts of environment. NO text/labeling. [Layout: Primary 45x27, Subject 41x9, Translation 53x6, Subtitle 57x6]. Theme/mood = `;
 
-        // Global functions for the UI
         window.updatePromptText = () => {
             const mood = document.getElementById('moodInput').value;
             document.getElementById('promptArea').value = BASE_PROMPT + mood;
@@ -135,27 +132,24 @@
         window.closePrompt = () => { document.getElementById('promptModal').style.display = 'none'; };
         
         window.copyPrompt = () => {
-            const copyText = document.getElementById("promptArea");
-            copyText.select();
-            navigator.clipboard.writeText(copyText.value);
-            alert("Prompt copied!");
+            const area = document.getElementById("promptArea");
+            area.select();
+            navigator.clipboard.writeText(area.value);
+            alert("Prompt Copied!");
         };
 
         window.handleUpload = async (event) => {
             const file = event.target.files[0];
             if (!file) return;
-            
             const status = document.getElementById('status-msg');
-            status.innerText = "Subiendo archivo a la nube...";
+            status.innerText = "Subiendo a la nube...";
             status.style.display = "block";
 
             try {
-                // 1. Upload to Storage
                 const storageRef = ref(storage, `themes/${Date.now()}_${file.name}`);
                 const snapshot = await uploadBytes(storageRef, file);
                 const downloadURL = await getDownloadURL(snapshot.ref);
 
-                // 2. Add record to Firestore
                 await addDoc(collection(db, "themes"), {
                     name: file.name,
                     url: downloadURL,
@@ -172,19 +166,18 @@
                         'pane-slab': {t:90, l:22, w:57, h:6}
                     }
                 });
-
                 status.style.display = "none";
                 loadThemes();
             } catch (err) {
-                console.error("Upload error:", err);
-                alert("Error al subir el archivo. Revisa las reglas de Firebase.");
+                console.error(err);
+                alert("Error subiendo. Verifica las reglas de Firebase.");
                 status.style.display = "none";
             }
         };
 
         window.loadThemes = async () => {
             const grid = document.getElementById('themeGrid');
-            grid.innerHTML = 'Cargando temas...';
+            grid.innerHTML = 'Cargando temas cloud...';
             const activeId = localStorage.getItem('bg_flashcard_cloud');
 
             try {
@@ -203,7 +196,7 @@
                         <img src="${theme.url}" class="thumb">
                         <div class="card-controls">
                             <button class="btn-use" onclick="selectTheme('${id}', '${theme.url}', ${JSON.stringify(theme.layout).replace(/"/g, '&quot;')})">
-                                ${isActive ? '✅ ACTIVO' : 'USAR ESTE FONDO'}
+                                ${isActive ? '✅ ACTIVO' : 'USAR FONDO'}
                             </button>
                             <button class="btn-del" onclick="deleteTheme('${id}', '${theme.storagePath}')">ELIMINAR</button>
                         </div>
@@ -211,8 +204,7 @@
                     grid.appendChild(card);
                 });
             } catch (err) {
-                console.error("Load error:", err);
-                grid.innerHTML = 'Error al cargar temas.';
+                grid.innerHTML = 'Error de conexión. Revisa las reglas de seguridad.';
             }
         };
 
@@ -221,22 +213,17 @@
             localStorage.setItem('bg_url_cloud', url);
             localStorage.setItem('ui_positions', JSON.stringify(layout));
             loadThemes();
-            alert("Fondo seleccionado.");
         };
 
         window.deleteTheme = async (id, storagePath) => {
-            if(!confirm("¿Borrar permanentemente de la nube?")) return;
+            if(!confirm("¿Borrar permanentemente?")) return;
             try {
                 await deleteDoc(doc(db, "themes", id));
-                const storageRef = ref(storage, storagePath);
-                await deleteObject(storageRef);
+                await deleteObject(ref(storage, storagePath));
                 loadThemes();
-            } catch (err) {
-                console.error("Delete error:", err);
-            }
+            } catch (err) {}
         };
 
-        // Initial Load
         loadThemes();
     </script>
 </body>
