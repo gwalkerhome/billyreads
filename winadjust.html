@@ -143,11 +143,13 @@
             document.getElementById('panel-title').innerText = id.replace('pane-', '').toUpperCase();
             
             const p = positions[id];
-            document.getElementById('val-top').value = p.t;
-            document.getElementById('val-left').value = p.l;
-            document.getElementById('val-width').value = p.w;
-            document.getElementById('val-height').value = p.h;
-            updatePosLabel(p);
+            if (p) {
+                document.getElementById('val-top').value = p.t;
+                document.getElementById('val-left').value = p.l;
+                document.getElementById('val-width').value = p.w;
+                document.getElementById('val-height').value = p.h;
+                updatePosLabel(p);
+            }
         };
 
         window.updateUI = () => {
@@ -170,12 +172,14 @@
         }
 
         window.savePositions = async () => {
-            document.getElementById('save-btn').innerText = "SAVING...";
+            const btn = document.getElementById('save-btn');
+            btn.innerText = "SAVING...";
             const success = await saveGlobalTheme(currentThemeId, currentThemeUrl, positions);
             if (success) {
-                document.getElementById('save-btn').innerText = "SAVE TO CLOUD";
+                btn.innerText = "SAVE TO CLOUD";
                 alert("Calibration Synced Globally!");
             } else {
+                btn.innerText = "SAVE TO CLOUD";
                 alert("Cloud Sync Failed.");
             }
         };
@@ -186,9 +190,25 @@
             overlay.style.display = 'flex';
             
             let promptInfo = "### UI BLUEPRINT ###\n";
-            const names = { 'pane-back': 'EXIT', 'pane-birch': 'SUBJECT', 'pane-stone': 'TEXT', 'pane-record': 'REC', 'pane-speech': 'AUDIO', 'pane-val-toggle': 'LANG', 'pane-valenciano': 'TRANS', 'pane-slab': 'SUBTITLE' };
+            const names = { 
+                'pane-back': 'EXIT', 
+                'pane-birch': 'SUBJECT', 
+                'pane-stone': 'TEXT', 
+                'pane-record': 'REC', 
+                'pane-speech': 'AUDIO', 
+                'pane-val-toggle': 'LANG', 
+                'pane-valenciano': 'TRANS', 
+                'pane-slab': 'SUBTITLE' 
+            };
             Object.keys(positions).forEach(id => {
                 const p = positions[id];
                 promptInfo += `${names[id] || id}: L:${p.l}%, T:${p.t}%, W:${p.w}%, H:${p.h}%\n`;
             });
-            bBox.value = promptInfo
+            bBox.value = promptInfo;
+        };
+
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>
