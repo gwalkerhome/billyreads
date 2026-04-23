@@ -101,14 +101,22 @@
 
         <div class="card">
             <div class="card-header">📊 Difficulty Settings</div>
-            <label>Reading Tier</label>
-            <div class="level-selector">
+            <label>Reading Tier (Content)</label>
+            <div class="level-selector" style="margin-bottom: 20px;">
                 <button class="lvl-btn" id="lvl-1" onclick="setLevel('1')">T1: FONÉTICO</button>
                 <button class="lvl-btn" id="lvl-2" onclick="setLevel('2')">T2: FLUIDEZ</button>
                 <button class="lvl-btn" id="lvl-3" onclick="setLevel('3')">T3: AVANZADO</button>
                 <button class="lvl-btn" id="lvl-4" onclick="setLevel('4')">T4: EXPERTO</button>
             </div>
-            <p style="font-size: 0.75rem; color: #888; margin-top: 15px;">Governs the complexity of the sentence structure.</p>
+
+            <label>Listening Strictness (Assessment)</label>
+            <div class="level-selector">
+                <button class="lvl-btn" id="strict-1" onclick="setStrictness('1')">L1: PERMISIVO</button>
+                <button class="lvl-btn" id="strict-2" onclick="setStrictness('2')">L2: ESTÁNDAR</button>
+                <button class="lvl-btn" id="strict-3" onclick="setStrictness('3')">L3: PRECISO</button>
+                <button class="lvl-btn" id="strict-4" onclick="setStrictness('4')">L4: MAESTRÍA</button>
+            </div>
+            <p style="font-size: 0.75rem; color: #888; margin-top: 15px;">L1 accepts keywords; L4 requires perfect pronunciation.</p>
         </div>
 
         <div class="card">
@@ -157,6 +165,7 @@
 
     <script>
         let currentLevel = '2';
+        let currentStrictness = '2';
 
         function loadVoices() {
             const select = document.getElementById('voice-select');
@@ -179,6 +188,7 @@
             document.getElementById('pitch').value = localStorage.getItem('billy_pitch') || 1.0;
             
             setLevel(localStorage.getItem('billy_level') || '2');
+            setStrictness(localStorage.getItem('billy_strictness') || '2');
             updateVals();
         };
 
@@ -189,8 +199,15 @@
 
         function setLevel(lvl) {
             currentLevel = lvl;
-            document.querySelectorAll('.lvl-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.level-selector:first-of-type .lvl-btn').forEach(btn => btn.classList.remove('active'));
             const activeBtn = document.getElementById('lvl-' + lvl);
+            if (activeBtn) activeBtn.classList.add('active');
+        }
+
+        function setStrictness(lvl) {
+            currentStrictness = lvl;
+            document.querySelectorAll('.level-selector:last-of-type .lvl-btn').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.getElementById('strict-' + lvl);
             if (activeBtn) activeBtn.classList.add('active');
         }
 
@@ -216,6 +233,7 @@
             localStorage.setItem('billy_pitch', document.getElementById('pitch').value);
             localStorage.setItem('billy_voice', document.getElementById('voice-select').value);
             localStorage.setItem('billy_level', currentLevel);
+            localStorage.setItem('billy_strictness', currentStrictness);
             
             alert("Settings Synchronized.");
             location.href = 'index.html';
