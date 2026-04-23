@@ -1,13 +1,25 @@
-// flashapp.js - Transitioned to OpenAI GPT-5.4-mini
+// flashapp.js - Curriculum-Contextualized Reading Engine
 let flashcards = [];
 let currentIndex = 0;
 let isListening = false;
 
+// Helper to determine Spanish School Year (Primaria) based on 2026
+function calculateYearGroup(dobString) {
+    const dob = new Date(dobString);
+    const now = new Date(); // April 2026
+    const age = now.getFullYear() - dob.getFullYear();
+    
+    // Simplification: age 6 = 1º, age 7 = 2º, etc.
+    let year = age - 5; 
+    if (year < 1) year = 1;
+    if (year > 6) year = 6;
+    return year;
+}
+
 async function fetchJourneyCards() {
-    // Variable Sync: Pulling from 'gemini_key' as saved in Command Center
     const apiKey = localStorage.getItem('gemini_key');
-    const dob = localStorage.getItem('billy_dob') || '2016-01-01';
-    const difficulty = localStorage.getItem('billy_level') || 'NORMAL';
+    const dob = localStorage.getItem('billy_dob') || '2019-01-01';
+    const readingLevel = localStorage.getItem('billy_level') || 'NORMAL'; // Levels 1-4
     const target = document.getElementById('target-sentence');
 
     if (!apiKey) {
@@ -15,15 +27,36 @@ async function fetchJourneyCards() {
         return;
     }
 
-    // UPDATED: Using GPT-5.4-mini for the best balance of speed and cost
+    const currentYear = calculateYearGroup(dob);
     const model = "gpt-5.4-mini";
     const url = "https://api.openai.com/v1/chat/completions";
 
-    const prompt = `Actúa como un profesor de primaria. Genera 20 tarjetas JSON para un alumno nacido en ${dob}.
-    Dificultad: ${difficulty}. 
-    FORMATO JSON PURO: [{"es": "frase", "val": "traducción", "cat": "TEMA", "keywords": ["palabra"]}]`;
+    // Defining the 4-Level Difficulty Constraints
+    const difficultyMap = {
+        "1": "Nivel 1 (Fonético): Palabras cortas, frases simples S+V+P, máximo 6 palabras, sin sílabas trabadas (tr, bl).",
+        "2": "Nivel 2 (Fluidez): Frases de 8-10 palabras, uso de adjetivos y conjunciones básicas.",
+        "3": "Nivel 3 (Avanzado): Oraciones compuestas, vocabulario técnico curricular, uso de comas.",
+        "4": "Nivel 4 (Experto): Lenguaje académico complejo, sintaxis sofisticada, términos técnicos precisos."
+    };
+    
+    const selectedDiff = difficultyMap[readingLevel] || difficultyMap["2"];
 
-    if (target) target.innerText = "Cargando misión...";
+    const prompt = `Actúa como un Diseñador de Currículo Español. Genera 20 tarjetas JSON de lectura.
+    CONTENIDO (Distribución obligatoria):
+    - 70%: Temas de ${currentYear}º de Primaria.
+    - 10%: Temas de ${currentYear + 1 > 6 ? 6 : currentYear + 1}º de Primaria.
+    - 20%: Temas de años anteriores (1º a ${currentYear > 1 ? currentYear - 1 : 1}º).
+
+    DIFICULTAD DE LECTURA: ${selectedDiff}
+    
+    INSTRUCCIONES:
+    - Cada frase debe ser una AFIRMACIÓN basada en el currículo (Ciencias, Mates, Geografía, etc.).
+    - NO hagas preguntas.
+    - No uses texto en las imágenes, solo el JSON.
+    
+    FORMATO JSON: [{"es": "afirmación curricular", "val": "traducción valenciano", "cat": "ASIGNATURA", "keywords": ["palabra_clave"]}]`;
+
+    if (target) target.innerText = "Sincronizando Currículo...";
 
     try {
         const response = await fetch(url, {
@@ -35,7 +68,7 @@ async function fetchJourneyCards() {
             body: JSON.stringify({ 
                 model: model,
                 messages: [
-                    { role: "system", content: "Eres un experto profesor de primaria que solo responde en JSON." },
+                    { role: "system", content: "Eres un experto en el currículo de primaria de España. Solo respondes en JSON puro." },
                     { role: "user", content: prompt }
                 ],
                 temperature: 0.7
@@ -43,14 +76,9 @@ async function fetchJourneyCards() {
         });
         
         const data = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(data.error ? data.error.message : "Error desconocido");
-        }
+        if (!response.ok) throw new Error(data.error ? data.error.message : "Error API");
 
         let rawText = data.choices[0].message.content;
-        
-        // Clean the text to ensure only JSON is parsed
         const start = rawText.indexOf('[');
         const end = rawText.lastIndexOf(']');
         if (start !== -1 && end !== -1) {
@@ -62,7 +90,7 @@ async function fetchJourneyCards() {
 
     } catch (err) {
         console.error("Fetch Error:", err);
-        if (target) target.innerText = "Error: OpenAI no pudo cargar.";
+        if (target) target.innerText = "Error de conexión con la misión.";
     }
 }
 
@@ -76,7 +104,7 @@ function loadCard() {
     const bar = document.getElementById('energy-bar');
 
     if (sentenceEl) sentenceEl.innerText = card.es;
-    if (tagEl) tagEl.innerText = card.cat;
+    if (tagEl) tagEl.innerText = card.cat.toUpperCase();
     if (transEl) transEl.innerText = card.val;
     if (bar) bar.style.width = ((currentIndex / flashcards.length) * 100) + '%';
 }
@@ -106,6 +134,7 @@ if (SpeechRecognition) {
         if (liveDisplay) liveDisplay.innerText = text.toUpperCase();
         
         if (result.isFinal && flashcards[currentIndex]) {
+            // Check if keywords are present in the speech
             const match = flashcards[currentIndex].keywords.some(k => 
                 text.toLowerCase().includes(k.toLowerCase())
             );
@@ -126,15 +155,14 @@ if (SpeechRecognition) {
             if (!isListening) { 
                 recognition.start(); 
                 isListening = true; 
-                btn.style.background = "rgba(255,0,0,0.4)"; 
+                btn.classList.add('recording-active');
             } else { 
                 recognition.stop(); 
                 isListening = false; 
-                btn.style.background = "none"; 
+                btn.classList.remove('recording-active');
             }
         };
     }
 }
 
-// Start the sequence
 fetchJourneyCards();
