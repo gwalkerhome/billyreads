@@ -6,18 +6,39 @@
     <title>Misión: BillyReads</title>
     <link rel="stylesheet" href="flashstyle.css">
     <style>
+        /* Base styles for the dynamic layout */
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background: #000;
+        }
+        #game-container {
+            width: 100vw; height: 100vh;
+            background-size: cover; background-position: center;
+            position: relative;
+        }
         .dynamic-pane {
             position: absolute;
             display: flex;
             justify-content: center; align-items: center;
             text-align: center; box-sizing: border-box;
             overflow: hidden;
+            background: transparent; border: none; outline: none;
         }
         #val-translation {
             color: #AACCFF; font-size: 1.2rem; font-style: italic;
             opacity: 0; transition: opacity 0.3s; pointer-events: none;
         }
         #val-translation.visible { opacity: 1; }
+        
+        .xp-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 10px;
+            background: rgba(0,0,0,0.5); z-index: 100;
+        }
+        #energy-bar {
+            height: 100%; width: 0%; background: var(--flash-green, #76FF03);
+            transition: width 0.3s;
+        }
+        .mc-btn { cursor: pointer; }
     </style>
 </head>
 <body>
@@ -25,78 +46,28 @@
         
         <div class="xp-container"><div id="energy-bar"></div></div>
 
-        <button id="back-btn" class="dynamic-pane" onclick="window.location.href='index.html'"></button>
+        <button id="pane-back" class="dynamic-pane mc-btn" onclick="window.location.href='index.html'"></button>
         
-        <div id="subject-tag" class="dynamic-pane">SINCRONIZANDO...</div>
-        <div id="target-sentence" class="dynamic-pane">CARGANDO MISIÓN...</div>
-        <div id="val-translation" class="dynamic-pane"></div>
+        <div id="pane-birch" class="dynamic-pane"><span id="subject-tag">SINCRONIZANDO...</span></div>
+        <div id="pane-stone" class="dynamic-pane"><span id="target-sentence">CARGANDO MISIÓN...</span></div>
+        <div id="pane-valenciano" class="dynamic-pane"><span id="val-translation"></span></div>
         
-        <button id="record-btn" class="dynamic-pane mc-btn"></button>
-        <button id="audio-btn" class="dynamic-pane mc-btn" onclick="playAudio()"></button>
-        <button id="val-btn" class="dynamic-pane mc-btn" onclick="toggleValenciano()">V</button>
+        <button id="pane-record" class="dynamic-pane mc-btn" id="record-btn"></button>
+        <button id="pane-speech" class="dynamic-pane mc-btn" onclick="playSpeech()"></button>
+        <button id="pane-val-toggle" class="dynamic-pane mc-btn" onclick="toggleValenciano()">V</button>
         
-        <div id="live-transcript" class="dynamic-pane">ESPERANDO SEÑAL...</div>
+        <div id="pane-slab" class="dynamic-pane"><span id="live-transcript">ESPERANDO SEÑAL...</span></div>
 
-    </div> <script>
-        function applyTheme() {
-            const themeId = localStorage.getItem('bg_flashcard');
-            const container = document.getElementById('game-container'); // Apply to container, not body
-            
-            if (!themeId) {
-                container.style.backgroundImage = "url('assets/minecraft.png')";
-                return;
-            }
-            const request = indexedDB.open("ThemeDB", 1);
-            request.onsuccess = e => {
-                const db = e.target.result;
-                const transaction = db.transaction("themes", "readonly");
-                const store = transaction.objectStore("themes");
-                const getRequest = store.get(parseInt(themeId));
-                getRequest.onsuccess = () => {
-                    const theme = getRequest.result;
-                    if (theme && theme.data) container.style.backgroundImage = `url('${theme.data}')`;
-                };
-            };
-        }
+    </div>
 
-        function applyCalibration() {
-            const savedData = localStorage.getItem('ui_positions');
-            if (!savedData) return;
-            const saved = JSON.parse(savedData);
-            
-            const mapping = {
-                'pane-back': 'back-btn',
-                'pane-birch': 'subject-tag',
-                'pane-stone': 'target-sentence',
-                'pane-record': 'record-btn',
-                'pane-speech': 'audio-btn',
-                'pane-valenciano': 'val-translation',
-                'pane-val-toggle': 'val-btn',
-                'pane-slab': 'live-transcript'
-            };
-
-            Object.keys(mapping).forEach(paneKey => {
-                const el = document.getElementById(mapping[paneKey]);
-                const pos = saved[paneKey];
-                if (el && pos) {
-                    el.style.top = pos.t + '%';
-                    el.style.left = pos.l + '%';
-                    el.style.width = pos.w + '%';
-                    el.style.height = pos.h + '%';
-                }
-            });
-        }
-
+    <script>
+        // Simple UI toggle for Valenciano layer
         function toggleValenciano() {
             const trans = document.getElementById('val-translation');
             if (trans) trans.classList.toggle('visible');
         }
-
-        window.onload = () => {
-            applyTheme();
-            applyCalibration();
-        };
     </script>
-    <script src="flashapp.js"></script>
+
+    <script type="module" src="flashapp.js"></script>
 </body>
 </html>
