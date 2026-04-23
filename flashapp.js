@@ -1,4 +1,4 @@
-// flashapp.js - Integrated Curriculum & Assessment Engine (Cloud Sync Edition)
+// flashapp.js - Integrated Curriculum & Assessment Engine (OpenAI Cloud Sync)
 import { getGlobalTheme } from "./firebase-bridge.js";
 
 let flashcards = [];
@@ -32,7 +32,7 @@ async function syncAppTheme() {
                 element.style.left = pos.l + '%';
                 element.style.width = pos.w + '%';
                 element.style.height = pos.h + '%';
-                // Remove borders as per project requirements
+                // Remove visual borders for production
                 element.style.border = "none";
                 element.style.outline = "none";
                 element.style.backgroundColor = "transparent";
@@ -95,9 +95,8 @@ async function fetchJourneyCards() {
     }
 
     const currentYear = calculateYearGroup(dob);
-    // Note: Ensuring we use the 2.5-flash as per instructions
-    const model = "gemini-2.5-flash"; 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const model = "gpt-4o-mini"; 
+    const url = "https://api.openai.com/v1/chat/completions";
 
     const difficultyMap = {
         "1": "Tier 1 (Phonetic): Short words, simple S+V+O, max 6 words, no complex clusters (tr, bl).",
@@ -128,14 +127,22 @@ async function fetchJourneyCards() {
     try {
         const response = await fetch(url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }]
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({ 
+                model: model,
+                messages: [
+                    { role: "system", content: "You are an expert in the Spanish Primary curriculum. Output JSON only." },
+                    { role: "user", content: prompt }
+                ],
+                temperature: 0.7
             })
         });
         
         const data = await response.json();
-        let rawText = data.candidates[0].content.parts[0].text;
+        let rawText = data.choices[0].message.content;
         const start = rawText.indexOf('[');
         const end = rawText.lastIndexOf(']');
         rawText = rawText.substring(start, end + 1);
@@ -161,7 +168,7 @@ function displayCurrentCard() {
     if(targetEl) targetEl.innerText = card.es;
     if(subjectEl) subjectEl.innerText = card.cat.toUpperCase();
     if(valEl) valEl.innerText = card.val;
-    if(energyEl) energyEl.energyEl.style.width = ((currentIndex / flashcards.length) * 100) + '%';
+    if(energyEl) energyEl.style.width = ((currentIndex / flashcards.length) * 100) + '%';
 }
 
 window.playSpeech = function() {
@@ -223,6 +230,6 @@ if (SpeechRecognition) {
     }
 }
 
-// Initial Sync and Fetch
+// Start sequence
 syncAppTheme();
 fetchJourneyCards();
