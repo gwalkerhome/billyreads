@@ -29,19 +29,18 @@ html, body {
     text-align: center;
     box-sizing: border-box;
     overflow: hidden;
-    /* Testing Border - Remove when sync is confirmed */
-    border: 2px solid white; 
+    border: none; 
 }
 
 /* Button Styling (mc-btn) */
 .mc-btn {
     position: absolute;
-    background: rgba(255, 255, 255, 0.1); /* Slight tint to see the box */
+    background: transparent; 
     cursor: pointer;
     display: flex;
     justify-content: center;
     align-items: center;
-    border: 2px solid white; /* Testing Border */
+    border: none; 
     box-sizing: border-box;
 }
 
@@ -101,5 +100,5 @@ html, body {
 /* Hidden Utility */
 #back-btn {
     background: transparent;
-    border: 2px solid white; /* Testing Border */
+    border: none; 
 }
