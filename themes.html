@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Biblioteca de Temas</title>
+    <title>Biblioteca de Temas: BillyReads Cloud</title>
     <style>
         :root { 
             --mc-font: 'Arial Black', Gadget, sans-serif; 
@@ -35,13 +35,13 @@
         }
         .theme-card {
             background: #2a2a2a; border-radius: 12px; padding: 10px;
-            border: 3px solid transparent; transition: 0.2s;
+            border: 3px solid transparent; transition: 0.2s; position: relative;
         }
         .theme-card.active { border-color: var(--flash-green); }
         .thumb { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 10px; }
         .card-controls { display: flex; flex-direction: column; gap: 5px; }
-        .btn-use { background: var(--flash-green); color: black; font-weight: bold; font-size: 10px; padding: 8px; }
-        .btn-del { background: #ff4d4d; color: white; font-size: 10px; opacity: 0.7; padding: 5px; border-radius: 4px; border:none; }
+        .btn-use { background: var(--flash-green); color: black; font-weight: bold; font-size: 10px; padding: 8px; border:none; border-radius:4px; cursor:pointer;}
+        .btn-del { background: #ff4d4d; color: white; font-size: 10px; opacity: 0.7; padding: 5px; border-radius: 4px; border:none; cursor:pointer;}
 
         /* Modal Styles */
         .modal {
@@ -53,27 +53,30 @@
             border: 2px solid var(--accent); text-align: left;
         }
         textarea {
-            width: 100%; height: 350px; background: #000; color: #ddd; font-family: sans-serif;
+            width: 100%; height: 250px; background: #000; color: #ddd; font-family: sans-serif;
             font-size: 12px; padding: 10px; border: 1px solid #333; box-sizing: border-box; resize: none;
         }
         .modal-btns { display: flex; gap: 10px; margin-top: 15px; }
 
         .back-nav {
             position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            background: #444; color: white; padding: 15px 40px; border-radius: 30px; border: none; font-family: var(--mc-font);
+            background: #444; color: white; padding: 15px 40px; border-radius: 30px; border: none; font-family: var(--mc-font); cursor:pointer;
         }
+        #status-msg { font-size: 12px; color: var(--flash-green); margin-bottom: 10px; display: none; }
     </style>
 </head>
 <body>
 
-    <h1>BIBLIOTECA DE TEMAS</h1>
+    <h1>BIBLIOTECA DE TEMAS CLOUD</h1>
 
     <div class="nav-hub">
         <button class="btn-prompt" onclick="openPrompt()">✨ GENERATE AI PROMPT</button>
         <button onclick="location.href='winadjust.html'">⚙️ WINGEN (AJUSTAR)</button>
         <button onclick="location.href='createbg.html'">🎨 CREAR NUEVO FONDO</button>
-        <button onclick="document.getElementById('fileInput').click()">+ SUBIR ARCHIVO</button>
+        <button onclick="document.getElementById('fileInput').click()">+ SUBIR A LA NUBE</button>
     </div>
+    
+    <div id="status-msg">Cargando...</div>
 
     <div class="theme-grid" id="themeGrid"></div>
 
@@ -82,31 +85,13 @@
     <div id="promptModal" class="modal">
         <div class="modal-content">
             <h3 style="margin-top:0; color: var(--accent);">V4 Architectural Prompt</h3>
-            <textarea id="promptArea" readonly>Role & Context: Act as an Architectural Illustrator specializing in children's educational interface design. You are creating a high-fidelity, polished thematic background for a learning application. The mood/theme is provided at the very end of this prompt. It must be rendered in a professional 3D style (3:2 aspect ratio). The Functional Constraint: This image is a functional framework. It is CRITICAL that the specified Text Windows are completely empty, flat, non-distracting zones where dynamic text will be placed. Do not place any characters, text, or focal points inside these specific zones. do not label the windows It is also CRITICAL that the Illustrated Features (buttons and toggles) are beautifully designed directly into the art. They must look like physical parts of the environment (carved, metallic, glowing, etc.) but must adhere strictly to the provided position and size constraints. Required Layout: There must be NO text/labelling anywhere in the image.
-
-📝 Clear Text Windows (Must be left empty) 
-
-1. PRIMARY TEXT FIELD: * centre of the image as the key focal point | Size: 45% width, 27% height. (The main display area). 
-
-2. SUBJECT TITLE WINDOW: * just above the primary text field. Size: 41% width, 9% height. (A horizontal plaque/banner). 
-
-3. SECONDARY TRANSLATION WINDOW: * Size: 53% width, 6% height. (A narrow horizontal strip). 
-
-4. SUBTITLE/TRANSCRIPT BAR: • at the bottom of the screen. Size: 57% width, 6% height. (A flat bar at the bottom). 
-
-🛠️ Illustrated Features (Incorporate into the art) 
-
-1. EXIT BUTTON: * Pos: 3% left, 12% top | Size: 9% width, 15% height. (A clear "Back" or "Close" mechanism). 
-
-2. LANGUAGE TOGGLE: * directly next to the secondary translation window | Size: 6% width, 12% height. (A physical switch or lever). 
-
-3. MICROPHONE/RECORD BUTTON: * directly beneath the primary text field | Size: 27% width, 11% height. (An integrated recording interface). 
-
-4. SPEAKER/AUDIO BUTTON: * directly next to the primary text field| Size: 10% width, 18% height. (An integrated "Listen" or speaker icon). 
-
-Final Instruction: Maintain a clean visual hierarchy. The art should exist around the text windows, never overlapping them. The illustrated features should be part of the world’s architecture. NO TEXT ON THE PAGE
-
-Theme/mood =</textarea>
+            <div style="margin-bottom:10px;">
+                <label style="color:var(--flash-green); font-size: 0.8rem; font-family: var(--mc-font);">MOOD / THEME:</label>
+                <input type="text" id="moodInput" placeholder="e.g. Underwater Science Lab, Mars Colony..." 
+                       style="width:100%; padding:10px; background:#222; border:1px solid #444; color:white; border-radius:5px;"
+                       oninput="updatePromptText()">
+            </div>
+            <textarea id="promptArea" readonly></textarea>
             <div class="modal-btns">
                 <button class="btn-use" style="flex:1" onclick="copyPrompt()">COPY TO CLIPBOARD</button>
                 <button class="btn-del" style="background:#444; opacity:1" onclick="closePrompt()">CLOSE</button>
@@ -116,38 +101,66 @@ Theme/mood =</textarea>
 
     <input type="file" id="fileInput" hidden accept="image/*" onchange="handleUpload(event)">
 
-    <script>
-        let db;
-        const request = indexedDB.open("ThemeDB", 1);
+    <script type="module">
+        // Firebase Integration
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-        request.onupgradeneeded = e => {
-            db = e.target.result;
-            if (!db.objectStoreNames.contains("themes")) {
-                db.createObjectStore("themes", { keyPath: "id", autoIncrement: true });
-            }
+        const firebaseConfig = {
+            apiKey: "AIzaSyAwysHSBZTEwZ8IrmgzrTnJwv9nEv6QJPo",
+            authDomain: "billyreads.firebaseapp.com",
+            projectId: "billyreads",
+            storageBucket: "billyreads.firebasestorage.app",
+            messagingSenderId: "106394773429",
+            appId: "1:106394773429:web:465bf15be58552cfd677dc"
         };
 
-        request.onsuccess = e => { db = e.target.result; loadThemes(); };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
 
-        function openPrompt() { document.getElementById('promptModal').style.display = 'flex'; }
-        function closePrompt() { document.getElementById('promptModal').style.display = 'none'; }
-        function copyPrompt() {
+        const BASE_PROMPT = `Role & Context: Act as an Architectural Illustrator specializing in children's educational interface design. You are creating a high-fidelity, polished thematic background for a learning application. It must be rendered in a professional 3D style (3:2 aspect ratio). The Functional Constraint: This image is a functional framework. It is CRITICAL that the specified Text Windows are completely empty, flat, non-distracting zones where dynamic text will be placed. Do not place any characters, text, or focal points inside these specific zones. Do not label the windows. It is also CRITICAL that the Illustrated Features (buttons and toggles) are beautifully designed directly into the art. They must look like physical parts of the environment. Required Layout: There must be NO text/labelling anywhere in the image. [Layout Specs: Primary Field 45x27, Subject 41x9, Translation 53x6, Transcript 57x6]. Theme/mood = `;
+
+        // Global functions for the UI
+        window.updatePromptText = () => {
+            const mood = document.getElementById('moodInput').value;
+            document.getElementById('promptArea').value = BASE_PROMPT + mood;
+        };
+
+        window.openPrompt = () => { 
+            document.getElementById('promptModal').style.display = 'flex'; 
+            updatePromptText();
+        };
+        window.closePrompt = () => { document.getElementById('promptModal').style.display = 'none'; };
+        
+        window.copyPrompt = () => {
             const copyText = document.getElementById("promptArea");
             copyText.select();
-            copyText.setSelectionRange(0, 99999);
             navigator.clipboard.writeText(copyText.value);
             alert("Prompt copied!");
-        }
+        };
 
-        function handleUpload(event) {
+        window.handleUpload = async (event) => {
             const file = event.target.files[0];
             if (!file) return;
-            const reader = new FileReader();
-            reader.onload = e => {
-                const tx = db.transaction(["themes"], "readwrite");
-                tx.objectStore("themes").add({
+            
+            const status = document.getElementById('status-msg');
+            status.innerText = "Subiendo archivo a la nube...";
+            status.style.display = "block";
+
+            try {
+                // 1. Upload to Storage
+                const storageRef = ref(storage, `themes/${Date.now()}_${file.name}`);
+                const snapshot = await uploadBytes(storageRef, file);
+                const downloadURL = await getDownloadURL(snapshot.ref);
+
+                // 2. Add record to Firestore
+                await addDoc(collection(db, "themes"), {
                     name: file.name,
-                    data: e.target.result,
+                    url: downloadURL,
+                    storagePath: storageRef.fullPath,
+                    createdAt: Date.now(),
                     layout: {
                         'pane-back': {t:12, l:3, w:9, h:15},
                         'pane-birch': {t:5, l:30, w:41, h:9},
@@ -159,49 +172,72 @@ Theme/mood =</textarea>
                         'pane-slab': {t:90, l:22, w:57, h:6}
                     }
                 });
-                tx.oncomplete = () => loadThemes();
-            };
-            reader.readAsDataURL(file);
-        }
 
-        function loadThemes() {
+                status.style.display = "none";
+                loadThemes();
+            } catch (err) {
+                console.error("Upload error:", err);
+                alert("Error al subir el archivo. Revisa las reglas de Firebase.");
+                status.style.display = "none";
+            }
+        };
+
+        window.loadThemes = async () => {
             const grid = document.getElementById('themeGrid');
-            grid.innerHTML = '';
-            const activeId = localStorage.getItem('bg_flashcard');
-            const tx = db.transaction("themes", "readonly");
-            tx.objectStore("themes").getAll().onsuccess = e => {
-                e.target.result.forEach(theme => {
+            grid.innerHTML = 'Cargando temas...';
+            const activeId = localStorage.getItem('bg_flashcard_cloud');
+
+            try {
+                const q = query(collection(db, "themes"), orderBy("createdAt", "desc"));
+                const querySnapshot = await getDocs(q);
+                grid.innerHTML = '';
+
+                querySnapshot.forEach((docSnap) => {
+                    const theme = docSnap.data();
+                    const id = docSnap.id;
+                    const isActive = activeId === id;
+
                     const card = document.createElement('div');
-                    card.className = `theme-card ${activeId == theme.id ? 'active' : ''}`;
+                    card.className = `theme-card ${isActive ? 'active' : ''}`;
                     card.innerHTML = `
-                        <img src="${theme.data}" class="thumb">
+                        <img src="${theme.url}" class="thumb">
                         <div class="card-controls">
-                            <button class="btn-use" onclick="selectTheme(${theme.id})">USAR ESTE FONDO</button>
-                            <button class="btn-del" onclick="deleteTheme(${theme.id})">ELIMINAR</button>
+                            <button class="btn-use" onclick="selectTheme('${id}', '${theme.url}', ${JSON.stringify(theme.layout).replace(/"/g, '&quot;')})">
+                                ${isActive ? '✅ ACTIVO' : 'USAR ESTE FONDO'}
+                            </button>
+                            <button class="btn-del" onclick="deleteTheme('${id}', '${theme.storagePath}')">ELIMINAR</button>
                         </div>
                     `;
                     grid.appendChild(card);
                 });
-            };
-        }
+            } catch (err) {
+                console.error("Load error:", err);
+                grid.innerHTML = 'Error al cargar temas.';
+            }
+        };
 
-        function selectTheme(id) {
-            const tx = db.transaction("themes", "readonly");
-            tx.objectStore("themes").get(id).onsuccess = e => {
-                const theme = e.target.result;
-                localStorage.setItem('bg_flashcard', theme.id);
-                if (theme.layout) localStorage.setItem('ui_positions', JSON.stringify(theme.layout));
+        window.selectTheme = (id, url, layout) => {
+            localStorage.setItem('bg_flashcard_cloud', id);
+            localStorage.setItem('bg_url_cloud', url);
+            localStorage.setItem('ui_positions', JSON.stringify(layout));
+            loadThemes();
+            alert("Fondo seleccionado.");
+        };
+
+        window.deleteTheme = async (id, storagePath) => {
+            if(!confirm("¿Borrar permanentemente de la nube?")) return;
+            try {
+                await deleteDoc(doc(db, "themes", id));
+                const storageRef = ref(storage, storagePath);
+                await deleteObject(storageRef);
                 loadThemes();
-                alert("Fondo seleccionado.");
-            };
-        }
+            } catch (err) {
+                console.error("Delete error:", err);
+            }
+        };
 
-        function deleteTheme(id) {
-            if(!confirm("¿Borrar?")) return;
-            const tx = db.transaction(["themes"], "readwrite");
-            tx.objectStore("themes").delete(id);
-            tx.oncomplete = () => loadThemes();
-        }
+        // Initial Load
+        loadThemes();
     </script>
 </body>
 </html>
