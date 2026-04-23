@@ -75,7 +75,7 @@
         <button onclick="document.getElementById('fileInput').click()">+ SUBIR A LA NUBE</button>
     </div>
     
-    <div id="status-msg">Iniciando conexión...</div>
+    <div id="status-msg">Conectando con el puente...</div>
 
     <div class="theme-grid" id="themeGrid"></div>
 
@@ -101,22 +101,11 @@
     <input type="file" id="fileInput" hidden accept="image/*" onchange="handleUpload(event)">
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyAwysHSBZTEwZ8IrmgzrTnJwv9nEv6QJPo",
-            authDomain: "billyreads.firebaseapp.com",
-            projectId: "billyreads",
-            storageBucket: "billyreads.firebasestorage.app",
-            messagingSenderId: "106394773429",
-            appId: "1:106394773429:web:465bf15be58552cfd677dc"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const storage = getStorage(app);
+        import { 
+            db, storage, ref, uploadBytes, getDownloadURL, deleteObject, 
+            collection, addDoc, getDocs, deleteDoc, doc, query, orderBy, 
+            saveGlobalTheme, getGlobalTheme 
+        } from "./firebase-bridge.js";
 
         const BASE_PROMPT = `Role & Context: Act as an Architectural Illustrator specializing in children's educational interface design. 3D style (3:2 aspect ratio). Functional Constraint: Text Windows must be empty. Illustrated features (buttons/toggles) must be physical parts of environment. NO text/labeling. [Layout: Primary 45x27, Subject 41x9, Translation 53x6, Subtitle 57x6]. Theme/mood = `;
 
@@ -178,7 +167,10 @@
         window.loadThemes = async () => {
             const grid = document.getElementById('themeGrid');
             grid.innerHTML = 'Cargando temas cloud...';
-            const activeId = localStorage.getItem('bg_flashcard_cloud');
+            
+            // Get active theme from Cloud first
+            const cloudState = await getGlobalTheme();
+            const activeId = cloudState ? cloudState.activeThemeId : localStorage.getItem('bg_flashcard_cloud');
 
             try {
                 const q = query(collection(db, "themes"), orderBy("createdAt", "desc"));
@@ -208,11 +200,13 @@
             }
         };
 
-        window.selectTheme = (id, url, layout) => {
-            localStorage.setItem('bg_flashcard_cloud', id);
-            localStorage.setItem('bg_url_cloud', url);
-            localStorage.setItem('ui_positions', JSON.stringify(layout));
-            loadThemes();
+        window.selectTheme = async (id, url, layout) => {
+            const success = await saveGlobalTheme(id, url, layout);
+            if (success) {
+                loadThemes();
+            } else {
+                alert("Error al sincronizar con la nube.");
+            }
         };
 
         window.deleteTheme = async (id, storagePath) => {
