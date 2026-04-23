@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Blueprint Architect: 3:2 Lock</title>
+    <title>Blueprint Architect: 3:2 Cloud Sync</title>
     <style>
         :root { 
             --mc-font: 'Arial Black', sans-serif; 
@@ -11,20 +11,24 @@
             --canvas-green: #00FF00;
         }
         
+        /* Synchronized with flashcard and winadjust */
         body, html {
             margin: 0; padding: 0; background: #111;
             height: 100vh; width: 100vw; overflow: hidden;
             display: flex; justify-content: center; align-items: center;
             font-family: var(--mc-font);
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
         }
 
-        /* The 3:2 iPad Container Lock */
+        /* Maintain 3:2 aspect ratio lock for iPad architecting */
         #canvas-viewport {
             position: relative;
             width: 100vw;
-            height: 66.66vw; /* Maintain 3:2 ratio */
+            height: 66.66vw; 
             max-height: 100vh;
-            max-width: 150vh; /* Prevents overflow on tall screens */
+            max-width: 150vh; 
             background: var(--canvas-green);
             box-shadow: 0 0 50px rgba(0,0,0,0.5);
             overflow: hidden;
@@ -62,7 +66,6 @@
         #back-btn { background: #333; color: white; }
         .pos-label { font-size: 10px; color: #76FF03; margin-bottom: 8px; display: block; }
         
-        /* Prompt Modal */
         #modal-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0,0,0,0.9); display: none; 
@@ -94,7 +97,7 @@
 
     <div id="control-panel">
         <h3 id="panel-title" style="margin:0 0 10px 0; color:var(--accent); font-size: 14px;">BLUEPRINT EDITOR</h3>
-        <span id="pos-info" class="pos-label">Select asset...</span>
+        <span id="pos-info" class="pos-label">Cargando Nube...</span>
 
         <label style="font-size: 9px; color:#888;">TOP %</label><input type="range" id="val-top" min="0" max="100" oninput="updateUI()">
         <label style="font-size: 9px; color:#888;">LEFT %</label><input type="range" id="val-left" min="0" max="100" oninput="updateUI()">
@@ -116,46 +119,64 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        import { getGlobalTheme } from "./firebase-bridge.js";
+
         let activeId = 'pane-stone';
+        let layout = {};
 
-        // Same default layout used across all pages
-        let layout = {
-            'pane-back': {t:12, l:3, w:9, h:15},
-            'pane-birch': {t:5, l:30, w:41, h:9},
-            'pane-stone': {t:27, l:28, w:45, h:27},
-            'pane-record': {t:66, l:37, w:27, h:11},
-            'pane-speech': {t:39, l:75, w:10, h:18},
-            'pane-valenciano': {t:75, l:26, w:53, h:6},
-            'pane-val-toggle': {t:75, l:18, w:6, h:12},
-            'pane-slab': {t:90, l:22, w:57, h:6}
-        };
+        async function init() {
+            // Pull real coordinates from Cloud to ensure prompt matches current iPad view
+            const cloudState = await getGlobalTheme();
+            
+            if (cloudState && cloudState.layout) {
+                layout = cloudState.layout;
+                // Preview the active theme in the background behind the green screen
+                if (cloudState.activeThemeUrl) {
+                    document.body.style.backgroundImage = `url('${cloudState.activeThemeUrl}')`;
+                }
+            } else {
+                // Fallback defaults
+                layout = {
+                    'pane-back': {t:12, l:3, w:9, h:15},
+                    'pane-birch': {t:5, l:30, w:41, h:9},
+                    'pane-stone': {t:27, l:28, w:45, h:27},
+                    'pane-record': {t:66, l:37, w:27, h:11},
+                    'pane-speech': {t:39, l:75, w:10, h:18},
+                    'pane-valenciano': {t:75, l:26, w:53, h:6},
+                    'pane-val-toggle': {t:75, l:18, w:6, h:12},
+                    'pane-slab': {t:90, l:22, w:57, h:6}
+                };
+            }
 
-        function init() {
             Object.keys(layout).forEach(id => {
                 const el = document.getElementById(id);
-                const p = layout[id];
-                el.style.top = p.t + '%'; el.style.left = p.l + '%';
-                el.style.width = p.w + '%'; el.style.height = p.h + '%';
+                if (el) {
+                    const p = layout[id];
+                    el.style.top = p.t + '%'; el.style.left = p.l + '%';
+                    el.style.width = p.w + '%'; el.style.height = p.h + '%';
+                }
             });
-            selectPane(activeId);
+            window.selectPane(activeId);
         }
 
-        function selectPane(id) {
+        window.selectPane = (id) => {
             document.querySelectorAll('.blueprint-pane').forEach(el => el.classList.remove('active'));
             activeId = id;
             document.getElementById(id).classList.add('active');
             document.getElementById('panel-title').innerText = id.replace('pane-', '').toUpperCase();
             
             const p = layout[id];
-            document.getElementById('val-top').value = p.t;
-            document.getElementById('val-left').value = p.l;
-            document.getElementById('val-width').value = p.w;
-            document.getElementById('val-height').value = p.h;
-            updatePosLabel(p);
+            if (p) {
+                document.getElementById('val-top').value = p.t;
+                document.getElementById('val-left').value = p.l;
+                document.getElementById('val-width').value = p.w;
+                document.getElementById('val-height').value = p.h;
+                updatePosLabel(p);
+            }
         }
 
-        function updateUI() {
+        window.updateUI = () => {
             const t = parseInt(document.getElementById('val-top').value);
             const l = parseInt(document.getElementById('val-left').value);
             const w = parseInt(document.getElementById('val-width').value);
@@ -173,7 +194,7 @@
             document.getElementById('pos-info').innerText = `T:${p.t}% L:${p.l}% | W:${p.w}% H:${p.h}%`;
         }
 
-        function generateStrictPrompt() {
+        window.generateStrictPrompt = () => {
             const modal = document.getElementById('modal-overlay');
             const output = document.getElementById('prompt-output');
             modal.style.display = 'flex';
@@ -203,27 +224,27 @@
             prompt += "[CLEAR WINDOWS]\n";
             Object.keys(names).forEach(id => {
                 const p = layout[id];
-                prompt += `- ${names[id]}: Fixed at ${p.l}% Left, ${p.t}% Top. Size: ${p.w}% Width, ${p.h}% Height.\n`;
+                if(p) prompt += `- ${names[id]}: Fixed at ${p.l}% Left, ${p.t}% Top. Size: ${p.w}% Width, ${p.h}% Height.\n`;
             });
 
             prompt += "\n[THEMATIC FEATURES]\n";
             Object.keys(features).forEach(id => {
                 const p = layout[id];
-                prompt += `- ${features[id]}: Fixed at ${p.l}% Left, ${p.t}% Top. Size: ${p.w}% Width, ${p.h}% Height.\n`;
+                if(p) prompt += `- ${features[id]}: Fixed at ${p.l}% Left, ${p.t}% Top. Size: ${p.w}% Width, ${p.h}% Height.\n`;
             });
 
             prompt += "\nFINAL RULES: No text. 3D Style. Theme must wrap around anchors.\n\nTheme/Mood = ";
             output.value = prompt;
         }
 
-        function copyToClipboard() {
+        window.copyToClipboard = () => {
             const box = document.getElementById('prompt-output');
             box.select();
             navigator.clipboard.writeText(box.value);
             alert("Blueprint Prompt Copied!");
         }
 
-        window.onload = init;
+        init();
     </script>
 </body>
 </html>
