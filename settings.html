@@ -96,7 +96,11 @@
             <div class="card-header">👤 Student Profile</div>
             <label>Date of Birth</label>
             <input type="date" id="billy-dob">
+            <p style="font-size: 0.75rem; color: #888; margin-top: 15px;">Determines the target curriculum year group.</p>
+        </div>
 
+        <div class="card">
+            <div class="card-header">📊 Difficulty Settings</div>
             <label>Reading Tier</label>
             <div class="level-selector">
                 <button class="lvl-btn" id="lvl-1" onclick="setLevel('1')">T1: FONÉTICO</button>
@@ -104,6 +108,7 @@
                 <button class="lvl-btn" id="lvl-3" onclick="setLevel('3')">T3: AVANZADO</button>
                 <button class="lvl-btn" id="lvl-4" onclick="setLevel('4')">T4: EXPERTO</button>
             </div>
+            <p style="font-size: 0.75rem; color: #888; margin-top: 15px;">Governs the complexity of the sentence structure.</p>
         </div>
 
         <div class="card">
@@ -135,10 +140,6 @@
                 <button class="admin-btn" style="margin-top:10px; color: #d9534f; padding: 8px; flex: 1;" onclick="location.href='testing.html'">🛠️ API TESTER</button>
                 <button class="inner-save-btn" onclick="saveKeyOnly()" style="flex: 0.5;">Save Key</button>
             </div>
-            
-            <p style="font-size: 0.7rem; color: #999; margin-top: 15px;">
-                This key enables dynamic curriculum generation via OpenAI.
-            </p>
         </div>
 
         <div class="card">
