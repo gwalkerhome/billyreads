@@ -1,7 +1,45 @@
-// flashapp.js - Integrated Curriculum & Assessment Engine
+// flashapp.js - Integrated Curriculum & Assessment Engine (Cloud Sync Edition)
+import { getGlobalTheme } from "./firebase-bridge.js";
+
 let flashcards = [];
 let currentIndex = 0;
 let isListening = false;
+
+/**
+ * NEW: Applies the Cloud Theme and Layout coordinates to the UI
+ */
+async function syncAppTheme() {
+    // 1. Fetch the latest state from the Cloud Bridge
+    const cloudState = await getGlobalTheme();
+    
+    // Fallback to local storage if cloud is unreachable
+    const themeUrl = cloudState ? cloudState.activeThemeUrl : localStorage.getItem('bg_url_cloud');
+    const layout = cloudState ? cloudState.layout : JSON.parse(localStorage.getItem('ui_positions'));
+
+    if (themeUrl) {
+        document.body.style.backgroundImage = `url('${themeUrl}')`;
+        document.body.style.backgroundSize = "cover";
+        document.body.style.backgroundPosition = "center";
+    }
+
+    if (layout) {
+        Object.keys(layout).forEach(paneId => {
+            const element = document.getElementById(paneId);
+            if (element) {
+                const pos = layout[paneId];
+                element.style.position = 'fixed';
+                element.style.top = pos.t + '%';
+                element.style.left = pos.l + '%';
+                element.style.width = pos.w + '%';
+                element.style.height = pos.h + '%';
+                // Remove borders as per project requirements
+                element.style.border = "none";
+                element.style.outline = "none";
+                element.style.backgroundColor = "transparent";
+            }
+        });
+    }
+}
 
 /**
  * Calculates the Spanish school year group based on DOB for 2026 context.
@@ -57,8 +95,9 @@ async function fetchJourneyCards() {
     }
 
     const currentYear = calculateYearGroup(dob);
-    const model = "gpt-5.4-mini";
-    const url = "https://api.openai.com/v1/chat/completions";
+    // Note: Ensuring we use the 2.5-flash as per instructions
+    const model = "gemini-2.5-flash"; 
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
     const difficultyMap = {
         "1": "Tier 1 (Phonetic): Short words, simple S+V+O, max 6 words, no complex clusters (tr, bl).",
@@ -89,22 +128,14 @@ async function fetchJourneyCards() {
     try {
         const response = await fetch(url, {
             method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify({ 
-                model: model,
-                messages: [
-                    { role: "system", content: "You are an expert in the Spanish Primary curriculum. Output JSON only." },
-                    { role: "user", content: prompt }
-                ],
-                temperature: 0.7
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }]
             })
         });
         
         const data = await response.json();
-        let rawText = data.choices[0].message.content;
+        let rawText = data.candidates[0].content.parts[0].text;
         const start = rawText.indexOf('[');
         const end = rawText.lastIndexOf(']');
         rawText = rawText.substring(start, end + 1);
@@ -122,13 +153,18 @@ function displayCurrentCard() {
     if (!flashcards.length || !flashcards[currentIndex]) return;
     const card = flashcards[currentIndex];
     
-    document.getElementById('target-sentence').innerText = card.es;
-    document.getElementById('subject-tag').innerText = card.cat.toUpperCase();
-    document.getElementById('val-translation').innerText = card.val;
-    document.getElementById('energy-bar').style.width = ((currentIndex / flashcards.length) * 100) + '%';
+    const targetEl = document.getElementById('target-sentence');
+    const subjectEl = document.getElementById('subject-tag');
+    const valEl = document.getElementById('val-translation');
+    const energyEl = document.getElementById('energy-bar');
+
+    if(targetEl) targetEl.innerText = card.es;
+    if(subjectEl) subjectEl.innerText = card.cat.toUpperCase();
+    if(valEl) valEl.innerText = card.val;
+    if(energyEl) energyEl.energyEl.style.width = ((currentIndex / flashcards.length) * 100) + '%';
 }
 
-function playSpeech() {
+window.playSpeech = function() {
     if (!flashcards.length || !flashcards[currentIndex]) return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(flashcards[currentIndex].es);
@@ -187,4 +223,6 @@ if (SpeechRecognition) {
     }
 }
 
+// Initial Sync and Fetch
+syncAppTheme();
 fetchJourneyCards();
