@@ -3,217 +3,318 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Biblioteca de Temas</title>
+    <title>Themes Studio: BillyReads</title>
     <style>
         :root { 
             --mc-font: 'Arial Black', Gadget, sans-serif; 
             --accent: #4a90e2;
             --flash-green: #76FF03;
-            --book-purple: #e2a0ff;
+            --ui-panel: rgba(20, 20, 20, 0.95);
         }
         body { 
-            font-family: sans-serif; 
-            background: #1a1a1a; 
-            color: white;
-            padding: 20px; 
-            text-align: center; 
-            margin: 0;
-        }
-        h1 { font-family: var(--mc-font); font-size: 1.5rem; margin-bottom: 20px; color: var(--accent); }
-        
-        /* Upload Area */
-        .upload-zone {
-            background: #2a2a2a; 
-            border: 3px dashed var(--accent); 
-            padding: 40px;
-            border-radius: 15px; 
-            margin-bottom: 30px; 
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        .upload-zone:hover { background: #333; }
-        .upload-zone span { font-weight: bold; color: var(--accent); }
-
-        /* Grid Layout */
-        .theme-grid {
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px; 
-            max-width: 1200px; 
-            margin: 0 auto;
+            font-family: sans-serif; background: #111; color: white;
+            margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden;
         }
 
+        /* --- TOP NAV --- */
+        header {
+            background: #222; padding: 15px; display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 2px solid #333; z-index: 10;
+        }
+        .nav-btns { display: flex; gap: 10px; }
+        header h1 { font-family: var(--mc-font); font-size: 1.2rem; color: var(--accent); margin: 0; }
+
+        /* --- MAIN VIEWPORT --- */
+        #studio-layout { display: flex; flex: 1; overflow: hidden; }
+
+        /* --- THEME REPOSITORY (Left Sidebar) --- */
+        #vault {
+            width: 300px; background: #1a1a1a; border-right: 2px solid #333;
+            overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 15px;
+        }
         .theme-card {
-            background: #333; 
-            border-radius: 12px; 
-            padding: 15px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-            border: 2px solid transparent;
+            background: #2a2a2a; border-radius: 10px; padding: 10px; cursor: pointer;
+            border: 2px solid transparent; transition: 0.2s;
         }
-        .theme-card.active-flash { border-color: var(--flash-green); }
-        .theme-card.active-book { border-color: var(--book-purple); }
+        .theme-card:hover { border-color: #555; }
+        .theme-card.active { border-color: var(--flash-green); }
+        .theme-card img { width: 100%; border-radius: 5px; margin-bottom: 5px; }
+        .theme-card-info { font-size: 10px; font-weight: bold; text-align: center; color: #aaa; }
 
-        .thumb {
-            width: 100%; 
-            height: 140px; 
-            object-fit: cover;
-            border-radius: 8px; 
-            margin-bottom: 10px;
+        /* --- CALIBRATION STAGE (Center) --- */
+        #stage {
+            flex: 1; position: relative; background: #000;
+            display: flex; justify-content: center; align-items: center;
         }
-
-        .status-labels {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 10px;
-            min-height: 20px;
+        #stage-bg {
+            width: 100%; height: 100%; background-size: contain;
+            background-position: center; background-repeat: no-repeat; position: relative;
         }
 
-        .badge {
-            font-size: 10px;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-weight: bold;
-            color: black;
+        /* Calibration Box Styles */
+        .calibration-pane {
+            position: absolute; border: 1px dashed rgba(255,255,255,0.5);
+            background: rgba(255,255,255,0.1); color: white; font-size: 8px;
+            display: flex; align-items: center; justify-content: center; pointer-events: none;
         }
-        .badge-flash { background: var(--flash-green); }
-        .badge-book { background: var(--book-purple); }
+        .active-pane { border: 2px solid var(--flash-green); background: rgba(118, 255, 3, 0.2); z-index: 5; }
 
-        /* Control Buttons */
-        .controls { display: flex; flex-direction: column; gap: 8px; }
-        button { 
-            padding: 12px; 
-            border: none; 
-            border-radius: 6px; 
-            cursor: pointer;
-            font-family: var(--mc-font);
-            font-size: 10px;
-            text-transform: uppercase;
+        /* --- TOOLBAR (Right) --- */
+        #toolbar {
+            width: 250px; background: #1a1a1a; border-left: 2px solid #333;
+            padding: 15px; display: flex; flex-direction: column; gap: 20px;
         }
-        .btn-flash { background: var(--flash-green); color: black; }
-        .btn-book { background: var(--book-purple); color: black; }
-        .btn-del { background: #ff4d4d; color: white; margin-top: 5px; opacity: 0.7; }
-        .btn-del:hover { opacity: 1; }
+        .control-group { background: #222; padding: 10px; border-radius: 8px; }
+        label { font-size: 10px; color: #888; text-transform: uppercase; display: block; margin-bottom: 5px; }
+        input[type=range] { width: 100%; }
+        
+        button {
+            width: 100%; padding: 12px; border-radius: 6px; border: none;
+            font-family: var(--mc-font); font-size: 10px; cursor: pointer; text-transform: uppercase;
+        }
+        .btn-prime { background: var(--accent); color: white; }
+        .btn-save { background: var(--flash-green); color: black; }
+        .btn-del { background: #ff4d4d; color: white; }
 
-        .back-nav {
-            margin-top: 50px;
-            background: #444;
-            color: white;
-            padding: 15px 40px;
+        /* --- MODALS --- */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); display: none; justify-content: center;
+            align-items: center; z-index: 1000;
+        }
+        .modal-content {
+            background: #1a1a1a; padding: 30px; border-radius: 15px; width: 80%;
+            max-width: 600px; border: 2px solid var(--accent);
+        }
+        textarea {
+            width: 100%; height: 250px; background: #000; color: var(--flash-green);
+            font-family: monospace; padding: 15px; border: 1px solid #333; box-sizing: border-box;
         }
     </style>
 </head>
 <body>
 
-    <h1>BIBLIOTECA DE TEMAS</h1>
+<header>
+    <h1>THEMES STUDIO</h1>
+    <div class="nav-btns">
+        <button class="btn-prime" style="width:auto" onclick="showWingen()">Wingen Prompt</button>
+        <button class="btn-prime" style="width:auto" onclick="document.getElementById('fileInput').click()">+ New Background</button>
+        <button style="width:auto; background:#444; color:white" onclick="location.href='settings.html'">Back</button>
+    </div>
+</header>
 
-    <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
-        <span>+ SUBIR NUEVO FONDO (PNG/JPG)</span>
-        <input type="file" id="fileInput" hidden accept="image/*" onchange="handleUpload(event)">
+<div id="studio-layout">
+    <div id="vault" id="themeGrid">
+        </div>
+
+    <div id="stage">
+        <div id="stage-bg">
+            </div>
     </div>
 
-    <div class="theme-grid" id="themeGrid"></div>
+    <div id="toolbar">
+        <div class="control-group">
+            <label>Selected Asset</label>
+            <select id="asset-selector" onchange="selectAsset(this.value)" style="width:100%; padding:5px;">
+                <option value="pane-stone">Primary Text</option>
+                <option value="pane-birch">Subject Title</option>
+                <option value="pane-valenciano">Translation</option>
+                <option value="pane-slab">Transcript</option>
+                <option value="pane-back">Exit Button</option>
+                <option value="pane-val-toggle">Toggle</option>
+                <option value="pane-record">Record Btn</option>
+                <option value="pane-speech">Audio Btn</option>
+            </select>
+        </div>
 
-    <button class="back-nav" onclick="location.href='settings.html'">VOLVER AL CONTROL</button>
+        <div class="control-group">
+            <label>Position & Size</label>
+            <label>Top %</label><input type="range" id="v-top" min="0" max="100" oninput="updateLayout()">
+            <label>Left %</label><input type="range" id="v-left" min="0" max="100" oninput="updateLayout()">
+            <label>Width %</label><input type="range" id="v-width" min="1" max="100" oninput="updateLayout()">
+            <label>Height %</label><input type="range" id="v-height" min="1" max="100" oninput="updateLayout()">
+        </div>
 
-    <script>
-        let db;
-        const request = indexedDB.open("ThemeDB", 1);
+        <button class="btn-save" onclick="saveActiveTheme()">Save Calibration</button>
+        <button class="btn-prime" style="background:#4a90e2;" onclick="setAsActive()">Set as Live Theme</button>
+        <button class="btn-del" onclick="deleteTheme()">Delete Theme</button>
+    </div>
+</div>
 
-        // Database setup for handling 1-2MB image files
-        request.onupgradeneeded = e => {
-            db = e.target.result;
-            if (!db.objectStoreNames.contains("themes")) {
-                db.createObjectStore("themes", { keyPath: "id", autoIncrement: true });
-            }
+<div id="wingen-modal" class="modal">
+    <div class="modal-content">
+        <h2 style="margin-top:0">Wingen V4 Generator</h2>
+        <textarea id="prompt-box" readonly></textarea>
+        <button onclick="document.getElementById('wingen-modal').style.display='none'" style="margin-top:15px">Close</button>
+    </div>
+</div>
+
+<input type="file" id="fileInput" hidden accept="image/*" onchange="handleUpload(event)">
+
+<script>
+    let db;
+    let activeThemeId = null;
+    let activeAssetId = 'pane-stone';
+    
+    // Default asset map
+    const defaultLayout = {
+        'pane-back': {t:12, l:3, w:9, h:15},
+        'pane-birch': {t:5, l:30, w:41, h:9},
+        'pane-stone': {t:27, l:28, w:45, h:27},
+        'pane-record': {t:66, l:37, w:27, h:11},
+        'pane-speech': {t:39, l:75, w:10, h:18},
+        'pane-valenciano': {t:75, l:26, w:53, h:6},
+        'pane-val-toggle': {t:75, l:18, w:6, h:12},
+        'pane-slab': {t:90, l:22, w:57, h:6}
+    };
+
+    const request = indexedDB.open("ThemeDB", 1);
+    request.onupgradeneeded = e => {
+        db = e.target.result;
+        if (!db.objectStoreNames.contains("themes")) {
+            db.createObjectStore("themes", { keyPath: "id", autoIncrement: true });
+        }
+    };
+    request.onsuccess = e => { db = e.target.result; loadVault(); };
+
+    function loadVault() {
+        const vault = document.getElementById('vault');
+        vault.innerHTML = '';
+        const tx = db.transaction("themes", "readonly");
+        tx.objectStore("themes").getAll().onsuccess = e => {
+            e.target.result.forEach(theme => {
+                const card = document.createElement('div');
+                card.className = `theme-card ${activeThemeId == theme.id ? 'active' : ''}`;
+                card.onclick = () => loadThemeToStage(theme);
+                card.innerHTML = `<img src="${theme.data}"><div class="theme-card-info">${theme.name || 'Untitled'}</div>`;
+                vault.appendChild(card);
+            });
         };
+    }
 
-        request.onsuccess = e => {
-            db = e.target.result;
-            loadThemes();
+    function handleUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            const tx = db.transaction(["themes"], "readwrite");
+            tx.objectStore("themes").add({
+                name: file.name,
+                data: e.target.result,
+                layout: JSON.parse(JSON.stringify(defaultLayout))
+            });
+            tx.oncomplete = () => loadVault();
         };
+        reader.readAsDataURL(file);
+    }
 
-        // Handle file reading and storage
-        function handleUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+    function loadThemeToStage(theme) {
+        activeThemeId = theme.id;
+        document.getElementById('stage-bg').style.backgroundImage = `url(${theme.data})`;
+        renderPanes(theme.layout);
+        loadVault(); // refresh active state
+    }
 
-            const reader = new FileReader();
-            reader.onload = e => {
-                const transaction = db.transaction(["themes"], "readwrite");
-                transaction.objectStore("themes").add({
-                    name: file.name,
-                    data: e.target.result,
-                    timestamp: Date.now()
-                });
-                transaction.oncomplete = () => {
-                    loadThemes();
-                    event.target.value = ''; // Reset input
-                };
-            };
-            reader.readAsDataURL(file);
-        }
+    function renderPanes(layout) {
+        const stage = document.getElementById('stage-bg');
+        stage.innerHTML = '';
+        Object.keys(layout).forEach(id => {
+            const p = layout[id];
+            const div = document.createElement('div');
+            div.id = 'stage-' + id;
+            div.className = `calibration-pane ${id === activeAssetId ? 'active-pane' : ''}`;
+            div.style.cssText = `top:${p.t}%; left:${p.l}%; width:${p.w}%; height:${p.h}%;`;
+            div.innerText = id.replace('pane-','').toUpperCase();
+            stage.appendChild(div);
+        });
+        // Sync sliders
+        const cur = layout[activeAssetId];
+        document.getElementById('v-top').value = cur.t;
+        document.getElementById('v-left').value = cur.l;
+        document.getElementById('v-width').value = cur.w;
+        document.getElementById('v-height').value = cur.h;
+    }
 
-        function loadThemes() {
-            const grid = document.getElementById('themeGrid');
-            grid.innerHTML = '';
-            
-            // Reference correct singular filename/key
-            const flashBgId = localStorage.getItem('bg_flashcard');
-            const bookBgId = localStorage.getItem('bg_magicbook');
+    function selectAsset(id) {
+        activeAssetId = id;
+        const tx = db.transaction("themes", "readonly");
+        tx.objectStore("themes").get(activeThemeId).onsuccess = e => {
+            if (e.target.result) renderPanes(e.target.result.layout);
+        };
+    }
 
-            const transaction = db.transaction("themes", "readonly");
-            const store = transaction.objectStore("themes");
-            
-            store.getAll().onsuccess = e => {
-                const themes = e.target.result;
-                
-                themes.forEach(theme => {
-                    const isFlash = flashBgId == theme.id;
-                    const isBook = bookBgId == theme.id;
-                    
-                    const card = document.createElement('div');
-                    card.className = `theme-card ${isFlash ? 'active-flash' : ''} ${isBook ? 'active-book' : ''}`;
-                    
-                    card.innerHTML = `
-                        <img src="${theme.data}" class="thumb">
-                        <div class="status-labels">
-                            ${isFlash ? '<span class="badge badge-flash">FLASHCARD GAME</span>' : ''}
-                            ${isBook ? '<span class="badge badge-book">MAGIC BOOK</span>' : ''}
-                        </div>
-                        <div class="controls">
-                            <button class="btn-flash" onclick="assignTheme(${theme.id}, 'flashcard')">USAR EN FLASHCARDS</button>
-                            <button class="btn-book" onclick="assignTheme(${theme.id}, 'book')">USAR EN MAGIC BOOK</button>
-                            <button class="btn-del" onclick="deleteTheme(${theme.id})">ELIMINAR</button>
-                        </div>
-                    `;
-                    grid.appendChild(card);
-                });
-            };
-        }
+    function updateLayout() {
+        if (!activeThemeId) return;
+        const t = parseInt(document.getElementById('v-top').value);
+        const l = parseInt(document.getElementById('v-left').value);
+        const w = parseInt(document.getElementById('v-width').value);
+        const h = parseInt(document.getElementById('v-height').value);
+        
+        const pane = document.getElementById('stage-' + activeAssetId);
+        pane.style.top = t+'%'; pane.style.left = l+'%';
+        pane.style.width = w+'%'; pane.style.height = h+'%';
+        pane.classList.add('active-pane');
+    }
 
-        function assignTheme(id, type) {
-            if (type === 'flashcard') {
-                localStorage.setItem('bg_flashcard', id);
-            } else {
-                localStorage.setItem('bg_magicbook', id);
-            }
-            loadThemes();
-            alert("¡Fondo asignado correctamente!");
-        }
+    async function saveActiveTheme() {
+        if (!activeThemeId) return;
+        const tx = db.transaction(["themes"], "readwrite");
+        const store = tx.objectStore("themes");
+        const theme = await new Promise(res => store.get(activeThemeId).onsuccess = e => res(e.target.result));
+        
+        theme.layout[activeAssetId] = {
+            t: parseInt(document.getElementById('v-top').value),
+            l: parseInt(document.getElementById('v-left').value),
+            w: parseInt(document.getElementById('v-width').value),
+            h: parseInt(document.getElementById('v-height').value)
+        };
+        
+        store.put(theme);
+        alert("Calibration Saved to Database.");
+    }
 
-        function deleteTheme(id) {
-            if(!confirm("¿Seguro que quieres borrar este fondo?")) return;
-            
-            const transaction = db.transaction(["themes"], "readwrite");
-            transaction.objectStore("themes").delete(id);
-            transaction.oncomplete = () => {
-                // Clear localStorage if the deleted theme was active
-                if(localStorage.getItem('bg_flashcard') == id) localStorage.removeItem('bg_flashcard');
-                if(localStorage.getItem('bg_magicbook') == id) localStorage.removeItem('bg_magicbook');
-                loadThemes();
-            };
-        }
-    </script>
+    function setAsActive() {
+        localStorage.setItem('bg_flashcard', activeThemeId);
+        // Also save coordinates to ui_positions so flashapp.js sees them immediately
+        const tx = db.transaction("themes", "readonly");
+        tx.objectStore("themes").get(activeThemeId).onsuccess = e => {
+            localStorage.setItem('ui_positions', JSON.stringify(e.target.result.layout));
+            alert("This theme is now LIVE.");
+        };
+    }
+
+    function showWingen() {
+        const modal = document.getElementById('wingen-modal');
+        const box = document.getElementById('prompt-box');
+        modal.style.display = 'flex';
+        box.value = `Role & Context: Act as an Architectural Illustrator specializing in children's educational interface design. Rendered in professional 3D style (3:2 aspect ratio). No text labels.
+
+📝 Clear Text Windows (Must be empty)
+1. PRIMARY TEXT FIELD: center focal point | Size: 45% width, 27% height.
+2. SUBJECT TITLE WINDOW: just above primary field. Size: 41% width, 9% height.
+3. SECONDARY TRANSLATION WINDOW: Size: 53% width, 6% height.
+4. SUBTITLE/TRANSCRIPT BAR: bottom of screen. Size: 57% width, 6% height.
+
+🛠️ Illustrated Features (Thematic art)
+1. EXIT BUTTON: Pos: 3% left, 12% top | Size: 9% width, 15% height.
+2. LANGUAGE TOGGLE: next to translation window | Size: 6% width, 12% height.
+3. MICROPHONE/RECORD BUTTON: beneath primary field | Size: 27% width, 11% height.
+4. SPEAKER/AUDIO BUTTON: next to primary field | Size: 10% width, 18% height.
+
+Theme/mood = [YOUR THEME HERE]`;
+    }
+
+    function deleteTheme() {
+        if (!confirm("Delete this theme forever?")) return;
+        const tx = db.transaction(["themes"], "readwrite");
+        tx.objectStore("themes").delete(activeThemeId);
+        tx.oncomplete = () => {
+            activeThemeId = null;
+            document.getElementById('stage-bg').style.backgroundImage = '';
+            loadVault();
+        };
+    }
+</script>
+
 </body>
 </html>
