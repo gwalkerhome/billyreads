@@ -7,23 +7,23 @@
     <style>
         :root { --mc-font: 'Arial Black', sans-serif; }
         
+        /* Synchronized with flashcard.html base styles */
         body, html {
             margin: 0; padding: 0;
             background: #000;
             height: 100vh; width: 100vw;
             overflow: hidden; font-family: var(--mc-font);
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
         }
 
         #game-container {
             position: relative;
             width: 100vw;
             height: 100vh;
-            background-size: cover;
-            background-position: center center;
-            background-repeat: no-repeat;
             margin: 0 auto;
             display: block;
-            background-color: #1a1a1a; /* Visual feedback if image fails */
         }
 
         .pane {
@@ -93,7 +93,7 @@
         
         <button id="save-btn" onclick="savePositions()">SAVE TO CLOUD</button>
         <button id="blueprint-btn" onclick="generateBlueprint()">GET ARCHITECT BLUEPRINT</button>
-        <button id="back-btn" onclick="window.location.href='settings.html'">BACK TO SETTINGS</button>
+        <button id="back-btn" onclick="window.location.href='themes.html'">BACK TO THEMES</button>
     </div>
 
     <div id="blueprint-overlay">
@@ -114,27 +114,24 @@
 
         async function init() {
             const cloudState = await getGlobalTheme();
-            const container = document.getElementById('game-container');
             
             if (cloudState && cloudState.activeThemeUrl) {
                 currentThemeId = cloudState.activeThemeId;
                 currentThemeUrl = cloudState.activeThemeUrl;
                 positions = cloudState.layout || {};
             } else {
-                // Fallback to local keys if cloud is not initialized yet
                 currentThemeId = localStorage.getItem('active_theme_id');
                 currentThemeUrl = localStorage.getItem('bg_url_cloud');
                 positions = JSON.parse(localStorage.getItem('ui_positions')) || {};
             }
 
-            // Apply Background
+            // Bind asset to body to match flashcard.html logic
             if (currentThemeUrl) {
-                container.style.backgroundImage = `url('${currentThemeUrl}')`;
+                document.body.style.backgroundImage = `url('${currentThemeUrl}')`;
             } else {
-                container.style.backgroundImage = "url('assets/minecraft.png')";
+                document.body.style.backgroundImage = "url('assets/minecraft.png')";
             }
 
-            // Position all panes
             Object.keys(positions).forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
@@ -149,11 +146,9 @@
         window.selectPane = (id) => {
             if(activeId) document.getElementById(activeId).classList.remove('active');
             activeId = id;
-            const el = document.getElementById(id);
-            el.classList.add('active');
+            document.getElementById(id).classList.add('active');
             document.getElementById('panel-title').innerText = id.replace('pane-', '').toUpperCase();
             
-            // Ensure position object exists for this pane
             if (!positions[id]) {
                 positions[id] = { t: 10, l: 10, w: 20, h: 10 };
             }
@@ -188,7 +183,6 @@
         window.savePositions = async () => {
             const btn = document.getElementById('save-btn');
             btn.innerText = "SAVING...";
-            // Use current state variables
             const success = await saveGlobalTheme(currentThemeId, currentThemeUrl, positions);
             if (success) {
                 btn.innerText = "SAVE TO CLOUD";
@@ -206,14 +200,9 @@
             
             let promptInfo = "### UI BLUEPRINT ###\n";
             const names = { 
-                'pane-back': 'EXIT', 
-                'pane-birch': 'SUBJECT', 
-                'pane-stone': 'TEXT', 
-                'pane-record': 'REC', 
-                'pane-speech': 'AUDIO', 
-                'pane-val-toggle': 'LANG', 
-                'pane-valenciano': 'TRANS', 
-                'pane-slab': 'SUBTITLE' 
+                'pane-back': 'EXIT', 'pane-birch': 'SUBJECT', 'pane-stone': 'TEXT', 
+                'pane-record': 'REC', 'pane-speech': 'AUDIO', 'pane-val-toggle': 'LANG', 
+                'pane-valenciano': 'TRANS', 'pane-slab': 'SUBTITLE' 
             };
             Object.keys(positions).forEach(id => {
                 const p = positions[id];
@@ -222,7 +211,6 @@
             bBox.value = promptInfo;
         };
 
-        // Standard init
         document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
