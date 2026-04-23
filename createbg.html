@@ -101,8 +101,8 @@
 
     <div id="modal-overlay">
         <div class="modal">
-            <h2 style="color: var(--accent); margin-top:0;">Strict Architectural Prompt</h2>
-            <p style="color: #ccc; font-size: 0.75rem;">This prompt uses your specific layout coordinates.</p>
+            <h2 style="color: var(--accent); margin-top:0;">Blueprint-First Prompt</h2>
+            <p style="color: #ccc; font-size: 0.75rem;">This prompt uses your specific layout as an immovable foundation.</p>
             <textarea id="prompt-output" readonly></textarea>
             <div style="display:flex; gap:10px; margin-top:10px;">
                 <button onclick="copyToClipboard()" style="background:#76FF03; color:black; flex:1">COPY PROMPT</button>
@@ -114,7 +114,6 @@
     <script>
         let activeId = 'pane-stone';
 
-        // Starting default layout
         let layout = {
             'pane-back': {t:12, l:3, w:9, h:15},
             'pane-birch': {t:5, l:30, w:41, h:9},
@@ -173,9 +172,16 @@
             const output = document.getElementById('prompt-output');
             modal.style.display = 'flex';
             
-            let prompt = "Role: Architectural Illustrator. Create a children's learning interface (3:2 ratio).\n";
-            prompt += "STRICT LAYOUT CONSTRAINT: You must place the following elements exactly at these coordinates.\n\n";
-            prompt += "CLEAR WINDOWS (Completely empty/flat):\n";
+            let prompt = "Role: Architectural UI Illustrator.\n";
+            prompt += "Task: Design a thematic environment AROUND a pre-existing 3:2 structural blueprint.\n\n";
+            prompt += "STRICT OPERATING PROTOCOL:\n";
+            prompt += "1. FOUNDATION FIRST: The following elements are already FIXED in 3D space. You must NOT move, shift, or ignore these coordinates.\n";
+            prompt += "2. ILLUSTRATE AROUND: Design the theme so the environment naturally incorporates these zones as physical parts of the scene.\n";
+            prompt += "3. ZERO INTERFERENCE: Text windows must remain FLAT and EMPTY. No focal points inside these zones.\n";
+            prompt += "4. NO TEXT: No labels or words on buttons. Use only physical 3D symbols.\n\n";
+            
+            prompt += "[STRUCTURED ANCHORS]\n\n";
+            prompt += "Clear Windows (Leave Empty/Flat):\n";
             
             const names = {
                 'pane-stone': 'PRIMARY TEXT FIELD',
@@ -185,26 +191,24 @@
             };
 
             const features = {
-                'pane-back': 'EXIT BUTTON (No text)',
+                'pane-back': 'EXIT MECHANISM',
                 'pane-val-toggle': 'LANGUAGE TOGGLE SWITCH',
-                'pane-record': 'MICROPHONE/RECORD INTERFACE',
-                'pane-speech': 'SPEAKER/AUDIO BUTTON'
+                'pane-record': 'RECORDING INTERFACE',
+                'pane-speech': 'AUDIO SPEAKER'
             };
 
-            // Add Windows
             Object.keys(names).forEach(id => {
                 const p = layout[id];
-                prompt += `- ${names[id]}: Pos: ${p.l}% from Left, ${p.t}% from Top. Size: ${p.w}% Width, ${p.h}% Height.\n`;
+                prompt += `- ${names[id]}: Fixed at ${p.l}% Left, ${p.t}% Top. Size: ${p.w}% Width, ${p.h}% Height.\n`;
             });
 
-            prompt += "\nINTEGRATED THEMATIC FEATURES (Physical objects):\n";
-            // Add Features
+            prompt += "\nThematic Features (Design as physical objects):\n";
             Object.keys(features).forEach(id => {
                 const p = layout[id];
-                prompt += `- ${features[id]}: Pos: ${p.l}% from Left, ${p.t}% from Top. Size: ${p.w}% Width, ${p.h}% Height.\n`;
+                prompt += `- ${features[id]}: Fixed at ${p.l}% Left, ${p.t}% Top. Size: ${p.w}% Width, ${p.h}% Height.\n`;
             });
 
-            prompt += "\nFINAL RULES: NO TEXT. NO LABELS. 3D Style. The background art must wrap around these exact coordinates.\n\nTheme/Mood = ";
+            prompt += "\nFINAL AESTHETIC: The theme must wrap around these anchors. They must appear as part of the architecture.\n\nTheme/Mood = ";
             
             output.value = prompt;
         }
@@ -213,7 +217,7 @@
             const box = document.getElementById('prompt-output');
             box.select();
             navigator.clipboard.writeText(box.value);
-            alert("Strict Prompt Copied!");
+            alert("Blueprint-First Prompt Copied!");
         }
 
         window.onload = init;
