@@ -1,11 +1,10 @@
-// flashapp.js - English logic for Spanish Curriculum Reading Engine
+// flashapp.js - Integrated Curriculum & Assessment Engine
 let flashcards = [];
 let currentIndex = 0;
 let isListening = false;
 
 /**
- * Calculates the student's school year in the Spanish system for 2026.
- * Age 6 = Year 1, Age 11 = Year 6.
+ * Calculates the Spanish school year group based on DOB for 2026 context.
  */
 function calculateYearGroup(dobString) {
     const dob = new Date(dobString);
@@ -15,6 +14,35 @@ function calculateYearGroup(dobString) {
     if (year < 1) year = 1;
     if (year > 6) year = 6;
     return year;
+}
+
+/**
+ * Assessment Logic: Compares spoken text against target text based on Strictness Level.
+ */
+function assessSpeech(spoken, target, keywords, strictness) {
+    const s = spoken.toLowerCase().trim();
+    const t = target.toLowerCase().trim();
+
+    switch (strictness) {
+        case '1': // PERMISIVO: Just needs one keyword to pass.
+            return keywords.some(k => s.includes(k.toLowerCase()));
+        
+        case '2': // ESTÁNDAR: "Spaniard would understand" - Keyword + 50% word match.
+            const targetWords = t.split(' ');
+            const matchedWords = targetWords.filter(word => s.includes(word));
+            return matchedWords.length >= (targetWords.length / 2);
+
+        case '3': // PRECISO: Requires 80% accuracy of the full sentence.
+            const words3 = t.split(' ');
+            const matches3 = words3.filter(word => s.includes(word));
+            return matches3.length >= (words3.length * 0.8);
+
+        case '4': // MAESTRÍA: Near-perfect match required.
+            return s === t || t.split(' ').every(word => s.includes(word));
+
+        default:
+            return keywords.some(k => s.includes(k.toLowerCase()));
+    }
 }
 
 async function fetchJourneyCards() {
@@ -32,35 +60,29 @@ async function fetchJourneyCards() {
     const model = "gpt-5.4-mini";
     const url = "https://api.openai.com/v1/chat/completions";
 
-    // Mapping UI tiers to specific linguistic constraints for the AI
     const difficultyMap = {
-        "1": "Tier 1 (Phonetic): Short words, simple Subject+Verb+Object phrases, max 6 words, no complex clusters like 'tr' or 'bl'.",
-        "2": "Tier 2 (Fluency): Sentences of 8-10 words, basic adjectives and conjunctions included.",
-        "3": "Tier 3 (Advanced): Compound sentences, technical curriculum vocabulary, use of commas.",
-        "4": "Tier 4 (Expert): Full academic language, sophisticated syntax, precise professional terminology."
+        "1": "Tier 1 (Phonetic): Short words, simple S+V+O, max 6 words, no complex clusters (tr, bl).",
+        "2": "Tier 2 (Fluency): 8-10 words, basic adjectives and conjunctions.",
+        "3": "Tier 3 (Advanced): Compound sentences, technical vocabulary, use of commas.",
+        "4": "Tier 4 (Expert): Full academic language, sophisticated syntax, precise terminology."
     };
     
     const selectedDifficulty = difficultyMap[readingLevel] || difficultyMap["2"];
 
-    // Prompt logic in English, instructing Spanish output
     const prompt = `Act as a Primary School Encyclopedia for students in Spain.
     YOUR OBJECTIVE: Generate 20 JSON objects containing REAL ACADEMIC FACTS from the Spanish school curriculum.
     
     CONTENT DISTRIBUTION:
-    - 70%: Facts from Year ${currentYear} of Primary (Primaria).
-    - 10%: Facts from Year ${currentYear + 1 > 6 ? 6 : currentYear + 1} of Primary.
-    - 20%: Review facts from Years 1 to ${currentYear > 1 ? currentYear - 1 : 1}.
+    - 70%: Year ${currentYear} of Primaria.
+    - 10%: Year ${currentYear + 1 > 6 ? 6 : currentYear + 1} of Primaria.
+    - 20%: Years 1 to ${currentYear > 1 ? currentYear - 1 : 1}.
 
-    READING DIFFICULTY (Syntax Constraint): ${selectedDifficulty}
+    READING DIFFICULTY: ${selectedDifficulty}
     
     CRITICAL RULES:
-    1. OUTPUT LANGUAGE: All content ('es', 'val', 'cat') MUST be in Spanish/Valenciano.
-    2. FACTUAL ONLY: Do not use classroom descriptions (e.g., Avoid "Students learn...", "We observe...").
-    3. DIRECT STATEMENTS: Only provide direct facts (e.g., "The Earth has a satellite called the Moon").
-    4. NO QUESTIONS: Provide statements only.
-    5. 'cat' field must be the Subject Title in Spanish (e.g., CIENCIAS, MATEMÁTICAS, HISTORIA).
-    
-    JSON FORMAT: [{"es": "Direct Spanish fact", "val": "Valencian translation", "cat": "SUBJECT", "keywords": ["keyword"]}]`;
+    1. OUTPUT LANGUAGE: Content must be in Spanish/Valencian.
+    2. FACTUAL ONLY: No classroom descriptions or "Teacher talk".
+    3. JSON FORMAT: [{"es": "Fact", "val": "Translation", "cat": "SUBJECT", "keywords": ["key"]}]`;
 
     if (targetDisplay) targetDisplay.innerText = "Syncing Curriculum...";
 
@@ -74,7 +96,7 @@ async function fetchJourneyCards() {
             body: JSON.stringify({ 
                 model: model,
                 messages: [
-                    { role: "system", content: "You are an expert in the Spanish Primary School curriculum. You only respond in valid, pure JSON." },
+                    { role: "system", content: "You are an expert in the Spanish Primary curriculum. Output JSON only." },
                     { role: "user", content: prompt }
                 ],
                 temperature: 0.7
@@ -82,21 +104,17 @@ async function fetchJourneyCards() {
         });
         
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error ? data.error.message : "API Error");
-
         let rawText = data.choices[0].message.content;
-        const startBracket = rawText.indexOf('[');
-        const endBracket = rawText.lastIndexOf(']');
-        if (startBracket !== -1 && endBracket !== -1) {
-            rawText = rawText.substring(startBracket, endBracket + 1);
-        }
+        const start = rawText.indexOf('[');
+        const end = rawText.lastIndexOf(']');
+        rawText = rawText.substring(start, end + 1);
         
         flashcards = JSON.parse(rawText);
         displayCurrentCard();
 
     } catch (err) {
-        console.error("Fetch Error:", err);
-        if (targetDisplay) targetDisplay.innerText = "Connection Error with Mission.";
+        console.error(err);
+        if (targetDisplay) targetDisplay.innerText = "Connection Error.";
     }
 }
 
@@ -104,23 +122,17 @@ function displayCurrentCard() {
     if (!flashcards.length || !flashcards[currentIndex]) return;
     const card = flashcards[currentIndex];
     
-    const sentenceEl = document.getElementById('target-sentence');
-    const subjectEl = document.getElementById('subject-tag');
-    const translationEl = document.getElementById('val-translation');
-    const progressBar = document.getElementById('energy-bar');
-
-    if (sentenceEl) sentenceEl.innerText = card.es;
-    if (subjectEl) subjectEl.innerText = card.cat.toUpperCase();
-    if (translationEl) translationEl.innerText = card.val;
-    if (progressBar) progressBar.style.width = ((currentIndex / flashcards.length) * 100) + '%';
+    document.getElementById('target-sentence').innerText = card.es;
+    document.getElementById('subject-tag').innerText = card.cat.toUpperCase();
+    document.getElementById('val-translation').innerText = card.val;
+    document.getElementById('energy-bar').style.width = ((currentIndex / flashcards.length) * 100) + '%';
 }
 
 function playSpeech() {
     if (!flashcards.length || !flashcards[currentIndex]) return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(flashcards[currentIndex].es);
-    const savedVoice = localStorage.getItem('billy_voice');
-    utterance.voice = window.speechSynthesis.getVoices().find(v => v.name === savedVoice);
+    utterance.voice = window.speechSynthesis.getVoices().find(v => v.name === localStorage.getItem('billy_voice'));
     utterance.rate = parseFloat(localStorage.getItem('billy_rate') || 1.0);
     utterance.pitch = parseFloat(localStorage.getItem('billy_pitch') || 1.0);
     utterance.lang = 'es-ES';
@@ -140,10 +152,15 @@ if (SpeechRecognition) {
         if (liveDisplay) liveDisplay.innerText = spokenText.toUpperCase();
         
         if (result.isFinal && flashcards[currentIndex]) {
-            const isMatch = flashcards[currentIndex].keywords.some(k => 
-                spokenText.toLowerCase().includes(k.toLowerCase())
+            const currentStrictness = localStorage.getItem('billy_strictness') || '2';
+            const isPass = assessSpeech(
+                spokenText, 
+                flashcards[currentIndex].es, 
+                flashcards[currentIndex].keywords, 
+                currentStrictness
             );
-            if (isMatch) {
+
+            if (isPass) {
                 currentIndex++;
                 if (currentIndex < flashcards.length) {
                     setTimeout(displayCurrentCard, 500);
@@ -170,5 +187,4 @@ if (SpeechRecognition) {
     }
 }
 
-// Initial Call
 fetchJourneyCards();
