@@ -127,18 +127,21 @@
             <div class="card-header">⚙️ System Core</div>
             <label>OpenAI API Key</label>
             <input type="password" id="gemini-key" placeholder="Enter sk-...">
-            <button class="inner-save-btn" onclick="saveKeyOnly()">Save Key</button>
+            
+            <div style="display: flex; gap: 10px; align-items: center; justify-content: flex-end;">
+                <button class="admin-btn" style="margin-top:10px; color: #d9534f; padding: 8px; flex: 1;" onclick="location.href='testing.html'">🛠️ API TESTER</button>
+                <button class="inner-save-btn" onclick="saveKeyOnly()" style="flex: 0.5;">Save Key</button>
+            </div>
+            
             <p style="font-size: 0.7rem; color: #999; margin-top: 15px;">
                 This key enables dynamic curriculum generation via OpenAI.
             </p>
         </div>
 
         <div class="card">
-            <div class="card-header">🛠️ Admin Tools</div>
-            <p style="font-size: 0.75rem; color: #888;">System diagnostics and interface calibration.</p>
-            <button class="admin-btn" onclick="location.href='winadjust.html'">Open winadjust.html</button>
+            <div class="card-header">🖼️ Background Themes</div>
+            <p style="font-size: 0.75rem; color: #888;">Manage background visual libraries and UI anchor points.</p>
             <button class="admin-btn" onclick="location.href='themes.html'">🎨 MANAGE THEMES</button>
-            <button class="admin-btn" style="color: #d9534f;" onclick="location.href='testing.html'">🛠️ API TESTER</button>
         </div>
 
     </div>
@@ -195,7 +198,6 @@
             window.speechSynthesis.speak(msg);
         }
 
-        // New function to save just the key
         function saveKeyOnly() {
             const key = document.getElementById('gemini-key').value.trim();
             localStorage.setItem('gemini_key', key);
