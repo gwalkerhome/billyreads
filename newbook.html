@@ -83,7 +83,7 @@
             
             try {
                 // we fetch the template file from your server/directory
-                const templateResponse = await fetch('assets/book_template.jpg');
+                const templateResponse = await fetch('assets/book_template.jpeg');
                 const templateBlob = await templateResponse.blob();
                 const templateBase64 = await new Promise(r => {
                     const reader = new FileReader();
