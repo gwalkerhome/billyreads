@@ -115,12 +115,12 @@
     <div id="backdrop"></div>
 
     <div class="language-bar">
-        <button id="btn-es" class="lang-btn active" onclick="setLanguage('es')">ES</button>
-        <button id="btn-va" class="lang-btn" onclick="setLanguage('va')">VA</button>
-        <button id="btn-en" class="lang-btn" onclick="setLanguage('en')">EN</button>
+        <button id="btn-es" class="lang-btn active" onclick="setlanguage('es')">ES</button>
+        <button id="btn-va" class="lang-btn" onclick="setlanguage('va')">VA</button>
+        <button id="btn-en" class="lang-btn" onclick="setlanguage('en')">EN</button>
     </div>
 
-    <div id="prev-btn" class="nav-arrow" onclick="changePage(-1)">&lt;</div>
+    <div id="prev-btn" class="nav-arrow" onclick="changepage(-1)">&lt;</div>
     
     <div class="page-window">
         <div id="text-content" class="page-text">
@@ -128,11 +128,11 @@
         </div>
     </div>
 
-    <div id="next-btn" class="nav-arrow" onclick="changePage(1)">&gt;</div>
+    <div id="next-btn" class="nav-arrow" onclick="changepage(1)">&gt;</div>
 
     <div class="bottom-controls">
         <button id="btn-exit" class="btn-action" onclick="location.href='pages.html'">salir</button>
-        <button id="btn-voice" class="btn-action" onclick="toggleVoice()">🔊 escuchar</button>
+        <button id="btn-voice" class="btn-action" onclick="togglevoice()">🔊 escuchar</button>
     </div>
 
     <script type="module">
@@ -171,8 +171,8 @@
             }
         }
 
-        window.setLanguage = (lang) => {
-            stopVoice();
+        window.setlanguage = (lang) => {
+            stopvoice();
             currentlang = lang;
             document.querySelectorAll('.lang-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.id === `btn-${lang}`);
@@ -180,10 +180,10 @@
             updatedisplay();
         };
 
-        window.changePage = (direction) => {
+        window.changepage = (direction) => {
             const newindex = currentindex + direction;
             if (newindex >= 0 && newindex < pagedata.length) {
-                stopVoice();
+                stopvoice();
                 currentindex = newindex;
                 updatedisplay();
             }
@@ -204,44 +204,64 @@
             textcontent.innerText = currentpage[languagekey] || "texto no disponible";
         }
 
-        // VoiceOver Logic
-        window.toggleVoice = () => {
+        window.togglevoice = () => {
             if (window.speechSynthesis.speaking) {
-                stopVoice();
+                stopvoice();
                 return;
             }
 
-            const textcontent = document.getElementById('text-content').innerText;
-            if (!textcontent || textcontent.includes("abriendo libro")) return;
+            if (pagedata.length === 0) return;
+            const currentpage = pagedata[currentindex];
+            const languagekey = `text_${currentlang}`;
+            const rawtext = currentpage[languagekey];
 
-            const msg = new SpeechSynthesisUtterance(textcontent);
+            if (!rawtext) return;
+
+            const msg = new SpeechSynthesisUtterance(rawtext);
             
-            // Apply calibrations from settings
-            const voicename = localStorage.getItem('billy_voice');
+            // Apply calibrations and select voice based on language
+            let voicename;
+            if (currentlang === 'en') {
+                msg.lang = 'en-US';
+                voicename = localStorage.getItem('billy_voice_en');
+            } else {
+                msg.lang = 'es-ES';
+                voicename = localStorage.getItem('billy_voice'); // Original Iberian variable
+            }
+
             const rate = localStorage.getItem('billy_rate') || 1.0;
             const pitch = localStorage.getItem('billy_pitch') || 1.0;
 
             const voices = window.speechSynthesis.getVoices();
             if (voicename) {
-                msg.voice = voices.find(v => v.name === voicename);
+                const targetvoice = voices.find(v => v.name === voicename);
+                if (targetvoice) msg.voice = targetvoice;
             }
             
             msg.rate = parseFloat(rate);
             msg.pitch = parseFloat(pitch);
             
-            // Update button UI while speaking
             document.getElementById('btn-voice').innerHTML = "⏹ detener";
+            
             msg.onend = () => {
+                document.getElementById('btn-voice').innerHTML = "🔊 escuchar";
+            };
+
+            msg.onerror = (event) => {
+                console.error("speech error:", event);
                 document.getElementById('btn-voice').innerHTML = "🔊 escuchar";
             };
 
             window.speechSynthesis.speak(msg);
         };
 
-        function stopVoice() {
+        function stopvoice() {
             window.speechSynthesis.cancel();
             document.getElementById('btn-voice').innerHTML = "🔊 escuchar";
         }
+
+        // Trigger voice loading
+        window.speechSynthesis.getVoices();
 
         initbook();
     </script>
