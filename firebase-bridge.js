@@ -36,6 +36,57 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
+/**
+ * callgemini:
+ * Fetches the gemini_key from localstorage, converts the image to base64,
+ * and calls the gemini-2.5-flash model for OCR and translation.
+ */
+window.callgemini = async function(file, prompt) {
+    const apikey = localStorage.getItem('gemini_key');
+    if (!apikey) throw new Error("No Gemini API Key found in settings.");
+
+    const gen_ai_url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apikey}`;
+
+    try {
+        // Convert image file to Base64
+        const base64data = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result.split(',')[1]);
+            reader.readAsDataURL(file);
+        });
+
+        // Prepare the API payload
+        const payload = {
+            contents: [{
+                parts: [
+                    { text: prompt },
+                    { inlineData: { mimeType: file.type, data: base64data } }
+                ]
+            }],
+            generationConfig: {
+                responseMimeType: "application/json"
+            }
+        };
+
+        const response = await fetch(gen_ai_url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) throw new Error(data.error ? data.error.message : "AI Error");
+
+        // Return the raw text (expected to be JSON string) from the first candidate
+        return data.candidates[0].content.parts[0].text;
+
+    } catch (error) {
+        console.error("Gemini Bridge Error:", error);
+        throw error;
+    }
+};
+
 export { 
     db, 
     storage, 
