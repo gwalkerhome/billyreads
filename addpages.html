@@ -18,11 +18,33 @@
             height: 100vh; box-sizing: border-box;
         }
 
+        /* Top Back Button */
+        #btn-top-back {
+            position: absolute;
+            top: 25px;
+            left: 20px;
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            cursor: pointer;
+            z-index: 100;
+            font-size: 1.2rem;
+            color: #2c3e50;
+            border: none;
+        }
+        #btn-top-back:active { transform: scale(0.9); }
+
         .main-card {
             width: 100%; max-width: 500px;
             background: white; border-radius: 20px;
             padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05);
             text-align: center; margin-bottom: auto;
+            margin-top: 50px;
         }
 
         h1 { font-family: var(--mc-font); color: #2c3e50; font-size: 1.2rem; margin-top: 0; }
@@ -85,18 +107,20 @@
         .btn-bottom {
             flex: 1; padding: 12px; border: none; border-radius: 12px;
             font-family: var(--mc-font); cursor: pointer; font-size: 0.8rem;
+            background: #4a90e2; color: white;
         }
-        #btn-back { background: #eee; color: #666; }
     </style>
 </head>
 <body>
+
+    <button id="btn-top-back" onclick="location.href='pages.html'">←</button>
 
     <div class="main-card">
         <h1 id="book-title-display">CARGANDO...</h1>
         
         <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
             <strong style="color: var(--accent-blue);">+ AÑADIR PÁGINA</strong>
-            <p style="font-size: 0.8rem; color: #94a3b8;">Toca para subir foto del libro.<br>La IA leerá y traducirá el texto automáticamente.</p>
+            <p style="font-size: 0.8rem; color: #94a3b8;">Toca para subir foto del libro.<br>La IA leerá y traducirá todo automáticamente.</p>
         </div>
         
         <input type="file" id="fileInput" accept="image/*">
@@ -104,12 +128,12 @@
     </div>
 
     <div class="bottom-strip-container">
-        <div class="strip-label">Páginas en este libro (Desliza para ver todas):</div>
+        <div class="strip-label">Páginas (Desliza para ver todas / Toca X para borrar):</div>
         <div class="asset-strip" id="assetStrip"></div>
     </div>
 
     <div class="nav-footer">
-        <button id="btn-back" class="btn-bottom" onclick="location.href='pages.html'">FINALIZAR</button>
+        <button class="btn-bottom" onclick="location.href='pages.html'">FINALIZAR</button>
     </div>
 
     <script type="module">
@@ -125,18 +149,14 @@
         const status = document.getElementById('status');
         const strip = document.getElementById('assetStrip');
 
-        // This is the Magic: AI OCR + Translation logic
+        // AI Magic for OCR and Translation
         async function processPageWithAI(file) {
-            status.innerText = "🤖 La IA está leyendo y traduciendo...";
-            
-            // Note: This connects to your wingen/flashapp prompt logic. 
-            // We are passing the image to Gemini 2.5-flash.
-            // For now, we simulate the returned JSON structure.
-            
+            status.innerText = "🤖 Leyendo y traduciendo...";
+            // This is our simulated AI response for now
             return {
-                es: "Había una vez un pequeño Billy...", // OCR result
-                va: "Hi havia una vegada un xicotet Billy...", // Translated
-                en: "Once upon a time there was a little Billy..." // Translated
+                es: "Había una vez un pequeño Billy...",
+                va: "Hi havia una vegada un xicotet Billy...",
+                en: "Once upon a time there was a little Billy..."
             };
         }
 
@@ -165,19 +185,15 @@
             if (!file) return;
 
             status.style.color = "#4a90e2";
-            status.innerText = "📤 Subiendo imagen...";
+            status.innerText = "📤 Procesando...";
 
             try {
-                // 1. Process with AI (OCR & Translate)
                 const aiData = await processPageWithAI(file);
-
-                // 2. Upload to Storage
                 const pageid = `page_${Date.now()}`;
                 const storageRef = ref(storage, `books/${bookid}/pages/${pageid}`);
                 const snap = await uploadBytes(storageRef, file);
                 const url = await getDownloadURL(snap.ref);
 
-                // 3. Save everything to Firestore
                 const currentCount = strip.querySelectorAll('.strip-item').length;
                 await setDoc(doc(collection(db, `books/${bookid}/pages`)), {
                     imageurl: url,
@@ -189,7 +205,7 @@
                 });
 
                 status.style.color = "green";
-                status.innerText = "✅ Página procesada y guardada.";
+                status.innerText = "✅ Guardado correctamente.";
                 refreshStrip();
             } catch (err) {
                 status.style.color = "red";
