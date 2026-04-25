@@ -47,6 +47,7 @@
         #status {
             margin-top: 15px; text-align: center;
             font-size: 0.85rem; color: #7f8c8d;
+            min-height: 1.2em;
         }
 
         .nav-footer { margin-top: 20px; width: 100%; max-width: 500px; }
@@ -77,7 +78,7 @@
             <input type="file" id="backdropImg" accept="image/*">
         </div>
 
-        <button id="saveBtn" class="btn-save" onclick="saveNewBook()">GUARDAR LIBRO</button>
+        <button id="saveBtn" class="btn-save">GUARDAR LIBRO</button>
         <div id="status"></div>
     </div>
 
@@ -88,12 +89,15 @@
     <script type="module">
         import { db, storage, collection, doc, setDoc, ref, uploadBytes, getDownloadURL } from "./firebase-bridge.js";
 
+        const saveBtn = document.getElementById('saveBtn');
+        const status = document.getElementById('status');
+
         async function saveNewBook() {
+            console.log("Button clicked. Starting save process...");
+            
             const title = document.getElementById('bookTitle').value;
             const coverFile = document.getElementById('coverImg').files[0];
             const backdropFile = document.getElementById('backdropImg').files[0];
-            const status = document.getElementById('status');
-            const saveBtn = document.getElementById('saveBtn');
 
             if (!title || !coverFile || !backdropFile) {
                 alert("Por favor, rellena todos los campos.");
@@ -102,25 +106,32 @@
 
             saveBtn.disabled = true;
             status.innerText = "Iniciando subida mágica...";
+            console.log("All files present. Title:", title);
 
             try {
-                // 1. Create a new Reference for the book to get a unique ID
+                // 1. Create a Document reference first
                 const newBookRef = doc(collection(db, "books"));
                 const bookId = newBookRef.id;
+                console.log("Generated Book ID:", bookId);
 
-                // 2. Upload Cover to book-specific folder
+                // 2. Upload Cover
                 status.innerText = "Subiendo portada...";
                 const coverRef = ref(storage, `books/${bookId}/cover`);
+                console.log("Uploading cover to:", coverRef.fullPath);
                 const coverSnap = await uploadBytes(coverRef, coverFile);
                 const coverURL = await getDownloadURL(coverSnap.ref);
+                console.log("Cover uploaded. URL:", coverURL);
 
-                // 3. Upload Backdrop to book-specific folder
+                // 3. Upload Backdrop
                 status.innerText = "Subiendo fondo...";
                 const backdropRef = ref(storage, `books/${bookId}/backdrop`);
+                console.log("Uploading backdrop to:", backdropRef.fullPath);
                 const backdropSnap = await uploadBytes(backdropRef, backdropFile);
                 const backdropURL = await getDownloadURL(backdropSnap.ref);
+                console.log("Backdrop uploaded. URL:", backdropURL);
 
-                // 4. Save the Book Document in Firestore
+                // 4. Save to Firestore
+                status.innerText = "Guardando datos en la nube...";
                 await setDoc(newBookRef, {
                     title: title,
                     coverURL: coverURL,
@@ -128,17 +139,22 @@
                     createdAt: Date.now()
                 });
 
+                console.log("Firestore document created successfully.");
                 status.innerText = "¡Libro guardado con éxito!";
-                setTimeout(() => location.href = 'magicbooks.html', 1500);
+                
+                setTimeout(() => {
+                    location.href = 'magicbooks.html';
+                }, 1500);
 
             } catch (error) {
-                console.error(error);
+                console.error("🔥 Error saving book:", error);
                 status.innerText = "Error: " + error.message;
                 saveBtn.disabled = false;
             }
         }
 
-        window.saveNewBook = saveNewBook;
+        // Attach listener explicitly
+        saveBtn.addEventListener('click', saveNewBook);
     </script>
 </body>
 </html>
