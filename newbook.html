@@ -9,75 +9,35 @@
             --mc-font: 'Arial Black', Gadget, sans-serif;
             --accent-blue: #4a90e2;
         }
-
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background: #f0f4f8;
-            margin: 0; padding: 20px;
-            display: flex; flex-direction: column; align-items: center;
-        }
-
-        .container {
-            width: 100%; max-width: 500px;
-            background: white; border-radius: 20px;
-            padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            box-sizing: border-box;
-        }
-
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 500px; background: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); box-sizing: border-box; }
         h1 { font-family: var(--mc-font); color: #2c3e50; text-align: center; margin-top: 0; }
-
         .input-group { margin-bottom: 20px; }
         label { display: block; font-weight: bold; margin-bottom: 8px; color: #34495e; font-size: 0.9rem; }
-        
-        input[type="text"], input[type="file"] {
-            width: 100%; padding: 12px;
-            border: 2px solid #edf2f7; border-radius: 12px;
-            box-sizing: border-box; font-size: 1rem;
-        }
-
-        .btn-save {
-            width: 100%; padding: 18px;
-            background: var(--accent-blue); color: white;
-            border: none; border-radius: 15px;
-            font-family: var(--mc-font); font-size: 1.1rem;
-            cursor: pointer; transition: background 0.2s;
-        }
-        .btn-save:disabled { background: #cbd5e0; cursor: not-allowed; }
-
-        #status {
-            margin-top: 15px; text-align: center;
-            font-size: 0.85rem; color: #7f8c8d;
-            min-height: 1.2em;
-        }
-
+        input[type="text"], input[type="file"] { width: 100%; padding: 12px; border: 2px solid #edf2f7; border-radius: 12px; box-sizing: border-box; font-size: 1rem; }
+        .btn-save { width: 100%; padding: 18px; background: var(--accent-blue); color: white; border: none; border-radius: 15px; font-family: var(--mc-font); font-size: 1.1rem; cursor: pointer; }
+        .btn-save:disabled { background: #cbd5e0; }
+        #status { margin-top: 15px; text-align: center; font-size: 0.85rem; color: #7f8c8d; min-height: 1.5em; }
         .nav-footer { margin-top: 20px; width: 100%; max-width: 500px; }
-        #btn-back {
-            width: 100%; padding: 12px; border: none; border-radius: 12px;
-            background: #eee; color: #666; font-family: var(--mc-font);
-            cursor: pointer;
-        }
+        #btn-back { width: 100%; padding: 12px; border: none; border-radius: 12px; background: #eee; color: #666; font-family: var(--mc-font); cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div class="container">
         <h1>NUEVO LIBRO</h1>
-        
         <div class="input-group">
             <label>Título del Libro</label>
             <input type="text" id="bookTitle" placeholder="Ej: El Dragón Lector">
         </div>
-
         <div class="input-group">
             <label>Portada (Thumbnail)</label>
             <input type="file" id="coverImg" accept="image/*">
         </div>
-
         <div class="input-group">
             <label>Fondo Mágico (Backdrop)</label>
             <input type="file" id="backdropImg" accept="image/*">
         </div>
-
         <button id="saveBtn" class="btn-save">GUARDAR LIBRO</button>
         <div id="status"></div>
     </div>
@@ -89,72 +49,66 @@
     <script type="module">
         import { db, storage, collection, doc, setDoc, ref, uploadBytes, getDownloadURL } from "./firebase-bridge.js";
 
-        const saveBtn = document.getElementById('saveBtn');
-        const status = document.getElementById('status');
-
         async function saveNewBook() {
-            console.log("Button clicked. Starting save process...");
-            
-            const title = document.getElementById('bookTitle').value;
-            const coverFile = document.getElementById('coverImg').files[0];
-            const backdropFile = document.getElementById('backdropImg').files[0];
+            const titleInput = document.getElementById('bookTitle');
+            const coverInput = document.getElementById('coverImg');
+            const backdropInput = document.getElementById('backdropImg');
+            const status = document.getElementById('status');
+            const saveBtn = document.getElementById('saveBtn');
 
-            if (!title || !coverFile || !backdropFile) {
-                alert("Por favor, rellena todos los campos.");
+            if (!titleInput.value || !coverInput.files[0] || !backdropInput.files[0]) {
+                alert("Por favor, rellena todos los campos y selecciona las imágenes.");
                 return;
             }
 
             saveBtn.disabled = true;
-            status.innerText = "Iniciando subida mágica...";
-            console.log("All files present. Title:", title);
+            status.innerText = "⏳ Preparando archivos...";
 
             try {
-                // 1. Create a Document reference first
+                // Create the book document reference to get a clean ID
                 const newBookRef = doc(collection(db, "books"));
                 const bookId = newBookRef.id;
-                console.log("Generated Book ID:", bookId);
 
-                // 2. Upload Cover
-                status.innerText = "Subiendo portada...";
+                // 1. Upload Cover
+                status.innerText = "📤 Subiendo portada...";
                 const coverRef = ref(storage, `books/${bookId}/cover`);
-                console.log("Uploading cover to:", coverRef.fullPath);
-                const coverSnap = await uploadBytes(coverRef, coverFile);
+                const coverSnap = await uploadBytes(coverRef, coverInput.files[0]);
                 const coverURL = await getDownloadURL(coverSnap.ref);
-                console.log("Cover uploaded. URL:", coverURL);
 
-                // 3. Upload Backdrop
-                status.innerText = "Subiendo fondo...";
+                // 2. Upload Backdrop
+                status.innerText = "📤 Subiendo fondo mágico...";
                 const backdropRef = ref(storage, `books/${bookId}/backdrop`);
-                console.log("Uploading backdrop to:", backdropRef.fullPath);
-                const backdropSnap = await uploadBytes(backdropRef, backdropFile);
+                const backdropSnap = await uploadBytes(backdropRef, backdropInput.files[0]);
                 const backdropURL = await getDownloadURL(backdropSnap.ref);
-                console.log("Backdrop uploaded. URL:", backdropURL);
 
-                // 4. Save to Firestore
-                status.innerText = "Guardando datos en la nube...";
+                // 3. Create the document in Firestore
+                status.innerText = "✍️ Escribiendo en la nube...";
                 await setDoc(newBookRef, {
-                    title: title,
+                    title: titleInput.value,
                     coverURL: coverURL,
                     backdropURL: backdropURL,
                     createdAt: Date.now()
                 });
 
-                console.log("Firestore document created successfully.");
-                status.innerText = "¡Libro guardado con éxito!";
+                status.style.color = "green";
+                status.innerText = "✅ ¡Libro guardado con éxito!";
                 
                 setTimeout(() => {
                     location.href = 'magicbooks.html';
                 }, 1500);
 
             } catch (error) {
-                console.error("🔥 Error saving book:", error);
-                status.innerText = "Error: " + error.message;
+                console.error("Firebase Error:", error);
+                status.style.color = "red";
+                status.innerText = "❌ Error: " + error.message;
                 saveBtn.disabled = false;
             }
         }
 
-        // Attach listener explicitly
-        saveBtn.addEventListener('click', saveNewBook);
+        // Initialize listener
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('saveBtn').onclick = saveNewBook;
+        });
     </script>
 </body>
 </html>
