@@ -3,148 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Billy Reads | Mis Libros Mágicos</title>
+    <title>Billy Reads | Biblioteca Mágica</title>
     <style>
         :root {
-            /* Change to rgba(0,0,0,0) once you are happy with the alignment */
-            --hitbox-color: rgba(255, 0, 0, 0.4); 
-            --hitbox-border: 1px solid rgba(255, 255, 255, 0.5);
+            --mc-font: 'Arial Black', Gadget, sans-serif;
         }
 
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            overflow: hidden; background: #1a1a1a;
-            display: flex; align-items: center; justify-content: center;
+        body {
+            margin: 0; padding: 20px;
+            background: #f0f4f8;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex; flex-direction: column; align-items: center;
         }
 
-        .background-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            background: url('assets/magicback1.png') no-repeat center center;
-            background-size: contain; 
+        h1 {
+            font-family: var(--mc-font);
+            color: #2c3e50;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
 
-        .hitbox {
-            position: absolute;
-            cursor: pointer;
-            background: var(--hitbox-color);
-            border: var(--hitbox-border);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-        }
-
-        #btn-back { 
-            top: 2%; left: 2%; width: 12%; height: 14%; 
-            border-radius: 15px;
-        }
-
-        #btn-settings { 
-            bottom: 3.5%; right: 3.5%; width: 12%; height: 14%; 
-            border-radius: 15px;
-        }
-
-        #btn-new-book {
-            top: 66.5%; left: 57.5%; width: 28.5%; height: 11.5%;
-            border-radius: 10px;
-        }
-
-        .scroll-container {
-            position: absolute;
-            top: 27%; left: 15%; width: 28%; height: 38%;
-            overflow-y: auto;
+        .book-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            padding: 8px;
-            background: var(--hitbox-color);
-            border: var(--hitbox-border);
-            box-sizing: border-box;
-            border-radius: 5px;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 25px;
+            width: 100%;
+            max-width: 1000px;
         }
 
-        .scroll-container::-webkit-scrollbar { width: 0px; background: transparent; }
-
-        .book-thumb {
-            width: 100%;
-            aspect-ratio: 1 / 1.3;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 5px;
+        .book-card {
+            background: white;
+            border-radius: 15px;
+            padding: 10px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
             cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* Hitbox alignment per previous notes */
+            border: 2px solid transparent; 
+        }
+
+        .book-card:active {
+            transform: scale(0.95);
+        }
+
+        .book-cover {
+            width: 100%;
+            aspect-ratio: 3/4;
             background-size: cover;
             background-position: center;
-            transition: transform 0.1s;
+            border-radius: 10px;
+            background-color: #eee;
         }
-        .book-thumb:active { transform: scale(0.95); }
 
-        #empty-msg {
-            grid-column: span 2;
-            color: white;
-            font-size: 0.7rem;
+        .book-title {
+            margin-top: 12px;
+            font-family: var(--mc-font);
+            font-size: 0.9rem;
+            color: #34495e;
             text-align: center;
-            font-family: sans-serif;
-            opacity: 0.7;
-            padding-top: 20px;
+            line-height: 1.2;
+        }
+
+        .nav-footer {
+            margin-top: 40px;
+            display: flex;
+            gap: 15px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .btn-nav {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-family: var(--mc-font);
+            font-size: 0.8rem;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        #btn-settings { background: #cbd5e0; color: #4a5568; }
+        #btn-add { background: #4a90e2; color: white; }
+
+        #loading-msg {
+            font-family: var(--mc-font);
+            color: #94a3b8;
+            margin-top: 50px;
         }
     </style>
 </head>
 <body>
 
-    <div class="background-container">
-        <div id="btn-back" class="hitbox" onclick="location.href='index.html'"></div>
-        <div id="btn-settings" class="hitbox" onclick="location.href='settings.html'"></div>
+    <h1>MIS LIBROS MÁGICOS</h1>
 
-        <div class="scroll-container" id="bookGrid">
-            <div id="empty-msg">Cargando biblioteca...</div>
+    <div id="loading-msg">Abriendo el cofre...</div>
+    
+    <div class="book-grid" id="bookGrid">
         </div>
 
-        <div id="btn-new-book" class="hitbox" onclick="location.href='newbook.html'"></div>
+    <div class="nav-footer">
+        <button id="btn-settings" class="btn-nav" onclick="location.href='settings.html'">Ajustes</button>
+        <button id="btn-add" class="btn-nav" onclick="location.href='newbook.html'">+ Nuevo Libro</button>
     </div>
 
     <script type="module">
         import { db, collection, getDocs, query, orderBy } from "./firebase-bridge.js";
 
-        async function loadBooks() {
+        async function loadLibrary() {
             const grid = document.getElementById('bookGrid');
-            
-            try {
-                const q = query(collection(db, "books"), orderBy("createdAt", "desc"));
-                const querySnapshot = await getDocs(q);
-                
-                grid.innerHTML = ''; // Clear loading message
+            const loader = document.getElementById('loading-msg');
 
-                if (querySnapshot.empty) {
-                    grid.innerHTML = '<div id="empty-msg">No hay libros todavía. ¡Añade uno nuevo!</div>';
+            try {
+                // Fetch from the "books" collection, ordered by most recent
+                const q = query(collection(db, "books"), orderBy("createdAt", "desc"));
+                const snap = await getDocs(q);
+                
+                loader.style.display = 'none';
+                grid.innerHTML = "";
+
+                if (snap.empty) {
+                    grid.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color:#94a3b8;'>La biblioteca está vacía. ¡Añade tu primer libro!</p>";
                     return;
                 }
 
-                querySnapshot.forEach((docSnap) => {
-                    const book = docSnap.data();
-                    const id = docSnap.id;
+                snap.forEach(doc => {
+                    const book = doc.data();
+                    const bookid = doc.id;
 
-                    const thumb = document.createElement('div');
-                    thumb.className = 'book-thumb';
-                    thumb.style.backgroundImage = `url('${book.coverURL}')`;
-                    thumb.onclick = () => selectBook(id, book.backdropURL, book.title);
-                    grid.appendChild(thumb);
+                    const card = document.createElement('div');
+                    card.className = 'book-card';
+                    card.innerHTML = `
+                        <div class="book-cover" style="background-image: url('${book.coverURL}')"></div>
+                        <div class="book-title">${book.title}</div>
+                    `;
+
+                    card.onclick = () => {
+                        // Store the selection for the next pages
+                        localStorage.setItem('current_book_id', bookid);
+                        localStorage.setItem('current_book_title', book.title);
+                        localStorage.setItem('current_book_backdrop', book.backdropURL);
+                        
+                        // Move to the page selection screen
+                        location.href = 'reading.html';
+                    };
+
+                    grid.appendChild(card);
                 });
-            } catch (err) {
-                console.error("Error loading library:", err);
-                grid.innerHTML = '<div id="empty-msg">Error al conectar con la nube.</div>';
+
+            } catch (error) {
+                console.error("Library load error:", error);
+                loader.innerText = "Error al cargar la biblioteca.";
             }
         }
 
-        window.selectBook = (id, backdropURL, title) => {
-            localStorage.setItem('current_book_id', id);
-            localStorage.setItem('current_book_backdrop', backdropURL);
-            localStorage.setItem('current_book_title', title);
-            location.href = 'reading.html';
-        };
-
-        window.onload = loadBooks;
+        window.onload = loadLibrary;
     </script>
 </body>
 </html>
