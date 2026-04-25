@@ -123,12 +123,12 @@
                     thumb.style.backgroundImage = `url('${book.coverURL}')`;
                     
                     thumb.onclick = () => {
-                        // Save selection for reading.html and addpages.html
+                        // Save selection for pages.html and addpages.html
                         localStorage.setItem('current_book_id', bookid);
                         localStorage.setItem('current_book_title', book.title);
                         localStorage.setItem('current_book_backdrop', book.backdropURL);
                         
-                        location.href = 'reading.html';
+                        location.href = 'pages.html';
                     };
 
                     grid.appendChild(thumb);
