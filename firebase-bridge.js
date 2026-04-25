@@ -26,13 +26,14 @@ import {
 // YOUR FIREBASE CONFIG
 // (Keep your existing apiKey, authDomain, etc. here)
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
+    apiKey: "AIzaSyAwysHSBZTEwZ8IrmgzrTnJwv9nEv6QJPo",
+    authDomain: "billyreads.firebaseapp.com",
     projectId: "billyreads",
     storageBucket: "billyreads.firebasestorage.app",
-    messagingSenderId: "YOUR_ID",
-    appId: "YOUR_APP_ID"
+    messagingSenderId: "106394773429",
+    appId: "1:106394773429:web:465bf15be58552cfd677dc"
 };
+
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
