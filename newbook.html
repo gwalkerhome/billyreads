@@ -3,184 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Billy Reads | Crear Libro Mágico</title>
+    <title>Billy Reads | Añadir Nuevo Libro</title>
     <style>
         :root {
             --mc-font: 'Arial Black', Gadget, sans-serif;
-            --mc-green: #76FF03;
             --accent-blue: #4a90e2;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f0f4f8;
+            font-family: 'Segoe UI', sans-serif;
+            background: #f0f4f8;
             margin: 0; padding: 20px;
             display: flex; flex-direction: column; align-items: center;
         }
 
-        .card {
-            background: white; border-radius: 20px; padding: 30px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            width: 100%; max-width: 500px; box-sizing: border-box;
+        .container {
+            width: 100%; max-width: 500px;
+            background: white; border-radius: 20px;
+            padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            box-sizing: border-box;
         }
 
-        h1 { font-family: var(--mc-font); color: #2c3e50; margin-top: 0; font-size: 1.5rem; }
-        
+        h1 { font-family: var(--mc-font); color: #2c3e50; text-align: center; margin-top: 0; }
+
         .input-group { margin-bottom: 20px; }
-        label { display: block; font-weight: bold; margin-bottom: 8px; color: #555; font-size: 0.8rem; text-transform: uppercase; }
+        label { display: block; font-weight: bold; margin-bottom: 8px; color: #34495e; font-size: 0.9rem; }
         
         input[type="text"], input[type="file"] {
-            width: 100%; padding: 12px; border: 2px solid #edf2f7;
-            border-radius: 10px; box-sizing: border-box; font-size: 1rem;
+            width: 100%; padding: 12px;
+            border: 2px solid #edf2f7; border-radius: 12px;
+            box-sizing: border-box; font-size: 1rem;
         }
 
-        .btn-main {
-            width: 100%; padding: 15px; border: none; border-radius: 12px;
-            font-family: var(--mc-font); font-size: 1rem; cursor: pointer;
-            transition: 0.2s; margin-top: 10px;
+        .btn-save {
+            width: 100%; padding: 18px;
+            background: var(--accent-blue); color: white;
+            border: none; border-radius: 15px;
+            font-family: var(--mc-font); font-size: 1.1rem;
+            cursor: pointer; transition: background 0.2s;
+        }
+        .btn-save:disabled { background: #cbd5e0; cursor: not-allowed; }
+
+        #status {
+            margin-top: 15px; text-align: center;
+            font-size: 0.85rem; color: #7f8c8d;
         }
 
-        #btn-save { background: var(--mc-green); color: #000; }
-        #btn-back { background: #cbd5e0; color: #4a5568; margin-top: 10px; }
-        
-        .loading-zone {
-            display: none; text-align: center; margin-top: 20px;
-            padding: 20px; border: 2px dashed var(--accent-blue); border-radius: 15px;
+        .nav-footer { margin-top: 20px; width: 100%; max-width: 500px; }
+        #btn-back {
+            width: 100%; padding: 12px; border: none; border-radius: 12px;
+            background: #eee; color: #666; font-family: var(--mc-font);
+            cursor: pointer;
         }
-
-        #status-msg { margin-top: 15px; font-weight: bold; color: var(--accent-blue); font-size: 0.9rem; }
-
-        /* Step 2: Page Uploading */
-        #page-upload-section { display: none; margin-top: 30px; border-top: 2px solid #eee; pt: 20px; }
-        .page-counter { color: #7f8c8d; font-size: 0.8rem; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
-    <div class="card" id="setup-card">
-        <h1>NUEVO LIBRO MÁGICO</h1>
+    <div class="container">
+        <h1>NUEVO LIBRO</h1>
         
-        <div id="step-1">
-            <div class="input-group">
-                <label>Título del Libro</label>
-                <input type="text" id="bookTitle" placeholder="Ej: Greta Rouge">
-            </div>
-
-            <div class="input-group">
-                <label>Portada (Thumbnail)</label>
-                <input type="file" id="coverFile" accept="image/*">
-            </div>
-
-            <div class="input-group">
-                <label>Fondo Mágico (Dragón/Parchment)</label>
-                <input type="file" id="backdropFile" accept="image/*">
-            </div>
-
-            <button id="btn-save" class="btn-main" onclick="initiateBookCreation()">CREAR BIBLIOTECA</button>
-            <button id="btn-back" class="btn-main" onclick="location.href='magicbook.html'">VOLVER</button>
+        <div class="input-group">
+            <label>Título del Libro</label>
+            <input type="text" id="bookTitle" placeholder="Ej: El Dragón Lector">
         </div>
 
-        <div id="status-msg"></div>
-
-        <div id="page-upload-section">
-            <h2 style="font-family: var(--mc-font); font-size: 1rem;">PASO 2: AÑADIR PÁGINAS</h2>
-            <p class="page-counter">Has añadido <span id="count">0</span> páginas.</p>
-            <div class="input-group">
-                <label>Foto de la Página</label>
-                <input type="file" id="pageFile" accept="image/*" capture="environment">
-            </div>
-            <button class="btn-main" style="background: var(--accent-blue); color: white;" onclick="uploadPage()">SUBIR PÁGINA</button>
-            <button class="btn-main" style="background: #2c3e50; color: white;" onclick="location.href='magicbook.html'">FINALIZAR</button>
+        <div class="input-group">
+            <label>Portada (Thumbnail)</label>
+            <input type="file" id="coverImg" accept="image/*">
         </div>
+
+        <div class="input-group">
+            <label>Fondo Mágico (Backdrop)</label>
+            <input type="file" id="backdropImg" accept="image/*">
+        </div>
+
+        <button id="saveBtn" class="btn-save" onclick="saveNewBook()">GUARDAR LIBRO</button>
+        <div id="status"></div>
+    </div>
+
+    <div class="nav-footer">
+        <button id="btn-back" onclick="location.href='magicbooks.html'">CANCELAR</button>
     </div>
 
     <script type="module">
-        import { 
-            db, storage, ref, uploadBytes, getDownloadURL, 
-            collection, addDoc 
-        } from "./firebase-bridge.js";
+        import { db, storage, collection, doc, setDoc, ref, uploadBytes, getDownloadURL } from "./firebase-bridge.js";
 
-        let currentBookId = null;
-        let pageCount = 0;
+        async function saveNewBook() {
+            const title = document.getElementById('bookTitle').value;
+            const coverFile = document.getElementById('coverImg').files[0];
+            const backdropFile = document.getElementById('backdropImg').files[0];
+            const status = document.getElementById('status');
+            const saveBtn = document.getElementById('saveBtn');
 
-        window.initiateBookCreation = async () => {
-            const title = document.getElementById('bookTitle').value.trim();
-            const coverInput = document.getElementById('coverFile').files[0];
-            const backdropInput = document.getElementById('backdropFile').files[0];
-            const status = document.getElementById('status-msg');
-
-            if (!title || !coverInput || !backdropInput) {
-                alert("Completa todos los campos para crear la magia.");
+            if (!title || !coverFile || !backdropFile) {
+                alert("Por favor, rellena todos los campos.");
                 return;
             }
 
-            try {
-                status.innerText = "⏳ Creando el alma del libro...";
-                document.getElementById('btn-save').disabled = true;
+            saveBtn.disabled = true;
+            status.innerText = "Iniciando subida mágica...";
 
-                // 1. Upload Cover
-                const coverRef = ref(storage, `books/covers/${Date.now()}_thumb`);
-                const coverSnap = await uploadBytes(coverRef, coverInput);
+            try {
+                // 1. Create a new Reference for the book to get a unique ID
+                const newBookRef = doc(collection(db, "books"));
+                const bookId = newBookRef.id;
+
+                // 2. Upload Cover to book-specific folder
+                status.innerText = "Subiendo portada...";
+                const coverRef = ref(storage, `books/${bookId}/cover`);
+                const coverSnap = await uploadBytes(coverRef, coverFile);
                 const coverURL = await getDownloadURL(coverSnap.ref);
 
-                // 2. Upload Backdrop
-                const backdropRef = ref(storage, `books/backdrops/${Date.now()}_bg`);
-                const backdropSnap = await uploadBytes(backdropRef, backdropInput);
+                // 3. Upload Backdrop to book-specific folder
+                status.innerText = "Subiendo fondo...";
+                const backdropRef = ref(storage, `books/${bookId}/backdrop`);
+                const backdropSnap = await uploadBytes(backdropRef, backdropFile);
                 const backdropURL = await getDownloadURL(backdropSnap.ref);
 
-                // 3. Create Firestore Entry
-                const docRef = await addDoc(collection(db, "books"), {
+                // 4. Save the Book Document in Firestore
+                await setDoc(newBookRef, {
                     title: title,
                     coverURL: coverURL,
                     backdropURL: backdropURL,
                     createdAt: Date.now()
                 });
 
-                currentBookId = docRef.id;
-                status.innerText = "✅ ¡Libro creado! Ahora añade sus páginas.";
-                
-                // Show Step 2
-                document.getElementById('step-1').style.display = 'none';
-                document.getElementById('page-upload-section').style.display = 'block';
+                status.innerText = "¡Libro guardado con éxito!";
+                setTimeout(() => location.href = 'magicbooks.html', 1500);
 
-            } catch (err) {
-                console.error(err);
-                status.innerText = "❌ Error en la creación.";
-                document.getElementById('btn-save').disabled = false;
+            } catch (error) {
+                console.error(error);
+                status.innerText = "Error: " + error.message;
+                saveBtn.disabled = false;
             }
-        };
+        }
 
-        window.uploadPage = async () => {
-            const fileInput = document.getElementById('pageFile');
-            const file = fileInput.files[0];
-            const status = document.getElementById('status-msg');
-
-            if (!file || !currentBookId) return;
-
-            try {
-                status.innerText = "⏳ Escaneando página...";
-                
-                const pageRef = ref(storage, `books/pages/${currentBookId}/${Date.now()}`);
-                const snap = await uploadBytes(pageRef, file);
-                const url = await getDownloadURL(snap.ref);
-
-                // Add to sub-collection
-                await addDoc(collection(db, "books", currentBookId, "pages"), {
-                    imageURL: url,
-                    order: pageCount + 1,
-                    timestamp: Date.now()
-                });
-
-                pageCount++;
-                document.getElementById('count').innerText = pageCount;
-                fileInput.value = ""; // Clear for next
-                status.innerText = "✅ Página guardada. ¡Siguiente!";
-
-            } catch (err) {
-                console.error(err);
-                status.innerText = "❌ Error al subir página.";
-            }
-        };
+        window.saveNewBook = saveNewBook;
     </script>
 </body>
 </html>
