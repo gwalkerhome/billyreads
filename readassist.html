@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Billy Reads | Modo Lectura</title>
+    <title>billy reads | modo lectura</title>
     <style>
         :root {
             --mc-font: 'Arial Black', Gadget, sans-serif;
@@ -90,12 +90,21 @@
             position: absolute;
             bottom: 5%; left: 5%;
             z-index: 20;
+            display: flex; gap: 15px;
         }
 
-        #btn-exit {
-            background: #e74c3c; color: white;
+        .btn-action {
             padding: 12px 25px; border: none; border-radius: 12px;
             font-family: var(--mc-font); cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .btn-action:active { transform: scale(0.95); }
+
+        #btn-exit { background: #e74c3c; color: white; }
+        
+        #btn-voice { 
+            background: var(--accent-gold); color: black;
+            display: flex; align-items: center; gap: 8px;
         }
 
         #loading-txt { text-align: center; font-style: italic; opacity: 0.7; }
@@ -115,93 +124,126 @@
     
     <div class="page-window">
         <div id="text-content" class="page-text">
-            <p id="loading-txt">Abriendo libro...</p>
+            <p id="loading-txt">abriendo libro...</p>
         </div>
     </div>
 
     <div id="next-btn" class="nav-arrow" onclick="changePage(1)">&gt;</div>
 
     <div class="bottom-controls">
-        <button id="btn-exit" onclick="location.href='pages.html'">SALIR</button>
+        <button id="btn-exit" class="btn-action" onclick="location.href='pages.html'">salir</button>
+        <button id="btn-voice" class="btn-action" onclick="toggleVoice()">🔊 escuchar</button>
     </div>
 
     <script type="module">
-        import { db, collection, getDocs, query, where } from "./firebase-bridge.js";
+        import { db, collection, getDocs, query } from "./firebase-bridge.js";
 
         const bookid = localStorage.getItem('current_book_id');
         const backdropurl = localStorage.getItem('current_book_backdrop');
-        const selectedImageUrls = JSON.parse(localStorage.getItem('selected_pages_json') || "[]");
+        const selectedimageurls = JSON.parse(localStorage.getItem('selected_pages_json') || "[]");
         
-        let pagedata = []; // Stores the full objects from Firestore
+        let pagedata = []; 
         let currentindex = 0;
         let currentlang = 'es';
 
         if (!bookid) location.href = 'magicbook.html';
 
-        // Apply background immediately
         if (backdropurl) {
             document.getElementById('backdrop').style.backgroundImage = `url('${backdropurl}')`;
         }
 
-        async function initBook() {
+        async function initbook() {
             try {
-                // Fetch all pages for this book to get their texts
                 const q = query(collection(db, `books/${bookid}/pages`));
                 const snap = await getDocs(q);
                 
-                const allPages = [];
-                snap.forEach(doc => allPages.push(doc.data()));
+                const allpages = [];
+                snap.forEach(doc => allpages.push(doc.data()));
 
-                // Filter and sort the data based on the selection and order Billy picked
-                // We use imageurl as the key to match selected pages
-                pagedata = selectedImageUrls.map(url => {
-                    return allPages.find(p => p.imageurl === url);
+                pagedata = selectedimageurls.map(url => {
+                    return allpages.find(p => p.imageurl === url);
                 }).filter(p => p !== undefined);
 
-                updateDisplay();
+                updatedisplay();
             } catch (e) {
-                console.error("Error initializing book:", e);
-                document.getElementById('text-content').innerText = "Error al cargar el texto.";
+                console.error("error initializing book:", e);
+                document.getElementById('text-content').innerText = "error al cargar el texto.";
             }
         }
 
         window.setLanguage = (lang) => {
+            stopVoice();
             currentlang = lang;
             document.querySelectorAll('.lang-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.id === `btn-${lang}`);
             });
-            updateDisplay();
+            updatedisplay();
         };
 
         window.changePage = (direction) => {
-            const newIndex = currentindex + direction;
-            if (newIndex >= 0 && newIndex < pagedata.length) {
-                currentindex = newIndex;
-                updateDisplay();
+            const newindex = currentindex + direction;
+            if (newindex >= 0 && newindex < pagedata.length) {
+                stopVoice();
+                currentindex = newindex;
+                updatedisplay();
             }
         };
 
-        function updateDisplay() {
-            const nextBtn = document.getElementById('next-btn');
-            const prevBtn = document.getElementById('prev-btn');
-            const textContent = document.getElementById('text-content');
+        function updatedisplay() {
+            const nextbtn = document.getElementById('next-btn');
+            const prevbtn = document.getElementById('prev-btn');
+            const textcontent = document.getElementById('text-content');
 
             if (pagedata.length === 0) return;
 
-            // Handle Arrow visibility
-            prevBtn.classList.toggle('disabled', currentindex === 0);
-            nextBtn.classList.toggle('disabled', currentindex === pagedata.length - 1);
+            prevbtn.classList.toggle('disabled', currentindex === 0);
+            nextbtn.classList.toggle('disabled', currentindex === pagedata.length - 1);
 
-            // Get the current page object
-            const currentPage = pagedata[currentindex];
-
-            // Display the correct language key (text_es, text_va, or text_en)
-            const languageKey = `text_${currentlang}`;
-            textContent.innerText = currentPage[languageKey] || "Texto no disponible";
+            const currentpage = pagedata[currentindex];
+            const languagekey = `text_${currentlang}`;
+            textcontent.innerText = currentpage[languagekey] || "texto no disponible";
         }
 
-        // Start loading
-        initBook();
+        // VoiceOver Logic
+        window.toggleVoice = () => {
+            if (window.speechSynthesis.speaking) {
+                stopVoice();
+                return;
+            }
+
+            const textcontent = document.getElementById('text-content').innerText;
+            if (!textcontent || textcontent.includes("abriendo libro")) return;
+
+            const msg = new SpeechSynthesisUtterance(textcontent);
+            
+            // Apply calibrations from settings
+            const voicename = localStorage.getItem('billy_voice');
+            const rate = localStorage.getItem('billy_rate') || 1.0;
+            const pitch = localStorage.getItem('billy_pitch') || 1.0;
+
+            const voices = window.speechSynthesis.getVoices();
+            if (voicename) {
+                msg.voice = voices.find(v => v.name === voicename);
+            }
+            
+            msg.rate = parseFloat(rate);
+            msg.pitch = parseFloat(pitch);
+            
+            // Update button UI while speaking
+            document.getElementById('btn-voice').innerHTML = "⏹ detener";
+            msg.onend = () => {
+                document.getElementById('btn-voice').innerHTML = "🔊 escuchar";
+            };
+
+            window.speechSynthesis.speak(msg);
+        };
+
+        function stopVoice() {
+            window.speechSynthesis.cancel();
+            document.getElementById('btn-voice').innerHTML = "🔊 escuchar";
+        }
+
+        initbook();
     </script>
 </body>
 </html>
