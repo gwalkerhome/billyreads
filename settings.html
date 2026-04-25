@@ -119,29 +119,30 @@
         </div>
 
         <div class="card">
-            <div class="card-header">🔊 Voice Calibration</div>
-            
-            <label>Iberian Voice (ES/VA)</label>
-            <select id="voice-select-es"><option>Loading voices...</option></select>
+    <div class="card-header">🔊 Voice Calibration</div>
+    
+    <label>Iberian Voice (ES/VA)</label>
+    <select id="voice-select-es"><option>Loading voices...</option></select>
+    <button class="admin-btn" style="margin-top:5px; padding: 8px; font-size: 0.7rem;" onclick="testspeech('es')">Test Iberian</button>
 
-            <label>English Voice (EN)</label>
-            <select id="voice-select-en"><option>Loading voices...</option></select>
+    <label style="margin-top: 20px;">English Voice (EN)</label>
+    <select id="voice-select-en"><option>Loading voices...</option></select>
+    <button class="admin-btn" style="margin-top:5px; padding: 8px; font-size: 0.7rem;" onclick="testspeech('en')">Test English</button>
 
-            <label>Reading Speed</label>
-            <div class="slider-row">
-                <input type="range" id="rate" min="0.5" max="1.5" step="0.1" oninput="updatevals()">
-                <span class="val-display" id="rate-val">1.0</span>
-            </div>
+    <label style="margin-top: 20px;">Reading Speed</label>
+    <div class="slider-row">
+        <input type="range" id="rate" min="0.5" max="1.5" step="0.1" oninput="updatevals()">
+        <span class="val-display" id="rate-val">1.0</span>
+    </div>
 
-            <label>Tone (Pitch)</label>
-            <div class="slider-row">
-                <input type="range" id="pitch" min="0.5" max="2.0" step="0.1" oninput="updatevals()">
-                <span class="val-display" id="pitch-val">1.0</span>
-            </div>
+    <label>Tone (Pitch)</label>
+    <div class="slider-row">
+        <input type="range" id="pitch" min="0.5" max="2.0" step="0.1" oninput="updatevals()">
+        <span class="val-display" id="pitch-val">1.0</span>
+    </div>
+</div>
 
-            <button class="admin-btn" style="margin-top:20px; color:var(--accent-blue);" onclick="testspeech()">Test Voices</button>
-        </div>
-
+        
         <div class="card">
             <div class="card-header">⚙️ System Core</div>
             <label>OpenAI API Key</label>
@@ -236,17 +237,15 @@
             if (activebtn) activebtn.classList.add('active');
         }
 
-        function testspeech() {
+        function testspeech(lang) {
     window.speechSynthesis.cancel();
     
-    // Determine which language to test based on the last selector used 
-    // or simply test based on which dropdown has focus
-    const isEnActive = document.activeElement.id === 'voice-select-en';
-    const voiceName = isEnActive 
+    const isEn = lang === 'en';
+    const voiceName = isEn 
         ? document.getElementById('voice-select-en').value 
         : document.getElementById('voice-select-es').value;
     
-    const testText = isEnActive 
+    const testText = isEn 
         ? "Testing the English voice for Billy Reads." 
         : "Probando la voz ibérica para Billy Reads.";
 
@@ -257,8 +256,8 @@
     msg.rate = document.getElementById('rate').value;
     msg.pitch = document.getElementById('pitch').value;
     
-    // Set the language tag explicitly for the test
-    msg.lang = isEnActive ? "en-US" : "es-ES";
+    // Explicitly set language tag
+    msg.lang = isEn ? "en-US" : "es-ES";
 
     window.speechSynthesis.speak(msg);
 }
