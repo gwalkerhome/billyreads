@@ -65,9 +65,17 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        /* Highlighting style */
-        .word-span { transition: color 0.3s; }
-        .word-read { color: var(--read-green); font-weight: bold; }
+        /* Stable Highlighting - No layout jumping */
+        .word-span { 
+            transition: color 0.2s, text-shadow 0.2s;
+            display: inline-block;
+            white-space: pre; /* Preserves spacing accurately */
+        }
+        
+        .word-read { 
+            color: var(--read-green); 
+            text-shadow: 0 0 5px rgba(118, 255, 3, 0.5);
+        }
 
         .nav-arrow {
             position: absolute;
@@ -156,8 +164,8 @@
         let pagedata = []; 
         let currentindex = 0;
         let currentlang = 'es';
+        let lastmatchedindex = -1; // Track progress in the text
 
-        // Speech Recognition Setup
         const recognition = 'webkitSpeechRecognition' in window ? new webkitSpeechRecognition() : null;
         if (recognition) {
             recognition.continuous = true;
@@ -222,13 +230,13 @@
             const languagekey = `text_${currentlang}`;
             const fulltext = currentpage[languagekey] || "texto no disponible";
             
-            // Split text into spans for highlighting
+            lastmatchedindex = -1; // Reset progress for new page/lang
+            
             textcontent.innerHTML = fulltext.split(/\s+/).map((word, i) => {
                 return `<span id="word-${i}" class="word-span">${word}</span>`;
             }).join(' ');
         }
 
-        // VoiceOver Logic
         window.togglevoice = () => {
             if (window.speechSynthesis.speaking) { stopvoice(); return; }
             stopmic();
@@ -257,7 +265,6 @@
             document.getElementById('btn-voice').innerHTML = "🔊 escuchar";
         }
 
-        // Microphone/Reading Logic
         window.togglemic = () => {
             if (!recognition) { alert("speech recognition not supported."); return; }
             const btn = document.getElementById('btn-mic');
@@ -268,7 +275,6 @@
                 stopvoice();
                 btn.classList.add('listening');
                 btn.innerHTML = "⏹ parar";
-                
                 recognition.lang = currentlang === 'en' ? 'en-US' : 'es-ES';
                 recognition.start();
             }
@@ -283,7 +289,7 @@
 
         if (recognition) {
             recognition.onresult = (event) => {
-                const strictness = localStorage.getItem('billy_strictness') || '2';
+                const strictness = parseInt(localStorage.getItem('billy_strictness') || '2');
                 let transcript = "";
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
                     transcript += event.results[i][0].transcript;
@@ -292,23 +298,29 @@
                 const spokenwords = transcript.toLowerCase().split(/\s+/);
                 const spans = document.querySelectorAll('.word-span');
 
-                spans.forEach(span => {
-                    const cleanword = span.innerText.toLowerCase().replace(/[.,!?;:]/g, "");
+                spokenwords.forEach(spoken => {
+                    const cleanvoice = spoken.replace(/[.,!?;:]/g, "");
                     
-                    // L1/L2 logic: if the word was heard anywhere in the transcript
-                    if (strictness < 3) {
-                        if (spokenwords.includes(cleanword)) span.classList.add('word-read');
-                    } else {
-                        // L3/L4 logic: stricter sequential check could go here, 
-                        // currently using includes for stability on iPad
-                        if (spokenwords.includes(cleanword)) span.classList.add('word-read');
+                    // Only look at words following the last match
+                    // Allow looking ahead 3 words for Permisivo (1), 1 word for Maestría (4)
+                    const lookahead = strictness === 1 ? 5 : (strictness === 4 ? 1 : 3);
+
+                    for (let i = lastmatchedindex + 1; i <= Math.min(lastmatchedindex + lookahead, spans.length - 1); i++) {
+                        const span = spans[i];
+                        const cleantext = span.innerText.toLowerCase().replace(/[.,!?;:]/g, "");
+                        
+                        if (cleanvoice === cleantext) {
+                            span.classList.add('word-read');
+                            lastmatchedindex = i;
+                            break; 
+                        }
                     }
                 });
             };
 
             recognition.onend = () => {
                 const btn = document.getElementById('btn-mic');
-                if (btn.classList.contains('listening')) recognition.start(); // Keep listening
+                if (btn.classList.contains('listening')) recognition.start();
             };
         }
 
