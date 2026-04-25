@@ -150,7 +150,13 @@
         async function processpagewithai(file) {
             status.innerText = "🤖 la ia está leyendo y traduciendo...";
             
-            const prompt = "read the text in this image. translate it to valenciano and english. return only a json object with keys: es (original spanish), va (valenciano), and en (english).";
+            const prompt = "Perform OCR on this image. 
+            1. Detect if the text is in Spanish, Valenciano, or English.
+            2. Regardless of the original language, provide a translation for all three:
+               - "es": The text in Spanish.
+               - "va": The text in Valenciano.
+               - "en": The text in English.
+            Return ONLY a valid JSON object with these three keys.";
 
             try {
                 if (typeof window.callgemini === "function") {
