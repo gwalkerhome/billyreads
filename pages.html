@@ -36,7 +36,6 @@
             overflow-y: auto;
             z-index: 10;
             display: flex; flex-direction: column; gap: 15px;
-            /* White borders removed per previous project notes */
             box-sizing: border-box;
         }
 
@@ -98,33 +97,36 @@
     <div class="controls">
         <button id="btn-go" class="btn" onclick="goToActivity()">¡A LEER!</button>
         <button id="btn-add" class="btn" onclick="addPages()">AÑADIR PÁGINAS</button>
-        <button id="btn-back" class="btn" onclick="location.href='magicbooks.html'">VOLVER</button>
+        <button id="btn-back" class="btn" onclick="location.href='magicbook.html'">VOLVER</button>
     </div>
 
     <script type="module">
         import { db, collection, getDocs, query, orderBy } from "./firebase-bridge.js";
 
-        const bookId = localStorage.getItem('current_book_id');
-        const backdropURL = localStorage.getItem('current_book_backdrop');
-        let selectedPageURL = null;
+        const bookid = localStorage.getItem('current_book_id');
+        const backdropurl = localStorage.getItem('current_book_backdrop');
+        let selectedpageurl = null;
 
-        if (!bookId) location.href = 'magicbooks.html';
+        // Redirect if no book is selected
+        if (!bookid) location.href = 'magicbook.html';
 
         // Apply backdrop immediately
-        document.getElementById('main-backdrop').style.backgroundImage = `url('${backdropURL}')`;
+        if (backdropurl) {
+            document.getElementById('main-backdrop').style.backgroundImage = `url('${backdropurl}')`;
+        }
 
         async function loadPages() {
             const list = document.getElementById('pageList');
             try {
-                // Fetch pages from the sub-collection "pages" inside the book document
-                const q = query(collection(db, `books/${bookId}/pages`), orderBy("pageNumber", "asc"));
+                // Fetch pages from the new sub-collection structure: books/[bookid]/pages
+                const q = query(collection(db, `books/${bookid}/pages`), orderBy("pagenumber", "asc"));
                 const snap = await getDocs(q);
                 
                 list.innerHTML = "";
                 document.getElementById('loading-overlay').style.display = 'none';
 
                 if (snap.empty) {
-                    list.innerHTML = "<p style='color:white; text-align:center; font-size:0.8rem;'>No hay páginas aún. Pulsa 'Añadir'.</p>";
+                    list.innerHTML = "<p style='color:white; text-align:center; font-size:0.8rem; padding-top:20px;'>No hay páginas aún.<br>Pulsa 'Añadir'.</p>";
                     return;
                 }
 
@@ -132,26 +134,25 @@
                     const data = doc.data();
                     const thumb = document.createElement('div');
                     thumb.className = 'page-thumb';
-                    thumb.style.backgroundImage = `url('${data.imageURL}')`;
+                    thumb.style.backgroundImage = `url('${data.imageurl}')`;
                     
                     thumb.onclick = () => {
-                        // Deselect others
                         document.querySelectorAll('.page-thumb').forEach(el => el.classList.remove('selected'));
                         thumb.classList.add('selected');
-                        selectedPageURL = data.imageURL;
-                        localStorage.setItem('current_page_url', data.imageURL);
+                        selectedpageurl = data.imageurl;
+                        localStorage.setItem('current_page_url', data.imageurl);
                     };
                     
                     list.appendChild(thumb);
                 });
             } catch (e) {
-                console.error(e);
+                console.error("Error loading pages:", e);
                 document.getElementById('loading-overlay').innerText = "Error al cargar páginas.";
             }
         }
 
         window.goToActivity = () => {
-            if (!selectedPageURL) {
+            if (!selectedpageurl) {
                 alert("Selecciona una página primero");
                 return;
             }
@@ -159,7 +160,6 @@
         };
 
         window.addPages = () => {
-            // This would go to your scanner/upload page
             location.href = 'addpages.html'; 
         };
 
