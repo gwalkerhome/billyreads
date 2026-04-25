@@ -9,6 +9,7 @@
             --mc-font: 'Arial Black', Gadget, sans-serif;
             --window-bg: rgba(255, 255, 255, 0.15);
             --accent-gold: #ffd700;
+            --read-green: #76FF03;
         }
 
         body, html {
@@ -24,7 +25,6 @@
             z-index: 1;
         }
 
-        /* Language Toggle Bar */
         .language-bar {
             position: absolute;
             top: 1%; right: 5%;
@@ -46,7 +46,6 @@
             color: black; border-color: var(--accent-gold);
         }
 
-        /* The Page Window (Top Right Quadrant) */
         .page-window {
             position: absolute;
             top: 5%; right: 5%;
@@ -66,7 +65,10 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        /* Navigation Arrows */
+        /* Highlighting style */
+        .word-span { transition: color 0.3s; }
+        .word-read { color: var(--read-green); font-weight: bold; }
+
         .nav-arrow {
             position: absolute;
             top: 25%;
@@ -85,7 +87,6 @@
         .nav-arrow:active { transform: scale(0.9); }
         .nav-arrow.disabled { opacity: 0.3; cursor: default; }
 
-        /* Controls / Back */
         .bottom-controls {
             position: absolute;
             bottom: 5%; left: 5%;
@@ -97,14 +98,23 @@
             padding: 12px 25px; border: none; border-radius: 12px;
             font-family: var(--mc-font); cursor: pointer;
             transition: transform 0.1s;
+            display: flex; align-items: center; gap: 8px;
         }
         .btn-action:active { transform: scale(0.95); }
 
         #btn-exit { background: #e74c3c; color: white; }
+        #btn-voice { background: var(--accent-gold); color: black; }
+        #btn-mic { background: white; color: black; }
         
-        #btn-voice { 
-            background: var(--accent-gold); color: black;
-            display: flex; align-items: center; gap: 8px;
+        #btn-mic.listening { 
+            background: #ff4757; color: white;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
         }
 
         #loading-txt { text-align: center; font-style: italic; opacity: 0.7; }
@@ -133,6 +143,7 @@
     <div class="bottom-controls">
         <button id="btn-exit" class="btn-action" onclick="location.href='pages.html'">salir</button>
         <button id="btn-voice" class="btn-action" onclick="togglevoice()">🔊 escuchar</button>
+        <button id="btn-mic" class="btn-action" onclick="togglemic()">🎤 leer</button>
     </div>
 
     <script type="module">
@@ -146,6 +157,13 @@
         let currentindex = 0;
         let currentlang = 'es';
 
+        // Speech Recognition Setup
+        const recognition = 'webkitSpeechRecognition' in window ? new webkitSpeechRecognition() : null;
+        if (recognition) {
+            recognition.continuous = true;
+            recognition.interimResults = true;
+        }
+
         if (!bookid) location.href = 'magicbook.html';
 
         if (backdropurl) {
@@ -156,7 +174,6 @@
             try {
                 const q = query(collection(db, `books/${bookid}/pages`));
                 const snap = await getDocs(q);
-                
                 const allpages = [];
                 snap.forEach(doc => allpages.push(doc.data()));
 
@@ -173,6 +190,7 @@
 
         window.setlanguage = (lang) => {
             stopvoice();
+            stopmic();
             currentlang = lang;
             document.querySelectorAll('.lang-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.id === `btn-${lang}`);
@@ -184,6 +202,7 @@
             const newindex = currentindex + direction;
             if (newindex >= 0 && newindex < pagedata.length) {
                 stopvoice();
+                stopmic();
                 currentindex = newindex;
                 updatedisplay();
             }
@@ -201,57 +220,35 @@
 
             const currentpage = pagedata[currentindex];
             const languagekey = `text_${currentlang}`;
-            textcontent.innerText = currentpage[languagekey] || "texto no disponible";
+            const fulltext = currentpage[languagekey] || "texto no disponible";
+            
+            // Split text into spans for highlighting
+            textcontent.innerHTML = fulltext.split(/\s+/).map((word, i) => {
+                return `<span id="word-${i}" class="word-span">${word}</span>`;
+            }).join(' ');
         }
 
+        // VoiceOver Logic
         window.togglevoice = () => {
-            if (window.speechSynthesis.speaking) {
-                stopvoice();
-                return;
-            }
+            if (window.speechSynthesis.speaking) { stopvoice(); return; }
+            stopmic();
 
-            if (pagedata.length === 0) return;
             const currentpage = pagedata[currentindex];
-            const languagekey = `text_${currentlang}`;
-            const rawtext = currentpage[languagekey];
-
+            const rawtext = currentpage[`text_${currentlang}`];
             if (!rawtext) return;
 
             const msg = new SpeechSynthesisUtterance(rawtext);
-            
-            // Apply calibrations and select voice based on language
-            let voicename;
-            if (currentlang === 'en') {
-                msg.lang = 'en-US';
-                voicename = localStorage.getItem('billy_voice_en');
-            } else {
-                msg.lang = 'es-ES';
-                voicename = localStorage.getItem('billy_voice'); // Original Iberian variable
-            }
-
-            const rate = localStorage.getItem('billy_rate') || 1.0;
-            const pitch = localStorage.getItem('billy_pitch') || 1.0;
+            let voicename = currentlang === 'en' ? localStorage.getItem('billy_voice_en') : localStorage.getItem('billy_voice');
+            msg.lang = currentlang === 'en' ? 'en-US' : 'es-ES';
 
             const voices = window.speechSynthesis.getVoices();
-            if (voicename) {
-                const targetvoice = voices.find(v => v.name === voicename);
-                if (targetvoice) msg.voice = targetvoice;
-            }
+            if (voicename) msg.voice = voices.find(v => v.name === voicename);
             
-            msg.rate = parseFloat(rate);
-            msg.pitch = parseFloat(pitch);
+            msg.rate = parseFloat(localStorage.getItem('billy_rate') || 1.0);
+            msg.pitch = parseFloat(localStorage.getItem('billy_pitch') || 1.0);
             
             document.getElementById('btn-voice').innerHTML = "⏹ detener";
-            
-            msg.onend = () => {
-                document.getElementById('btn-voice').innerHTML = "🔊 escuchar";
-            };
-
-            msg.onerror = (event) => {
-                console.error("speech error:", event);
-                document.getElementById('btn-voice').innerHTML = "🔊 escuchar";
-            };
-
+            msg.onend = () => document.getElementById('btn-voice').innerHTML = "🔊 escuchar";
             window.speechSynthesis.speak(msg);
         };
 
@@ -260,8 +257,60 @@
             document.getElementById('btn-voice').innerHTML = "🔊 escuchar";
         }
 
-        // Trigger voice loading
-        window.speechSynthesis.getVoices();
+        // Microphone/Reading Logic
+        window.togglemic = () => {
+            if (!recognition) { alert("speech recognition not supported."); return; }
+            const btn = document.getElementById('btn-mic');
+            
+            if (btn.classList.contains('listening')) {
+                stopmic();
+            } else {
+                stopvoice();
+                btn.classList.add('listening');
+                btn.innerHTML = "⏹ parar";
+                
+                recognition.lang = currentlang === 'en' ? 'en-US' : 'es-ES';
+                recognition.start();
+            }
+        };
+
+        function stopmic() {
+            if (recognition) recognition.stop();
+            const btn = document.getElementById('btn-mic');
+            btn.classList.remove('listening');
+            btn.innerHTML = "🎤 leer";
+        }
+
+        if (recognition) {
+            recognition.onresult = (event) => {
+                const strictness = localStorage.getItem('billy_strictness') || '2';
+                let transcript = "";
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    transcript += event.results[i][0].transcript;
+                }
+                
+                const spokenwords = transcript.toLowerCase().split(/\s+/);
+                const spans = document.querySelectorAll('.word-span');
+
+                spans.forEach(span => {
+                    const cleanword = span.innerText.toLowerCase().replace(/[.,!?;:]/g, "");
+                    
+                    // L1/L2 logic: if the word was heard anywhere in the transcript
+                    if (strictness < 3) {
+                        if (spokenwords.includes(cleanword)) span.classList.add('word-read');
+                    } else {
+                        // L3/L4 logic: stricter sequential check could go here, 
+                        // currently using includes for stability on iPad
+                        if (spokenwords.includes(cleanword)) span.classList.add('word-read');
+                    }
+                });
+            };
+
+            recognition.onend = () => {
+                const btn = document.getElementById('btn-mic');
+                if (btn.classList.contains('listening')) recognition.start(); // Keep listening
+            };
+        }
 
         initbook();
     </script>
