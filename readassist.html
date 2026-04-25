@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Billy Reads | Modo Lectura</title>
+    <style>
+        :root {
+            --mc-font: 'Arial Black', Gadget, sans-serif;
+            --window-bg: rgba(255, 255, 255, 0.15);
+            --accent-gold: #ffd700;
+        }
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background: #000;
+            font-family: sans-serif;
+        }
+
+        #backdrop {
+            position: fixed; inset: 0;
+            background-size: cover;
+            background-position: center;
+            z-index: 1;
+        }
+
+        /* Language Toggle Bar */
+        .language-bar {
+            position: absolute;
+            top: 1%; right: 5%;
+            width: 45%; height: 4%;
+            display: flex; justify-content: center; gap: 10px;
+            z-index: 20;
+        }
+
+        .lang-btn {
+            background: rgba(0,0,0,0.5);
+            color: white; border: 1px solid white;
+            padding: 2px 15px; border-radius: 10px;
+            font-family: var(--mc-font); font-size: 0.8rem;
+            cursor: pointer; transition: 0.3s;
+        }
+
+        .lang-btn.active {
+            background: var(--accent-gold);
+            color: black; border-color: var(--accent-gold);
+        }
+
+        /* The Page Window (Top Right Quadrant) */
+        .page-window {
+            position: absolute;
+            top: 5%; right: 5%;
+            width: 45%; height: 45%;
+            background: var(--window-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-sizing: border-box;
+            z-index: 10;
+            display: flex; flex-direction: column;
+            color: white; overflow-y: auto;
+        }
+
+        .page-text {
+            font-size: 1.4rem; line-height: 1.6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Navigation Arrows */
+        .nav-arrow {
+            position: absolute;
+            top: 25%; /* Centered vertically relative to window */
+            width: 50px; height: 50px;
+            background: rgba(0,0,0,0.4);
+            color: white; border: 2px solid white;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--mc-font); cursor: pointer;
+            z-index: 15;
+        }
+
+        #prev-btn { left: 47%; } /* Just to the left of the window */
+        #next-btn { right: 1%; } /* Just to the right of the window */
+
+        .nav-arrow:active { transform: scale(0.9); }
+        .nav-arrow.disabled { opacity: 0.3; cursor: default; }
+
+        /* Controls / Back */
+        .bottom-controls {
+            position: absolute;
+            bottom: 5%; left: 5%;
+            z-index: 20;
+        }
+
+        #btn-exit {
+            background: #e74c3c; color: white;
+            padding: 12px 25px; border: none; border-radius: 12px;
+            font-family: var(--mc-font); cursor: pointer;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="backdrop"></div>
+
+    <div class="language-bar">
+        <button class="lang-btn active" onclick="setLanguage('es')">ES</button>
+        <button class="lang-btn" onclick="setLanguage('va')">VA</button>
+        <button class="lang-btn" onclick="setLanguage('en')">EN</button>
+    </div>
+
+    <div id="prev-btn" class="nav-arrow" onclick="changePage(-1)">&lt;</div>
+    
+    <div class="page-window">
+        <div id="text-content" class="page-text">
+            Había una vez... (Placeholder text)
+        </div>
+    </div>
+
+    <div id="next-btn" class="nav-arrow" onclick="changePage(1)">&gt;</div>
+
+    <div class="bottom-controls">
+        <button id="btn-exit" onclick="location.href='pages.html'">SALIR</button>
+    </div>
+
+    <script type="module">
+        // Placeholder setup - we will link real Firestore data next
+        const backdropurl = localStorage.getItem('current_book_backdrop');
+        const selectedpages = JSON.parse(localStorage.getItem('selected_pages_json') || "[]");
+        
+        let currentindex = 0;
+        let currentlang = 'es';
+
+        // Apply background
+        if (backdropurl) {
+            document.getElementById('backdrop').style.backgroundImage = `url('${backdropurl}')`;
+        }
+
+        window.setLanguage = (lang) => {
+            currentlang = lang;
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.innerText.toLowerCase() === lang);
+            });
+            updateDisplay();
+        };
+
+        window.changePage = (direction) => {
+            const newIndex = currentindex + direction;
+            if (newIndex >= 0 && newIndex < selectedpages.length) {
+                currentindex = newIndex;
+                updateDisplay();
+            }
+        };
+
+        function updateDisplay() {
+            const nextBtn = document.getElementById('next-btn');
+            const prevBtn = document.getElementById('prev-btn');
+            const textContent = document.getElementById('text-content');
+
+            // Handle Arrow visibility
+            prevBtn.classList.toggle('disabled', currentindex === 0);
+            nextBtn.classList.toggle('disabled', currentindex === selectedpages.length - 1);
+
+            // Update text based on current index and language
+            // For now, this is just a placeholder until we update addpages.html
+            textContent.innerText = `[Página ${currentindex + 1}] Mostrando texto en ${currentlang.toUpperCase()}...`;
+            
+            console.log("Viewing page URL:", selectedpages[currentindex]);
+        }
+
+        // Initialize
+        updateDisplay();
+    </script>
+</body>
+</html>
