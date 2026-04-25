@@ -10,6 +10,7 @@
             --window-bg: rgba(255, 255, 255, 0.15);
             --accent-gold: #ffd700;
             --read-green: #76FF03;
+            --quiz-bg: rgba(0, 0, 0, 0.6);
         }
 
         body, html {
@@ -49,7 +50,7 @@
         .page-window {
             position: absolute;
             top: 5%; right: 5%;
-            width: 45%; height: 70%;
+            width: 45%; height: 55%;
             background: var(--window-bg);
             backdrop-filter: blur(10px);
             border-radius: 20px;
@@ -60,22 +61,32 @@
             color: white; overflow-y: auto;
         }
 
+        /* Quiz Window - Appears below Page Window */
+        .quiz-window {
+            position: absolute;
+            top: 62%; right: 5%;
+            width: 45%; height: 13%;
+            background: var(--quiz-bg);
+            backdrop-filter: blur(15px);
+            border: 2px solid var(--accent-gold);
+            border-radius: 15px;
+            padding: 15px;
+            box-sizing: border-box;
+            z-index: 11;
+            display: none; /* Hidden by default */
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+
         .page-text {
             font-size: 1.4rem; line-height: 1.6;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        /* Stable Highlighting - No layout jumping */
-        .word-span { 
-            transition: color 0.2s, text-shadow 0.2s;
-            display: inline-block;
-            white-space: pre; /* Preserves spacing accurately */
-        }
-        
-        .word-read { 
-            color: var(--read-green); 
-            text-shadow: 0 0 5px rgba(118, 255, 3, 0.5);
-        }
+        .word-span { transition: color 0.2s; display: inline-block; white-space: pre; }
+        .word-read { color: var(--read-green); text-shadow: 0 0 5px rgba(118, 255, 3, 0.5); }
 
         .nav-arrow {
             position: absolute;
@@ -91,9 +102,6 @@
 
         #prev-btn { left: 47%; }
         #next-btn { right: 1%; }
-
-        .nav-arrow:active { transform: scale(0.9); }
-        .nav-arrow.disabled { opacity: 0.3; cursor: default; }
 
         .bottom-controls {
             position: absolute;
@@ -113,16 +121,17 @@
         #btn-exit { background: #e74c3c; color: white; }
         #btn-voice { background: var(--accent-gold); color: black; }
         #btn-mic { background: white; color: black; }
-        
-        #btn-mic.listening { 
-            background: #ff4757; color: white;
-            animation: pulse 1.5s infinite;
-        }
+        #btn-quiz { background: #9b59b6; color: white; }
 
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
+        .listening { animation: pulse 1.5s infinite; background: #ff4757 !important; color: white !important; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+
+        /* Success Overlay */
+        #success-overlay {
+            position: fixed; inset: 0;
+            display: none; align-items: center; justify-content: center;
+            z-index: 100; pointer-events: none;
+            font-size: 15rem;
         }
 
         #loading-txt { text-align: center; font-style: italic; opacity: 0.7; }
@@ -131,6 +140,7 @@
 <body>
 
     <div id="backdrop"></div>
+    <div id="success-overlay">✅</div>
 
     <div class="language-bar">
         <button id="btn-es" class="lang-btn active" onclick="setlanguage('es')">ES</button>
@@ -146,12 +156,17 @@
         </div>
     </div>
 
+    <div id="quiz-window" class="quiz-window">
+        <div id="quiz-text">preparando pregunta...</div>
+    </div>
+
     <div id="next-btn" class="nav-arrow" onclick="changepage(1)">&gt;</div>
 
     <div class="bottom-controls">
         <button id="btn-exit" class="btn-action" onclick="location.href='pages.html'">salir</button>
         <button id="btn-voice" class="btn-action" onclick="togglevoice()">🔊 escuchar</button>
         <button id="btn-mic" class="btn-action" onclick="togglemic()">🎤 leer</button>
+        <button id="btn-quiz" class="btn-action" onclick="startquiz()">❓ quiz me</button>
     </div>
 
     <script type="module">
@@ -160,19 +175,19 @@
         const bookid = localStorage.getItem('current_book_id');
         const backdropurl = localStorage.getItem('current_book_backdrop');
         const selectedimageurls = JSON.parse(localStorage.getItem('selected_pages_json') || "[]");
+        const geminikey = localStorage.getItem('gemini_key');
         
         let pagedata = []; 
         let currentindex = 0;
         let currentlang = 'es';
-        let lastmatchedindex = -1; // Track progress in the text
+        let lastmatchedindex = -1;
+        let isquizactive = false;
 
         const recognition = 'webkitSpeechRecognition' in window ? new webkitSpeechRecognition() : null;
         if (recognition) {
             recognition.continuous = true;
             recognition.interimResults = true;
         }
-
-        if (!bookid) location.href = 'magicbook.html';
 
         if (backdropurl) {
             document.getElementById('backdrop').style.backgroundImage = `url('${backdropurl}')`;
@@ -184,77 +199,53 @@
                 const snap = await getDocs(q);
                 const allpages = [];
                 snap.forEach(doc => allpages.push(doc.data()));
-
-                pagedata = selectedimageurls.map(url => {
-                    return allpages.find(p => p.imageurl === url);
-                }).filter(p => p !== undefined);
-
+                pagedata = selectedimageurls.map(url => allpages.find(p => p.imageurl === url)).filter(p => p !== undefined);
                 updatedisplay();
             } catch (e) {
-                console.error("error initializing book:", e);
-                document.getElementById('text-content').innerText = "error al cargar el texto.";
+                console.error(e);
             }
         }
 
         window.setlanguage = (lang) => {
-            stopvoice();
-            stopmic();
+            stopvoice(); stopmic();
             currentlang = lang;
-            document.querySelectorAll('.lang-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.id === `btn-${lang}`);
-            });
+            document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.toggle('active', btn.id === `btn-${lang}`));
+            document.getElementById('quiz-window').style.display = 'none';
+            isquizactive = false;
             updatedisplay();
         };
 
         window.changepage = (direction) => {
             const newindex = currentindex + direction;
             if (newindex >= 0 && newindex < pagedata.length) {
-                stopvoice();
-                stopmic();
+                stopvoice(); stopmic();
                 currentindex = newindex;
+                document.getElementById('quiz-window').style.display = 'none';
+                isquizactive = false;
                 updatedisplay();
             }
         };
 
         function updatedisplay() {
-            const nextbtn = document.getElementById('next-btn');
-            const prevbtn = document.getElementById('prev-btn');
             const textcontent = document.getElementById('text-content');
-
             if (pagedata.length === 0) return;
-
-            prevbtn.classList.toggle('disabled', currentindex === 0);
-            nextbtn.classList.toggle('disabled', currentindex === pagedata.length - 1);
-
             const currentpage = pagedata[currentindex];
-            const languagekey = `text_${currentlang}`;
-            const fulltext = currentpage[languagekey] || "texto no disponible";
-            
-            lastmatchedindex = -1; // Reset progress for new page/lang
-            
-            textcontent.innerHTML = fulltext.split(/\s+/).map((word, i) => {
-                return `<span id="word-${i}" class="word-span">${word}</span>`;
-            }).join(' ');
+            const fulltext = currentpage[`text_${currentlang}`] || "texto no disponible";
+            lastmatchedindex = -1;
+            textcontent.innerHTML = fulltext.split(/\s+/).map((word, i) => `<span id="word-${i}" class="word-span">${word}</span>`).join(' ');
         }
 
         window.togglevoice = () => {
             if (window.speechSynthesis.speaking) { stopvoice(); return; }
             stopmic();
-
-            const currentpage = pagedata[currentindex];
-            const rawtext = currentpage[`text_${currentlang}`];
-            if (!rawtext) return;
-
+            const rawtext = pagedata[currentindex][`text_${currentlang}`];
             const msg = new SpeechSynthesisUtterance(rawtext);
-            let voicename = currentlang === 'en' ? localStorage.getItem('billy_voice_en') : localStorage.getItem('billy_voice');
             msg.lang = currentlang === 'en' ? 'en-US' : 'es-ES';
-
+            const voicename = currentlang === 'en' ? localStorage.getItem('billy_voice_en') : localStorage.getItem('billy_voice');
             const voices = window.speechSynthesis.getVoices();
             if (voicename) msg.voice = voices.find(v => v.name === voicename);
-            
             msg.rate = parseFloat(localStorage.getItem('billy_rate') || 1.0);
             msg.pitch = parseFloat(localStorage.getItem('billy_pitch') || 1.0);
-            
             document.getElementById('btn-voice').innerHTML = "⏹ detener";
             msg.onend = () => document.getElementById('btn-voice').innerHTML = "🔊 escuchar";
             window.speechSynthesis.speak(msg);
@@ -265,13 +256,42 @@
             document.getElementById('btn-voice').innerHTML = "🔊 escuchar";
         }
 
-        window.togglemic = () => {
-            if (!recognition) { alert("speech recognition not supported."); return; }
-            const btn = document.getElementById('btn-mic');
+        // Quiz Logic
+        window.startquiz = async () => {
+            if (!geminikey) { alert("api key missing in settings"); return; }
+            stopmic(); stopvoice();
             
-            if (btn.classList.contains('listening')) {
-                stopmic();
-            } else {
+            const qwin = document.getElementById('quiz-window');
+            const qtext = document.getElementById('quiz-text');
+            qwin.style.display = 'block';
+            qtext.innerText = "pensando una pregunta...";
+            isquizactive = true;
+
+            const pagetext = pagedata[currentindex][`text_${currentlang}`];
+            
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminikey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: `Based on this text: "${pagetext}", ask a very short, simple question for a child in ${currentlang}. Only output the question text.` }] }]
+                    })
+                });
+                const data = await response.json();
+                const question = data.candidates[0].content.parts[0].text;
+                qtext.innerText = question;
+                
+                // Automatically open mic for Billy to answer
+                setTimeout(() => togglemic(), 1000);
+            } catch (e) {
+                qtext.innerText = "error al generar pregunta.";
+            }
+        };
+
+        window.togglemic = () => {
+            const btn = document.getElementById('btn-mic');
+            if (btn.classList.contains('listening')) { stopmic(); } 
+            else {
                 stopvoice();
                 btn.classList.add('listening');
                 btn.innerHTML = "⏹ parar";
@@ -287,41 +307,75 @@
             btn.innerHTML = "🎤 leer";
         }
 
+        function playting() {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.5);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+        }
+
+        async function verifyanswer(answer) {
+            const pagetext = pagedata[currentindex][`text_${currentlang}`];
+            const question = document.getElementById('quiz-text').innerText;
+            
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminikey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: `Text: "${pagetext}". Question: "${question}". Billy's answer: "${answer}". Is this answer correct? Reply only with "YES" or "NO".` }] }]
+                    })
+                });
+                const data = await response.json();
+                const result = data.candidates[0].content.parts[0].text.trim().toUpperCase();
+                
+                if (result.includes("YES")) {
+                    playting();
+                    const overlay = document.getElementById('success-overlay');
+                    overlay.style.display = 'flex';
+                    setTimeout(() => { overlay.style.display = 'none'; }, 2000);
+                    stopmic();
+                }
+            } catch (e) { console.error(e); }
+        }
+
         if (recognition) {
             recognition.onresult = (event) => {
-                const strictness = parseInt(localStorage.getItem('billy_strictness') || '2');
                 let transcript = "";
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
                     transcript += event.results[i][0].transcript;
                 }
                 
-                const spokenwords = transcript.toLowerCase().split(/\s+/);
-                const spans = document.querySelectorAll('.word-span');
-
-                spokenwords.forEach(spoken => {
-                    const cleanvoice = spoken.replace(/[.,!?;:]/g, "");
-                    
-                    // Only look at words following the last match
-                    // Allow looking ahead 3 words for Permisivo (1), 1 word for Maestría (4)
-                    const lookahead = strictness === 1 ? 5 : (strictness === 4 ? 1 : 3);
-
-                    for (let i = lastmatchedindex + 1; i <= Math.min(lastmatchedindex + lookahead, spans.length - 1); i++) {
-                        const span = spans[i];
-                        const cleantext = span.innerText.toLowerCase().replace(/[.,!?;:]/g, "");
-                        
-                        if (cleanvoice === cleantext) {
-                            span.classList.add('word-read');
-                            lastmatchedindex = i;
-                            break; 
-                        }
+                if (isquizactive) {
+                    if (event.results[event.results.length - 1].isFinal) {
+                        verifyanswer(transcript);
                     }
-                });
+                } else {
+                    // Standard reading highlight logic
+                    const spokenwords = transcript.toLowerCase().split(/\s+/);
+                    const spans = document.querySelectorAll('.word-span');
+                    const strictness = parseInt(localStorage.getItem('billy_strictness') || '2');
+                    const lookahead = strictness === 1 ? 5 : (strictness === 4 ? 1 : 3);
+                    
+                    spokenwords.forEach(spoken => {
+                        const cleanvoice = spoken.replace(/[.,!?;:]/g, "");
+                        for (let i = lastmatchedindex + 1; i <= Math.min(lastmatchedindex + lookahead, spans.length - 1); i++) {
+                            if (cleanvoice === spans[i].innerText.toLowerCase().replace(/[.,!?;:]/g, "")) {
+                                spans[i].classList.add('word-read');
+                                lastmatchedindex = i;
+                                break;
+                            }
+                        }
+                    });
+                }
             };
-
-            recognition.onend = () => {
-                const btn = document.getElementById('btn-mic');
-                if (btn.classList.contains('listening')) recognition.start();
-            };
+            recognition.onend = () => { if (document.getElementById('btn-mic').classList.contains('listening')) recognition.start(); };
         }
 
         initbook();
