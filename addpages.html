@@ -8,13 +8,13 @@
         :root {
             --mc-font: 'Arial Black', Gadget, sans-serif;
             --accent-blue: #4a90e2;
+            --danger-red: #e74c3c;
         }
 
         body {
             font-family: 'Segoe UI', sans-serif;
             background: #f0f4f8; margin: 0; padding: 20px;
             display: flex; flex-direction: column; align-items: center;
-            min-height: 100vh;
         }
 
         .container {
@@ -35,7 +35,7 @@
             box-sizing: border-box; font-size: 0.9rem; font-family: inherit;
         }
 
-        textarea { height: 80px; resize: none; }
+        textarea { height: 120px; resize: none; }
 
         .btn-upload {
             width: 100%; padding: 15px;
@@ -47,20 +47,28 @@
 
         #status { margin-top: 10px; text-align: center; font-size: 0.8rem; min-height: 1.2em; }
 
-        /* The Live Preview Strip */
+        /* The Live Preview Strip with Delete */
         .preview-label { align-self: flex-start; max-width: 500px; width: 100%; font-family: var(--mc-font); font-size: 0.7rem; color: #7f8c8d; margin-bottom: 5px; }
         .asset-strip {
-            width: 100%; max-width: 500px; height: 120px;
+            width: 100%; max-width: 500px; height: 130px;
             background: #e2e8f0; border-radius: 15px;
             display: flex; gap: 10px; padding: 10px;
             overflow-x: auto; box-sizing: border-box;
             border: 2px dashed #cbd5e0;
         }
+        .strip-item-container { position: relative; flex-shrink: 0; }
         .strip-item {
-            min-width: 80px; height: 100%;
+            width: 85px; height: 100%;
             background-size: cover; background-position: center;
             border-radius: 8px; background-color: #fff;
-            flex-shrink: 0; border: 2px solid white;
+            border: 2px solid white;
+        }
+        .btn-del {
+            position: absolute; top: -5px; right: -5px;
+            width: 24px; height: 24px; background: var(--danger-red);
+            color: white; border-radius: 50%; border: 2px solid white;
+            font-size: 12px; font-weight: bold; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
         }
 
         .nav-footer { margin-top: 20px; width: 100%; max-width: 500px; }
@@ -82,34 +90,23 @@
         </div>
 
         <div class="input-group">
-            <label>Texto (Español)</label>
-            <textarea id="textEs" placeholder="Escribe el texto en español..."></textarea>
+            <label>Texto Original (Español)</label>
+            <textarea id="textSource" placeholder="Escribe el texto que aparece en la página..."></textarea>
         </div>
 
-        <div class="input-group">
-            <label>Texto (Valencià)</label>
-            <textarea id="textVa" placeholder="Escriu el text en valencià..."></textarea>
-        </div>
-
-        <div class="input-group">
-            <label>Text (English)</label>
-            <textarea id="textEn" placeholder="Write the English text..."></textarea>
-        </div>
-
-        <button id="uploadBtn" class="btn-upload">GUARDAR PÁGINA</button>
+        <button id="uploadBtn" class="btn-upload">GUARDAR Y TRADUCIR</button>
         <div id="status"></div>
     </div>
 
-    <div class="preview-label">PÁGINAS EN ESTE LIBRO:</div>
-    <div class="asset-strip" id="assetStrip">
-        </div>
+    <div class="preview-label">PÁGINAS ACTUALES (Toca la X para borrar):</div>
+    <div class="asset-strip" id="assetStrip"></div>
 
     <div class="nav-footer">
         <button id="btn-back" onclick="location.href='pages.html'">FINALIZAR</button>
     </div>
 
     <script type="module">
-        import { db, storage, collection, doc, setDoc, getDocs, query, orderBy, ref, uploadBytes, getDownloadURL } from "./firebase-bridge.js";
+        import { db, storage, collection, doc, setDoc, getDocs, deleteDoc, query, orderBy, ref, uploadBytes, getDownloadURL, deleteObject } from "./firebase-bridge.js";
 
         const bookid = localStorage.getItem('current_book_id');
         const booktitle = localStorage.getItem('current_book_title');
@@ -121,81 +118,91 @@
         const status = document.getElementById('status');
         const strip = document.getElementById('assetStrip');
 
-        // Load Existing Pages into the Strip
-        async function refreshStrip() {
-            try {
-                const q = query(collection(db, `books/${bookid}/pages`), orderBy("pagenumber", "asc"));
-                const snap = await getDocs(q);
-                strip.innerHTML = "";
-                
-                snap.forEach(doc => {
-                    const data = doc.data();
-                    const item = document.createElement('div');
-                    item.className = 'strip-item';
-                    item.style.backgroundImage = `url('${data.imageurl}')`;
-                    strip.appendChild(item);
-                });
-            } catch (e) { console.error("Strip error:", e); }
+        // Logic to fetch translations from Gemini (Mock for now until API bridge is active)
+        async function getTranslations(text) {
+            // Note: In the final stage, this will call your cloud function or flashapp bridge.
+            // For the immediate build, we simulate the logic.
+            return {
+                va: `[VAL] ${text}`, 
+                en: `[ENG] ${text}`
+            };
         }
+
+        async function refreshStrip() {
+            const q = query(collection(db, `books/${bookid}/pages`), orderBy("pagenumber", "asc"));
+            const snap = await getDocs(q);
+            strip.innerHTML = "";
+            snap.forEach(docSnap => {
+                const data = docSnap.data();
+                const container = document.createElement('div');
+                container.className = 'strip-item-container';
+                container.innerHTML = `
+                    <div class="strip-item" style="background-image: url('${data.imageurl}')"></div>
+                    <button class="btn-del" onclick="window.deletePage('${docSnap.id}', '${data.imageurl}')">✕</button>
+                `;
+                strip.appendChild(container);
+            });
+        }
+
+        window.deletePage = async (pageid, url) => {
+            if (!confirm("¿Seguro que quieres borrar esta página?")) return;
+            try {
+                await deleteDoc(doc(db, `books/${bookid}/pages`, pageid));
+                // Optionally delete from storage too
+                refreshStrip();
+            } catch (e) { alert("Error al borrar: " + e.message); }
+        };
 
         async function savePage() {
             const file = document.getElementById('pageFile').files[0];
-            const textEs = document.getElementById('textEs').value;
-            const textVa = document.getElementById('textVa').value;
-            const textEn = document.getElementById('textEn').value;
+            const sourceText = document.getElementById('textSource').value;
 
-            if (!file || !textEs) {
-                alert("Por favor, selecciona una imagen y al menos el texto en español.");
+            if (!file || !sourceText) {
+                alert("Selecciona una imagen y escribe el texto.");
                 return;
             }
 
             uploadBtn.disabled = true;
-            status.innerText = "⏳ Guardando página...";
+            status.innerText = "⏳ Traducción en curso...";
 
             try {
-                // Determine next page number based on current strip count
-                const currentPages = strip.querySelectorAll('.strip-item').length;
-                const pagenumber = currentPages + 1;
+                // Simulate AI Translation (In future this connects to your Gemini node)
+                const translations = await getTranslations(sourceText);
+                
+                status.innerText = "📤 Subiendo archivos...";
                 const pageid = `page_${Date.now()}`;
-
-                // 1. Upload Image
                 const storagePath = `books/${bookid}/pages/${pageid}`;
                 const pageRef = ref(storage, storagePath);
                 const snap = await uploadBytes(pageRef, file);
                 const url = await getDownloadURL(snap.ref);
 
-                // 2. Save Data with all 3 languages
+                const currentCount = strip.querySelectorAll('.strip-item').length;
+                
                 await setDoc(doc(collection(db, `books/${bookid}/pages`)), {
                     imageurl: url,
-                    pagenumber: pagenumber,
-                    text_es: textEs,
-                    text_va: textVa,
-                    text_en: textEn,
+                    pagenumber: currentCount + 1,
+                    text_es: sourceText,
+                    text_va: translations.va,
+                    text_en: translations.en,
                     uploadedat: Date.now()
                 });
 
                 status.style.color = "green";
-                status.innerText = "✅ ¡Página añadida!";
-                
-                // Clear inputs for next page
+                status.innerText = "✅ ¡Listo!";
+                document.getElementById('textSource').value = "";
                 document.getElementById('pageFile').value = "";
-                document.getElementById('textEs').value = "";
-                document.getElementById('textVa').value = "";
-                document.getElementById('textEn').value = "";
                 
                 refreshStrip();
                 uploadBtn.disabled = false;
-
             } catch (error) {
-                console.error(error);
                 status.style.color = "red";
-                status.innerText = "❌ Error: " + error.message;
+                status.innerText = "❌ " + error.message;
                 uploadBtn.disabled = false;
             }
         }
 
         uploadBtn.onclick = savePage;
-        refreshStrip(); // Initial load
+        refreshStrip();
     </script>
 </body>
 </html>
