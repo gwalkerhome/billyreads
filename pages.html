@@ -24,7 +24,6 @@
             z-index: 1;
         }
 
-        /* The Asset Window on the right */
         .asset-window {
             position: absolute;
             right: 2%; top: 10%;
@@ -56,10 +55,9 @@
         .page-thumb.selected {
             border-color: #ffd700;
             box-shadow: var(--gold-glow);
-            transform: scale(1.05);
+            transform: scale(1.02);
         }
 
-        /* Navigation & Actions */
         .controls {
             position: absolute;
             left: 2%; bottom: 5%;
@@ -91,8 +89,7 @@
     <div id="loading-overlay">ABRIENDO LIBRO MÁGICO...</div>
     <div id="main-backdrop"></div>
 
-    <div class="asset-window" id="pageList">
-        </div>
+    <div class="asset-window" id="pageList"></div>
 
     <div class="controls">
         <button id="btn-go" class="btn" onclick="goToActivity()">¡A LEER!</button>
@@ -105,12 +102,10 @@
 
         const bookid = localStorage.getItem('current_book_id');
         const backdropurl = localStorage.getItem('current_book_backdrop');
-        let selectedpageurl = null;
+        let selectedpages = [];
 
-        // Redirect if no book is selected
         if (!bookid) location.href = 'magicbook.html';
 
-        // Apply backdrop immediately
         if (backdropurl) {
             document.getElementById('main-backdrop').style.backgroundImage = `url('${backdropurl}')`;
         }
@@ -118,7 +113,6 @@
         async function loadPages() {
             const list = document.getElementById('pageList');
             try {
-                // Fetch pages from the new sub-collection structure: books/[bookid]/pages
                 const q = query(collection(db, `books/${bookid}/pages`), orderBy("pagenumber", "asc"));
                 const snap = await getDocs(q);
                 
@@ -137,10 +131,14 @@
                     thumb.style.backgroundImage = `url('${data.imageurl}')`;
                     
                     thumb.onclick = () => {
-                        document.querySelectorAll('.page-thumb').forEach(el => el.classList.remove('selected'));
-                        thumb.classList.add('selected');
-                        selectedpageurl = data.imageurl;
-                        localStorage.setItem('current_page_url', data.imageurl);
+                        const index = selectedpages.indexOf(data.imageurl);
+                        if (index > -1) {
+                            selectedpages.splice(index, 1);
+                            thumb.classList.remove('selected');
+                        } else {
+                            selectedpages.push(data.imageurl);
+                            thumb.classList.add('selected');
+                        }
                     };
                     
                     list.appendChild(thumb);
@@ -152,15 +150,13 @@
         }
 
         window.goToActivity = () => {
-            if (!selectedpageurl) {
-                alert("Selecciona una página primero");
+            if (selectedpages.length === 0) {
+                alert("Selecciona al menos una página para leer");
                 return;
             }
+            // Save the array as a string so readassist.html can handle the sequence
+            localStorage.setItem('selected_pages_json', JSON.stringify(selectedpages));
             location.href = 'readassist.html';
-        };
-
-        window.addPages = () => {
-            location.href = 'addpages.html'; 
         };
 
         window.onload = loadPages;
