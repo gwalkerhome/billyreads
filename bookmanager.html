@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Billy Reads | Administrar Biblioteca</title>
+    <style>
+        :root {
+            --mc-font: 'Arial Black', Gadget, sans-serif;
+            --danger-red: #ff5252;
+            --accent-blue: #4a90e2;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f0f4f8;
+            margin: 0; padding: 20px;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        .container {
+            width: 100%; max-width: 800px;
+            background: white; border-radius: 20px;
+            padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+
+        h1 { font-family: var(--mc-font); color: #2c3e50; text-align: center; margin-bottom: 30px; }
+
+        .book-item {
+            display: flex; align-items: center; gap: 20px;
+            padding: 15px; border-bottom: 1px solid #eee;
+            transition: background 0.2s;
+        }
+        .book-item:last-child { border-bottom: none; }
+
+        .book-thumb {
+            width: 60px; height: 80px;
+            background-size: cover; background-position: center;
+            border-radius: 8px; border: 1px solid #ddd;
+        }
+
+        .book-info { flex-grow: 1; }
+        .book-title { font-weight: bold; font-size: 1.1rem; color: #2c3e50; }
+        .book-meta { font-size: 0.8rem; color: #7f8c8d; }
+
+        .action-btns { display: flex; gap: 10px; }
+        .btn {
+            padding: 10px 15px; border: none; border-radius: 8px;
+            font-weight: bold; cursor: pointer; font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        .btn-edit { background: #e3f2fd; color: var(--accent-blue); }
+        .btn-delete { background: #ffebee; color: var(--danger-red); }
+
+        .nav-footer { margin-top: 30px; display: flex; gap: 15px; width: 100%; max-width: 800px; }
+        .btn-nav {
+            flex: 1; padding: 15px; border: none; border-radius: 12px;
+            font-family: var(--mc-font); cursor: pointer; text-align: center; text-decoration: none;
+        }
+        #btn-back { background: #cbd5e0; color: #4a5568; }
+
+        /* Modal for Editing */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 100;
+        }
+        .modal-content { background: white; padding: 25px; border-radius: 15px; width: 90%; max-width: 400px; }
+        input[type="text"], input[type="file"] { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>GESTOR DE LIBROS</h1>
+        <div id="book-list">
+            <p style="text-align: center; color: #888;">Consultando la biblioteca...</p>
+        </div>
+    </div>
+
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-top:0">Editar Libro</h3>
+            <label style="font-size: 0.8rem;">Título</label>
+            <input type="text" id="editTitle">
+            <label style="font-size: 0.8rem;">Nueva Portada (Opcional)</label>
+            <input type="file" id="editCover" accept="image/*">
+            <label style="font-size: 0.8rem;">Nuevo Fondo Mágico (Opcional)</label>
+            <input type="file" id="editBackdrop" accept="image/*">
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn" onclick="closeEdit()" style="flex:1; background:#eee;">Cancelar</button>
+                <button class="btn" onclick="saveEdits()" style="flex:1; background:var(--accent-blue); color:white;">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav-footer">
+        <button id="btn-back" class="btn-nav" onclick="location.href='settings.html'">VOLVER A AJUSTES</button>
+    </div>
+
+    <script type="module">
+        import { 
+            db, storage, collection, getDocs, doc, updateDoc, deleteDoc, 
+            ref, uploadBytes, getDownloadURL, deleteObject, query, orderBy 
+        } from "./firebase-bridge.js";
+
+        let allBooks = [];
+        let editingId = null;
+
+        async function fetchBooks() {
+            const listDiv = document.getElementById('book-list');
+            listDiv.innerHTML = "";
+            
+            const q = query(collection(db, "books"), orderBy("createdAt", "desc"));
+            const snap = await getDocs(q);
+            
+            if (snap.empty) {
+                listDiv.innerHTML = "<p style='text-align:center; color:#888;'>No hay libros en la nube.</p>";
+                return;
+            }
+
+            snap.forEach(d => {
+                const book = { id: d.id, ...d.data() };
+                allBooks.push(book);
+                
+                const item = document.createElement('div');
+                item.className = 'book-item';
+                item.innerHTML = `
+                    <div class="book-thumb" style="background-image: url('${book.coverURL}')"></div>
+                    <div class="book-info">
+                        <div class="book-title">${book.title}</div>
+                        <div class="book-meta">ID: ${book.id}</div>
+                    </div>
+                    <div class="action-btns">
+                        <button class="btn btn-edit" onclick="openEdit('${book.id}')">Editar</button>
+                        <button class="btn btn-delete" onclick="confirmDelete('${book.id}', '${book.title}')">Borrar</button>
+                    </div>
+                `;
+                listDiv.appendChild(item);
+            });
+        }
+
+        window.openEdit = (id) => {
+            editingId = id;
+            const book = allBooks.find(b => b.id === id);
+            document.getElementById('editTitle').value = book.title;
+            document.getElementById('editModal').style.display = 'flex';
+        };
+
+        window.closeEdit = () => {
+            document.getElementById('editModal').style.display = 'none';
+        };
+
+        window.saveEdits = async () => {
+            const newTitle = document.getElementById('editTitle').value;
+            const coverFile = document.getElementById('editCover').files[0];
+            const backdropFile = document.getElementById('editBackdrop').files[0];
+            const bookRef = doc(db, "books", editingId);
+            
+            const updates = { title: newTitle };
+
+            try {
+                if (coverFile) {
+                    const cRef = ref(storage, `books/covers/${Date.now()}_thumb`);
+                    const snap = await uploadBytes(
