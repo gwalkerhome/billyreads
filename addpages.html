@@ -18,7 +18,6 @@
             height: 100vh; box-sizing: border-box;
         }
 
-        /* Top Back Button */
         #btn-top-back {
             position: absolute;
             top: 25px;
@@ -66,7 +65,6 @@
             margin-top: 15px; min-height: 1.5em;
         }
 
-        /* Bottom Asset Strip */
         .bottom-strip-container {
             width: 100%; max-width: 600px;
             margin-top: 20px;
@@ -137,6 +135,7 @@
     </div>
 
     <script type="module">
+        // Assuming your bridge has a callGemini function or similar for 2.5-flash
         import { db, storage, collection, doc, setDoc, getDocs, deleteDoc, query, orderBy, ref, uploadBytes, getDownloadURL } from "./firebase-bridge.js";
 
         const bookid = localStorage.getItem('current_book_id');
@@ -149,15 +148,27 @@
         const status = document.getElementById('status');
         const strip = document.getElementById('assetStrip');
 
-        // AI Magic for OCR and Translation
         async function processPageWithAI(file) {
-            status.innerText = "🤖 Leyendo y traduciendo...";
-            // This is our simulated AI response for now
-            return {
-                es: "Había una vez un pequeño Billy...",
-                va: "Hi havia una vegada un xicotet Billy...",
-                en: "Once upon a time there was a little Billy..."
-            };
+            status.innerText = "🤖 La IA está leyendo y traduciendo...";
+            
+            // This prompt instructs the model to perform OCR and provide the 3-language JSON
+            const prompt = "Read the text in this image. Translate it to Valenciano and English. Return ONLY a JSON object with keys: es (original Spanish), va (Valenciano), and en (English).";
+
+            try {
+                // IMPORTANT: This calls the actual AI model bridge you are developing
+                // If callGemini isn't in your bridge yet, we will need to add it there next
+                if (typeof window.callGemini === "function") {
+                    const response = await window.callGemini(file, prompt);
+                    return JSON.parse(response);
+                } else {
+                    // Safety fallback if the bridge isn't quite linked yet
+                    console.warn("AI Bridge not found. Check firebase-bridge.js");
+                    throw new Error("Bridge AI no configurado");
+                }
+            } catch (e) {
+                console.error("AI Error:", e);
+                throw e;
+            }
         }
 
         async function refreshStrip() {
@@ -185,15 +196,19 @@
             if (!file) return;
 
             status.style.color = "#4a90e2";
-            status.innerText = "📤 Procesando...";
+            status.innerText = "📤 Procesando imagen...";
 
             try {
+                // 1. Get real OCR/Translation from AI
                 const aiData = await processPageWithAI(file);
+
+                // 2. Upload Image
                 const pageid = `page_${Date.now()}`;
                 const storageRef = ref(storage, `books/${bookid}/pages/${pageid}`);
                 const snap = await uploadBytes(storageRef, file);
                 const url = await getDownloadURL(snap.ref);
 
+                // 3. Save real text to Firestore
                 const currentCount = strip.querySelectorAll('.strip-item').length;
                 await setDoc(doc(collection(db, `books/${bookid}/pages`)), {
                     imageurl: url,
