@@ -103,150 +103,168 @@
             <div class="card-header">📊 Difficulty Settings</div>
             <label>Reading Tier (Content)</label>
             <div class="level-selector" style="margin-bottom: 20px;">
-                <button class="lvl-btn" id="lvl-1" onclick="setLevel('1')">T1: FONÉTICO</button>
-                <button class="lvl-btn" id="lvl-2" onclick="setLevel('2')">T2: FLUIDEZ</button>
-                <button class="lvl-btn" id="lvl-3" onclick="setLevel('3')">T3: AVANZADO</button>
-                <button class="lvl-btn" id="lvl-4" onclick="setLevel('4')">T4: EXPERTO</button>
+                <button class="lvl-btn" id="lvl-1" onclick="setlevel('1')">T1: FONÉTICO</button>
+                <button class="lvl-btn" id="lvl-2" onclick="setlevel('2')">T2: FLUIDEZ</button>
+                <button class="lvl-btn" id="lvl-3" onclick="setlevel('3')">T3: AVANZADO</button>
+                <button class="lvl-btn" id="lvl-4" onclick="setlevel('4')">T4: EXPERTO</button>
             </div>
 
             <label>Listening Strictness (Assessment)</label>
             <div class="level-selector">
-                <button class="lvl-btn" id="strict-1" onclick="setStrictness('1')">L1: PERMISIVO</button>
-                <button class="lvl-btn" id="strict-2" onclick="setStrictness('2')">L2: ESTÁNDAR</button>
-                <button class="lvl-btn" id="strict-3" onclick="setStrictness('3')">L3: PRECISO</button>
-                <button class="lvl-btn" id="strict-4" onclick="setStrictness('4')">L4: MAESTRÍA</button>
+                <button class="lvl-btn" id="strict-1" onclick="setstrictness('1')">L1: PERMISIVO</button>
+                <button class="lvl-btn" id="strict-2" onclick="setstrictness('2')">L2: ESTÁNDAR</button>
+                <button class="lvl-btn" id="strict-3" onclick="setstrictness('3')">L3: PRECISO</button>
+                <button class="lvl-btn" id="strict-4" onclick="setstrictness('4')">L4: MAESTRÍA</button>
             </div>
-            <p style="font-size: 0.75rem; color: #888; margin-top: 15px;">L1 accepts keywords; L4 requires perfect pronunciation.</p>
         </div>
 
         <div class="card">
             <div class="card-header">🔊 Voice Calibration</div>
-            <label>Selected Voice</label>
-            <select id="voice-select"></select>
+            
+            <label>Iberian Voice (ES/VA)</label>
+            <select id="voice-select-es"><option>Loading voices...</option></select>
+
+            <label>English Voice (EN)</label>
+            <select id="voice-select-en"><option>Loading voices...</option></select>
 
             <label>Reading Speed</label>
             <div class="slider-row">
-                <input type="range" id="rate" min="0.5" max="1.5" step="0.1" oninput="updateVals()">
+                <input type="range" id="rate" min="0.5" max="1.5" step="0.1" oninput="updatevals()">
                 <span class="val-display" id="rate-val">1.0</span>
             </div>
 
             <label>Tone (Pitch)</label>
             <div class="slider-row">
-                <input type="range" id="pitch" min="0.5" max="2.0" step="0.1" oninput="updateVals()">
+                <input type="range" id="pitch" min="0.5" max="2.0" step="0.1" oninput="updatevals()">
                 <span class="val-display" id="pitch-val">1.0</span>
             </div>
 
-            <button class="admin-btn" style="margin-top:20px; color:var(--accent-blue);" onclick="testSpeech()">Test Settings</button>
+            <button class="admin-btn" style="margin-top:20px; color:var(--accent-blue);" onclick="testspeech()">Test Voices</button>
         </div>
 
         <div class="card">
             <div class="card-header">⚙️ System Core</div>
             <label>OpenAI API Key</label>
-            <input type="password" id="openai-key" placeholder="Enter sk-...">
+            <input type="password" id="openai-key">
 
             <label>Gemini API Key</label>
-            <input type="password" id="gemini-key" placeholder="Enter Gemini Key...">
+            <input type="password" id="gemini-key">
             
             <div style="display: flex; gap: 10px; align-items: center; justify-content: flex-end; margin-top: 10px;">
                 <button class="admin-btn" style="color: #d9534f; padding: 8px; flex: 1; margin-top:0;" onclick="location.href='testing.html'">🛠️ API TESTER</button>
-                <button class="inner-save-btn" onclick="saveKeyOnly()" style="flex: 0.5; margin-top:0;">Save Keys</button>
+                <button class="inner-save-btn" onclick="savekeyonly()" style="flex: 0.5; margin-top:0;">Save Keys</button>
             </div>
         </div>
 
         <div class="card">
             <div class="card-header">🖼️ Background Themes</div>
-            <p style="font-size: 0.75rem; color: #888;">Manage background visual libraries and UI anchor points.</p>
             <button class="admin-btn" onclick="location.href='themes.html'">🎨 MANAGE THEMES</button>
         </div>
 
         <div class="card">
             <div class="card-header">📚 Magic Books</div>
-            <p style="font-size: 0.75rem; color: #888;">Fix mistakes, update covers, or delete books from Billy's library.</p>
             <button class="admin-btn" style="color: #6d4c41;" onclick="location.href='bookmanager.html'">📖 LIBRARY MANAGER</button>
         </div>
 
     </div>
 
     <div class="footer-actions">
-        <button id="save-btn" class="main-btn" onclick="saveAll()">SAVE CHANGES</button>
+        <button id="save-btn" class="main-btn" onclick="saveall()">SAVE CHANGES</button>
         <button id="cancel-btn" class="main-btn" onclick="location.href='index.html'">CANCEL</button>
     </div>
 
     <script>
-        let currentLevel = '2';
-        let currentStrictness = '2';
+        let currentlevel = '2';
+        let currentstrictness = '2';
 
-        function loadVoices() {
-            const select = document.getElementById('voice-select');
+        function loadvoices() {
             const voices = window.speechSynthesis.getVoices();
-            select.innerHTML = voices
-                .filter(v => v.lang.includes('es') || v.lang.includes('en'))
-                .map(v => `<option value="${v.name}">${v.name}</option>`).join('');
+            if (voices.length === 0) return;
+
+            const selectes = document.getElementById('voice-select-es');
+            const selecten = document.getElementById('voice-select-en');
+
+            const esvoices = voices.filter(v => v.lang.includes('es'));
+            const envoices = voices.filter(v => v.lang.includes('en'));
+
+            selectes.innerHTML = esvoices.map(v => `<option value="${v.name}">${v.name}</option>`).join('');
+            selecten.innerHTML = envoices.map(v => `<option value="${v.name}">${v.name}</option>`).join('');
             
-            const savedVoice = localStorage.getItem('billy_voice');
-            if (savedVoice) select.value = savedVoice;
+            // Keeps original billy_voice for Spanish
+            if (localStorage.getItem('billy_voice')) selectes.value = localStorage.getItem('billy_voice');
+            if (localStorage.getItem('billy_voice_en')) selecten.value = localStorage.getItem('billy_voice_en');
         }
 
-        window.speechSynthesis.onvoiceschanged = loadVoices;
+        const voiceinterval = setInterval(() => {
+            const voices = window.speechSynthesis.getVoices();
+            if (voices.length > 0) {
+                loadvoices();
+                clearInterval(voiceinterval);
+            }
+        }, 500);
+
+        window.speechSynthesis.onvoiceschanged = loadvoices;
 
         window.onload = () => {
-            loadVoices();
             document.getElementById('openai-key').value = localStorage.getItem('openai_key') || '';
             document.getElementById('gemini-key').value = localStorage.getItem('gemini_key') || '';
             document.getElementById('billy-dob').value = localStorage.getItem('billy_dob') || '';
             document.getElementById('rate').value = localStorage.getItem('billy_rate') || 1.0;
             document.getElementById('pitch').value = localStorage.getItem('billy_pitch') || 1.0;
             
-            setLevel(localStorage.getItem('billy_level') || '2');
-            setStrictness(localStorage.getItem('billy_strictness') || '2');
-            updateVals();
+            setlevel(localStorage.getItem('billy_level') || '2');
+            setstrictness(localStorage.getItem('billy_strictness') || '2');
+            updatevals();
         };
 
-        function updateVals() {
+        function updatevals() {
             document.getElementById('rate-val').innerText = document.getElementById('rate').value;
             document.getElementById('pitch-val').innerText = document.getElementById('pitch').value;
         }
 
-        function setLevel(lvl) {
-            currentLevel = lvl;
+        function setlevel(lvl) {
+            currentlevel = lvl;
             document.querySelectorAll('.level-selector:first-of-type .lvl-btn').forEach(btn => btn.classList.remove('active'));
-            const activeBtn = document.getElementById('lvl-' + lvl);
-            if (activeBtn) activeBtn.classList.add('active');
+            const activebtn = document.getElementById('lvl-' + lvl);
+            if (activebtn) activebtn.classList.add('active');
         }
 
-        function setStrictness(lvl) {
-            currentStrictness = lvl;
+        function setstrictness(lvl) {
+            currentstrictness = lvl;
             document.querySelectorAll('.level-selector:last-of-type .lvl-btn').forEach(btn => btn.classList.remove('active'));
-            const activeBtn = document.getElementById('strict-' + lvl);
-            if (activeBtn) activeBtn.classList.add('active');
+            const activebtn = document.getElementById('strict-' + lvl);
+            if (activebtn) activebtn.classList.add('active');
         }
 
-        function testSpeech() {
-            const msg = new SpeechSynthesisUtterance("Hola Billy, misión de prueba completada.");
-            const voiceName = document.getElementById('voice-select').value;
-            msg.voice = window.speechSynthesis.getVoices().find(v => v.name === voiceName);
+        function testspeech() {
+            window.speechSynthesis.cancel();
+            const msg = new SpeechSynthesisUtterance("probando voces de billy reads.");
+            const voices = window.speechSynthesis.getVoices();
+            msg.voice = voices.find(v => v.name === document.getElementById('voice-select-es').value);
             msg.rate = document.getElementById('rate').value;
             msg.pitch = document.getElementById('pitch').value;
             window.speechSynthesis.speak(msg);
         }
 
-        function saveKeyOnly() {
-            const gKey = document.getElementById('gemini-key').value.trim();
-            const oKey = document.getElementById('openai-key').value.trim();
-            localStorage.setItem('gemini_key', gKey);
-            localStorage.setItem('openai_key', oKey);
+        function savekeyonly() {
+            localStorage.setItem('gemini_key', document.getElementById('gemini-key').value.trim());
+            localStorage.setItem('openai_key', document.getElementById('openai-key').value.trim());
             alert("API Keys Locked.");
         }
 
-        function saveAll() {
+        function saveall() {
             localStorage.setItem('openai_key', document.getElementById('openai-key').value.trim());
             localStorage.setItem('gemini_key', document.getElementById('gemini-key').value.trim());
             localStorage.setItem('billy_dob', document.getElementById('billy-dob').value);
             localStorage.setItem('billy_rate', document.getElementById('rate').value);
             localStorage.setItem('billy_pitch', document.getElementById('pitch').value);
-            localStorage.setItem('billy_voice', document.getElementById('voice-select').value);
-            localStorage.setItem('billy_level', currentLevel);
-            localStorage.setItem('billy_strictness', currentStrictness);
+            
+            // Maintain original billy_voice for Spanish compatibility
+            localStorage.setItem('billy_voice', document.getElementById('voice-select-es').value);
+            localStorage.setItem('billy_voice_en', document.getElementById('voice-select-en').value);
+            
+            localStorage.setItem('billy_level', currentlevel);
+            localStorage.setItem('billy_strictness', currentstrictness);
             
             alert("Settings Synchronized.");
             location.href = 'index.html';
