@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Billy Reads | Selección de Páginas</title>
+    <style>
+        :root {
+            --mc-font: 'Arial Black', Gadget, sans-serif;
+            --gold-glow: 0 0 15px #ffd700;
+        }
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background: #1a1a1a;
+            font-family: sans-serif;
+        }
+
+        #main-backdrop {
+            position: fixed; top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background-size: cover;
+            background-position: center;
+            z-index: 1;
+        }
+
+        /* The Asset Window on the right */
+        .asset-window {
+            position: absolute;
+            right: 2%; top: 10%;
+            width: 25%; height: 80%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border-radius: 20px;
+            padding: 15px;
+            overflow-y: auto;
+            z-index: 10;
+            display: flex; flex-direction: column; gap: 15px;
+            /* White borders removed per previous project notes */
+            box-sizing: border-box;
+        }
+
+        .asset-window::-webkit-scrollbar { width: 0px; }
+
+        .page-thumb {
+            width: 100%;
+            aspect-ratio: 3/4;
+            background: #eee;
+            border-radius: 10px;
+            background-size: cover;
+            background-position: center;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 3px solid transparent;
+        }
+
+        .page-thumb.selected {
+            border-color: #ffd700;
+            box-shadow: var(--gold-glow);
+            transform: scale(1.05);
+        }
+
+        /* Navigation & Actions */
+        .controls {
+            position: absolute;
+            left: 2%; bottom: 5%;
+            display: flex; flex-direction: column; gap: 10px;
+            z-index: 10;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none; border-radius: 15px;
+            font-family: var(--mc-font);
+            font-size: 1rem; cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        #btn-go { background: #4caf50; color: white; }
+        #btn-add { background: #4a90e2; color: white; }
+        #btn-back { background: #e74c3c; color: white; }
+
+        #loading-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+            display: flex; align-items: center; justify-content: center;
+            color: white; z-index: 100; font-family: var(--mc-font);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loading-overlay">ABRIENDO LIBRO MÁGICO...</div>
+    <div id="main-backdrop"></div>
+
+    <div class="asset-window" id="pageList">
+        </div>
+
+    <div class="controls">
+        <button id="btn-go" class="btn" onclick="goToActivity()">¡A LEER!</button>
+        <button id="btn-add" class="btn" onclick="addPages()">AÑADIR PÁGINAS</button>
+        <button id="btn-back" class="btn" onclick="location.href='magicbooks.html'">VOLVER</button>
+    </div>
+
+    <script type="module">
+        import { db, collection, getDocs, query, orderBy } from "./firebase-bridge.js";
+
+        const bookId = localStorage.getItem('current_book_id');
+        const backdropURL = localStorage.getItem('current_book_backdrop');
+        let selectedPageURL = null;
+
+        if (!bookId) location.href = 'magicbooks.html';
+
+        // Apply backdrop immediately
+        document.getElementById('main-backdrop').style.backgroundImage = `url('${backdropURL}')`;
+
+        async function loadPages() {
+            const list = document.getElementById('pageList');
+            try {
+                // Fetch pages from the sub-collection "pages" inside the book document
+                const q = query(collection(db, `books/${bookId}/pages`), orderBy("pageNumber", "asc"));
+                const snap = await getDocs(q);
+                
+                list.innerHTML = "";
+                document.getElementById('loading-overlay').style.display = 'none';
+
+                if (snap.empty) {
+                    list.innerHTML = "<p style='color:white; text-align:center; font-size:0.8rem;'>No hay páginas aún. Pulsa 'Añadir'.</p>";
+                    return;
+                }
+
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    const thumb = document.createElement('div');
+                    thumb.className = 'page-thumb';
+                    thumb.style.backgroundImage = `url('${data.imageURL}')`;
+                    
+                    thumb.onclick = () => {
+                        // Deselect others
+                        document.querySelectorAll('.page-thumb').forEach(el => el.classList.remove('selected'));
+                        thumb.classList.add('selected');
+                        selectedPageURL = data.imageURL;
+                        localStorage.setItem('current_page_url', data.imageURL);
+                    };
+                    
+                    list.appendChild(thumb);
+                });
+            } catch (e) {
+                console.error(e);
+                document.getElementById('loading-overlay').innerText = "Error al cargar páginas.";
+            }
+        }
+
+        window.goToActivity = () => {
+            if (!selectedPageURL) {
+                alert("Selecciona una página primero");
+                return;
+            }
+            location.href = 'readassist.html';
+        };
+
+        window.addPages = () => {
+            // This would go to your scanner/upload page
+            location.href = 'addpages.html'; 
+        };
+
+        window.onload = loadPages;
+    </script>
+</body>
+</html>
