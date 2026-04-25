@@ -237,14 +237,31 @@
         }
 
         function testspeech() {
-            window.speechSynthesis.cancel();
-            const msg = new SpeechSynthesisUtterance("probando voces de billy reads.");
-            const voices = window.speechSynthesis.getVoices();
-            msg.voice = voices.find(v => v.name === document.getElementById('voice-select-es').value);
-            msg.rate = document.getElementById('rate').value;
-            msg.pitch = document.getElementById('pitch').value;
-            window.speechSynthesis.speak(msg);
-        }
+    window.speechSynthesis.cancel();
+    
+    // Determine which language to test based on the last selector used 
+    // or simply test based on which dropdown has focus
+    const isEnActive = document.activeElement.id === 'voice-select-en';
+    const voiceName = isEnActive 
+        ? document.getElementById('voice-select-en').value 
+        : document.getElementById('voice-select-es').value;
+    
+    const testText = isEnActive 
+        ? "Testing the English voice for Billy Reads." 
+        : "Probando la voz ibérica para Billy Reads.";
+
+    const msg = new SpeechSynthesisUtterance(testText);
+    const voices = window.speechSynthesis.getVoices();
+    
+    msg.voice = voices.find(v => v.name === voiceName);
+    msg.rate = document.getElementById('rate').value;
+    msg.pitch = document.getElementById('pitch').value;
+    
+    // Set the language tag explicitly for the test
+    msg.lang = isEnActive ? "en-US" : "es-ES";
+
+    window.speechSynthesis.speak(msg);
+}
 
         function savekeyonly() {
             localStorage.setItem('gemini_key', document.getElementById('gemini-key').value.trim());
