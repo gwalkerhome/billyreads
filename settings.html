@@ -142,11 +142,14 @@
         <div class="card">
             <div class="card-header">⚙️ System Core</div>
             <label>OpenAI API Key</label>
-            <input type="password" id="gemini-key" placeholder="Enter sk-...">
+            <input type="password" id="openai-key" placeholder="Enter sk-...">
+
+            <label>Gemini API Key</label>
+            <input type="password" id="gemini-key" placeholder="Enter Gemini Key...">
             
-            <div style="display: flex; gap: 10px; align-items: center; justify-content: flex-end;">
-                <button class="admin-btn" style="margin-top:10px; color: #d9534f; padding: 8px; flex: 1;" onclick="location.href='testing.html'">🛠️ API TESTER</button>
-                <button class="inner-save-btn" onclick="saveKeyOnly()" style="flex: 0.5;">Save Key</button>
+            <div style="display: flex; gap: 10px; align-items: center; justify-content: flex-end; margin-top: 10px;">
+                <button class="admin-btn" style="color: #d9534f; padding: 8px; flex: 1; margin-top:0;" onclick="location.href='testing.html'">🛠️ API TESTER</button>
+                <button class="inner-save-btn" onclick="saveKeyOnly()" style="flex: 0.5; margin-top:0;">Save Keys</button>
             </div>
         </div>
 
@@ -188,6 +191,7 @@
 
         window.onload = () => {
             loadVoices();
+            document.getElementById('openai-key').value = localStorage.getItem('openai_key') || '';
             document.getElementById('gemini-key').value = localStorage.getItem('gemini_key') || '';
             document.getElementById('billy-dob').value = localStorage.getItem('billy_dob') || '';
             document.getElementById('rate').value = localStorage.getItem('billy_rate') || 1.0;
@@ -227,12 +231,15 @@
         }
 
         function saveKeyOnly() {
-            const key = document.getElementById('gemini-key').value.trim();
-            localStorage.setItem('gemini_key', key);
-            alert("API Key Locked.");
+            const gKey = document.getElementById('gemini-key').value.trim();
+            const oKey = document.getElementById('openai-key').value.trim();
+            localStorage.setItem('gemini_key', gKey);
+            localStorage.setItem('openai_key', oKey);
+            alert("API Keys Locked.");
         }
 
         function saveAll() {
+            localStorage.setItem('openai_key', document.getElementById('openai-key').value.trim());
             localStorage.setItem('gemini_key', document.getElementById('gemini-key').value.trim());
             localStorage.setItem('billy_dob', document.getElementById('billy-dob').value);
             localStorage.setItem('billy_rate', document.getElementById('rate').value);
