@@ -58,13 +58,6 @@
             font-family: var(--mc-font); cursor: pointer; text-align: center; 
             background: #cbd5e0; color: #4a5568; text-decoration: none;
         }
-
-        .modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 100;
-        }
-        .modal-content { background: white; padding: 25px; border-radius: 15px; width: 90%; max-width: 400px; }
-        input[type="text"], input[type="file"] { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
     </style>
 </head>
 <body>
@@ -72,23 +65,7 @@
     <div class="container">
         <h1>GESTOR DE LIBROS</h1>
         <div id="book-list">
-            <p style="text-align: center; color: #888;">Cargando biblioteca...</p>
-        </div>
-    </div>
-
-    <div id="editModal" class="modal">
-        <div class="modal-content">
-            <h3 style="margin-top:0">Editar Libro</h3>
-            <label style="font-size: 0.8rem; font-weight: bold;">Título</label>
-            <input type="text" id="editTitle">
-            <label style="font-size: 0.8rem; font-weight: bold;">Nueva Portada (Opcional)</label>
-            <input type="file" id="editCover" accept="image/*">
-            <label style="font-size: 0.8rem; font-weight: bold;">Nuevo Fondo Mágico (Opcional)</label>
-            <input type="file" id="editBackdrop" accept="image/*">
-            <div style="display: flex; gap: 10px; margin-top: 20px;">
-                <button class="btn" onclick="closeEdit()" style="flex:1; background:#eee;">Cancelar</button>
-                <button class="btn" id="saveBtn" style="flex:1; background:var(--accent-blue); color:white;">Guardar</button>
-            </div>
+            <p style="text-align: center; color: #888;">Consultando biblioteca...</p>
         </div>
     </div>
 
@@ -97,19 +74,18 @@
     </div>
 
     <script type="module">
-        import { db, storage, collection, getDocs, doc, updateDoc, deleteDoc, ref, uploadBytes, getDownloadURL } from "./firebase-bridge.js";
-
-        let allBooks = [];
-        let editingId = null;
+        // Mirroring the exact working imports from magicbooks.html
+        import { db, collection, getDocs, doc, deleteDoc, query, orderBy } from "./firebase-bridge.js";
 
         async function fetchBooks() {
             const listDiv = document.getElementById('book-list');
+            
             try {
-                // Fetching collection directly to avoid query/index dependency
-                const snap = await getDocs(collection(db, "books"));
+                // Using the exact same query that works in magicbooks.html
+                const q = query(collection(db, "books"), orderBy("createdAt", "desc"));
+                const snap = await getDocs(q);
                 
                 listDiv.innerHTML = "";
-                allBooks = [];
 
                 if (snap.empty) {
                     listDiv.innerHTML = "<p style='text-align:center; color:#888;'>No hay libros todavía.</p>";
@@ -117,94 +93,40 @@
                 }
 
                 snap.forEach(d => {
-                    allBooks.push({ id: d.id, ...d.data() });
-                });
-
-                // Manual sort by timestamp if it exists, otherwise leave as is
-                allBooks.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-
-                allBooks.forEach(book => {
+                    const book = d.data();
+                    const id = d.id;
+                    
                     const item = document.createElement('div');
                     item.className = 'book-item';
                     item.innerHTML = `
-                        <div class="book-thumb" style="background-image: url('${book.coverURL || ''}')"></div>
+                        <div class="book-thumb" style="background-image: url('${book.coverURL}')"></div>
                         <div class="book-info">
-                            <div class="book-title">${book.title || 'Sin Título'}</div>
-                            <div class="book-meta">ID: ${book.id}</div>
+                            <div class="book-title">${book.title}</div>
+                            <div class="book-meta">ID: ${id}</div>
                         </div>
                         <div class="action-btns">
-                            <button class="btn btn-edit" onclick="openEdit('${book.id}')">Editar</button>
-                            <button class="btn btn-delete" onclick="confirmDelete('${book.id}', '${book.title}')">Borrar</button>
+                            <button class="btn btn-delete" onclick="confirmDelete('${id}', '${book.title}')">Borrar</button>
                         </div>
                     `;
                     listDiv.appendChild(item);
                 });
             } catch (e) { 
-                console.error("Manager fetch error:", e);
-                listDiv.innerHTML = `<p style='color:red; text-align:center;'>Error al cargar: ${e.message}</p>`;
-            }
-        }
-
-        window.openEdit = (id) => {
-            editingId = id;
-            const book = allBooks.find(b => b.id === id);
-            if (book) {
-                document.getElementById('editTitle').value = book.title || "";
-                document.getElementById('editModal').style.display = 'flex';
-            }
-        };
-
-        window.closeEdit = () => {
-            document.getElementById('editModal').style.display = 'none';
-        };
-
-        async function saveEdits() {
-            const saveBtn = document.getElementById('saveBtn');
-            const newTitle = document.getElementById('editTitle').value;
-            const coverFile = document.getElementById('editCover').files[0];
-            const backdropFile = document.getElementById('editBackdrop').files[0];
-            
-            saveBtn.disabled = true;
-            saveBtn.innerText = "Subiendo...";
-
-            try {
-                const updates = { title: newTitle };
-
-                if (coverFile) {
-                    const cRef = ref(storage, `books/covers/${Date.now()}_thumb`);
-                    const snap = await uploadBytes(cRef, coverFile);
-                    updates.coverURL = await getDownloadURL(snap.ref);
-                }
-                if (backdropFile) {
-                    const bRef = ref(storage, `books/backdrops/${Date.now()}_bg`);
-                    const snap = await uploadBytes(bRef, backdropFile);
-                    updates.backdropURL = await getDownloadURL(snap.ref);
-                }
-
-                await updateDoc(doc(db, "books", editingId), updates);
-                alert("Libro actualizado.");
-                location.reload();
-            } catch (e) {
-                console.error("Update error:", e);
-                alert("Error al actualizar.");
-                saveBtn.disabled = false;
-                saveBtn.innerText = "Guardar";
+                console.error("Manager Error:", e);
+                listDiv.innerHTML = `<p style='color:red; text-align:center;'>Error: ${e.message}</p>`;
             }
         }
 
         window.confirmDelete = async (id, title) => {
-            if (confirm(`¿Estás seguro de borrar "${title}"?`)) {
+            if (confirm(`¿Borrar "${title}"?`)) {
                 try {
                     await deleteDoc(doc(db, "books", id));
                     location.reload();
                 } catch (e) {
-                    console.error("Delete error:", e);
                     alert("Error al borrar.");
                 }
             }
         };
 
-        document.getElementById('saveBtn').onclick = saveEdits;
         window.onload = fetchBooks;
     </script>
 </body>
