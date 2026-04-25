@@ -97,7 +97,7 @@
     </div>
 
     <script type="module">
-        import { db, storage, collection, getDocs, doc, updateDoc, deleteDoc, ref, uploadBytes, getDownloadURL, query, orderBy } from "./firebase-bridge.js";
+        import { db, storage, collection, getDocs, doc, updateDoc, deleteDoc, ref, uploadBytes, getDownloadURL } from "./firebase-bridge.js";
 
         let allBooks = [];
         let editingId = null;
@@ -105,8 +105,8 @@
         async function fetchBooks() {
             const listDiv = document.getElementById('book-list');
             try {
-                const q = query(collection(db, "books"), orderBy("createdAt", "desc"));
-                const snap = await getDocs(q);
+                // Fetching collection directly to avoid query/index dependency
+                const snap = await getDocs(collection(db, "books"));
                 
                 listDiv.innerHTML = "";
                 allBooks = [];
@@ -117,15 +117,19 @@
                 }
 
                 snap.forEach(d => {
-                    const book = { id: d.id, ...d.data() };
-                    allBooks.push(book);
-                    
+                    allBooks.push({ id: d.id, ...d.data() });
+                });
+
+                // Manual sort by timestamp if it exists, otherwise leave as is
+                allBooks.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+                allBooks.forEach(book => {
                     const item = document.createElement('div');
                     item.className = 'book-item';
                     item.innerHTML = `
-                        <div class="book-thumb" style="background-image: url('${book.coverURL}')"></div>
+                        <div class="book-thumb" style="background-image: url('${book.coverURL || ''}')"></div>
                         <div class="book-info">
-                            <div class="book-title">${book.title}</div>
+                            <div class="book-title">${book.title || 'Sin Título'}</div>
                             <div class="book-meta">ID: ${book.id}</div>
                         </div>
                         <div class="action-btns">
@@ -144,8 +148,10 @@
         window.openEdit = (id) => {
             editingId = id;
             const book = allBooks.find(b => b.id === id);
-            document.getElementById('editTitle').value = book.title;
-            document.getElementById('editModal').style.display = 'flex';
+            if (book) {
+                document.getElementById('editTitle').value = book.title || "";
+                document.getElementById('editModal').style.display = 'flex';
+            }
         };
 
         window.closeEdit = () => {
@@ -192,6 +198,7 @@
                     await deleteDoc(doc(db, "books", id));
                     location.reload();
                 } catch (e) {
+                    console.error("Delete error:", e);
                     alert("Error al borrar.");
                 }
             }
