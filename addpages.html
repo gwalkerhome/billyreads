@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Billy Reads | Editor Automático</title>
+    <title>billy reads | editor automático</title>
     <style>
         :root {
             --mc-font: 'Arial Black', Gadget, sans-serif;
@@ -58,7 +58,7 @@
         }
         .upload-zone:active { background: #edf2f7; }
 
-        #fileInput { display: none; }
+        #file-input { display: none; }
 
         #status {
             font-size: 0.9rem; color: #7f8c8d;
@@ -114,121 +114,113 @@
     <button id="btn-top-back" onclick="location.href='pages.html'">←</button>
 
     <div class="main-card">
-        <h1 id="book-title-display">CARGANDO...</h1>
+        <h1 id="book-title-display">cargando...</h1>
         
-        <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
-            <strong style="color: var(--accent-blue);">+ AÑADIR PÁGINA</strong>
-            <p style="font-size: 0.8rem; color: #94a3b8;">Toca para subir foto del libro.<br>La IA leerá y traducirá todo automáticamente.</p>
+        <div class="upload-zone" onclick="document.getElementById('file-input').click()">
+            <strong style="color: var(--accent-blue);">+ añadir página</strong>
+            <p style="font-size: 0.8rem; color: #94a3b8;">toca para subir foto del libro.<br>la ia leerá y traducirá todo automáticamente.</p>
         </div>
         
-        <input type="file" id="fileInput" accept="image/*">
-        <div id="status">Esperando página...</div>
+        <input type="file" id="file-input" accept="image/*">
+        <div id="status">esperando página...</div>
     </div>
 
     <div class="bottom-strip-container">
-        <div class="strip-label">Páginas (Desliza para ver todas / Toca X para borrar):</div>
-        <div class="asset-strip" id="assetStrip"></div>
+        <div class="strip-label">páginas (desliza para ver todas / toca x para borrar):</div>
+        <div class="asset-strip" id="asset-strip"></div>
     </div>
 
     <div class="nav-footer">
-        <button class="btn-bottom" onclick="location.href='pages.html'">FINALIZAR</button>
+        <button class="btn-bottom" onclick="location.href='pages.html'">finalizar</button>
     </div>
 
     <script type="module">
-        // Assuming your bridge has a callGemini function or similar for 2.5-flash
         import { db, storage, collection, doc, setDoc, getDocs, deleteDoc, query, orderBy, ref, uploadBytes, getDownloadURL } from "./firebase-bridge.js";
 
         const bookid = localStorage.getItem('current_book_id');
         const booktitle = localStorage.getItem('current_book_title');
         
         if (!bookid) location.href = 'magicbook.html';
-        document.getElementById('book-title-display').innerText = booktitle.toUpperCase();
+        document.getElementById('book-title-display').innerText = booktitle ? booktitle.toLowerCase() : "libro sin título";
 
-        const fileInput = document.getElementById('fileInput');
+        const fileinput = document.getElementById('file-input');
         const status = document.getElementById('status');
-        const strip = document.getElementById('assetStrip');
+        const strip = document.getElementById('asset-strip');
 
-        async function processPageWithAI(file) {
-            status.innerText = "🤖 La IA está leyendo y traduciendo...";
+        async function processpagewithai(file) {
+            status.innerText = "🤖 la ia está leyendo y traduciendo...";
             
-            // This prompt instructs the model to perform OCR and provide the 3-language JSON
-            const prompt = "Read the text in this image. Translate it to Valenciano and English. Return ONLY a JSON object with keys: es (original Spanish), va (Valenciano), and en (English).";
+            const prompt = "read the text in this image. translate it to valenciano and english. return only a json object with keys: es (original spanish), va (valenciano), and en (english).";
 
             try {
-                // IMPORTANT: This calls the actual AI model bridge you are developing
-                // If callGemini isn't in your bridge yet, we will need to add it there next
-                if (typeof window.callGemini === "function") {
-                    const response = await window.callGemini(file, prompt);
+                if (typeof window.callgemini === "function") {
+                    const response = await window.callgemini(file, prompt);
                     return JSON.parse(response);
                 } else {
-                    // Safety fallback if the bridge isn't quite linked yet
-                    console.warn("AI Bridge not found. Check firebase-bridge.js");
-                    throw new Error("Bridge AI no configurado");
+                    console.warn("ai bridge not found. check firebase-bridge.js");
+                    throw new Error("error bridge ai no configured");
                 }
             } catch (e) {
-                console.error("AI Error:", e);
+                console.error("ai error:", e);
                 throw e;
             }
         }
 
-        async function refreshStrip() {
+        async function refreshstrip() {
             const q = query(collection(db, `books/${bookid}/pages`), orderBy("pagenumber", "asc"));
             const snap = await getDocs(q);
             strip.innerHTML = "";
-            snap.forEach(docSnap => {
-                const data = docSnap.data();
+            snap.forEach(docsnap => {
+                const data = docsnap.data();
                 const item = document.createElement('div');
                 item.className = 'strip-item';
                 item.style.backgroundImage = `url('${data.imageurl}')`;
-                item.innerHTML = `<button class="btn-del" onclick="window.deletePage('${docSnap.id}')">✕</button>`;
+                item.innerHTML = `<button class="btn-del" onclick="window.deletepage('${docsnap.id}')">✕</button>`;
                 strip.appendChild(item);
             });
         }
 
-        window.deletePage = async (pageid) => {
-            if (!confirm("¿Borrar esta página?")) return;
+        window.deletepage = async (pageid) => {
+            if (!confirm("¿borrar esta página?")) return;
             await deleteDoc(doc(db, `books/${bookid}/pages`, pageid));
-            refreshStrip();
+            refreshstrip();
         };
 
-        fileInput.onchange = async (e) => {
+        fileinput.onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
 
             status.style.color = "#4a90e2";
-            status.innerText = "📤 Procesando imagen...";
+            status.innerText = "📤 procesando imagen...";
 
             try {
-                // 1. Get real OCR/Translation from AI
-                const aiData = await processPageWithAI(file);
+                const aidata = await processpagewithai(file);
 
-                // 2. Upload Image
                 const pageid = `page_${Date.now()}`;
-                const storageRef = ref(storage, `books/${bookid}/pages/${pageid}`);
-                const snap = await uploadBytes(storageRef, file);
+                const storageref = ref(storage, `books/${bookid}/pages/${pageid}`);
+                const snap = await uploadBytes(storageref, file);
                 const url = await getDownloadURL(snap.ref);
 
-                // 3. Save real text to Firestore
-                const currentCount = strip.querySelectorAll('.strip-item').length;
+                const currentcount = strip.querySelectorAll('.strip-item').length;
                 await setDoc(doc(collection(db, `books/${bookid}/pages`)), {
                     imageurl: url,
-                    pagenumber: currentCount + 1,
-                    text_es: aiData.es,
-                    text_va: aiData.va,
-                    text_en: aiData.en,
+                    pagenumber: currentcount + 1,
+                    text_es: aidata.es,
+                    text_va: aidata.va,
+                    text_en: aidata.en,
                     uploadedat: Date.now()
                 });
 
                 status.style.color = "green";
-                status.innerText = "✅ Guardado correctamente.";
-                refreshStrip();
+                status.innerText = "✅ guardado correctamente.";
+                refreshstrip();
             } catch (err) {
                 status.style.color = "red";
-                status.innerText = "❌ Error: " + err.message;
+                status.innerText = "❌ error: " + err.message;
             }
         };
 
-        refreshStrip();
+        refreshstrip();
     </script>
 </body>
 </html>
