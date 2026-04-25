@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Billy Reads | Añadir Páginas</title>
+    <title>Billy Reads | Editor de Páginas</title>
     <style>
         :root {
             --mc-font: 'Arial Black', Gadget, sans-serif;
@@ -12,74 +12,104 @@
 
         body {
             font-family: 'Segoe UI', sans-serif;
-            background: #f0f4f8;
-            margin: 0; padding: 20px;
+            background: #f0f4f8; margin: 0; padding: 20px;
             display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh;
         }
 
         .container {
             width: 100%; max-width: 500px;
             background: white; border-radius: 20px;
-            padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            box-sizing: border-box;
+            padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            box-sizing: border-box; margin-bottom: 20px;
         }
 
         h1 { font-family: var(--mc-font); color: #2c3e50; text-align: center; margin-top: 0; font-size: 1.2rem; }
-        #book-title-display { text-align: center; color: var(--accent-blue); font-weight: bold; margin-bottom: 20px; }
+        #book-title-display { text-align: center; color: var(--accent-blue); font-weight: bold; margin-bottom: 15px; }
 
-        .input-group { margin-bottom: 20px; }
-        label { display: block; font-weight: bold; margin-bottom: 8px; color: #34495e; font-size: 0.9rem; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; color: #34495e; font-size: 0.8rem; text-transform: uppercase; }
         
-        input[type="file"] {
-            width: 100%; padding: 12px;
-            border: 2px solid #edf2f7; border-radius: 12px;
-            box-sizing: border-box; font-size: 1rem;
+        input[type="file"], textarea {
+            width: 100%; padding: 12px; border: 2px solid #edf2f7; border-radius: 12px;
+            box-sizing: border-box; font-size: 0.9rem; font-family: inherit;
         }
 
+        textarea { height: 80px; resize: none; }
+
         .btn-upload {
-            width: 100%; padding: 18px;
+            width: 100%; padding: 15px;
             background: var(--accent-blue); color: white;
             border: none; border-radius: 15px;
-            font-family: var(--mc-font); font-size: 1.1rem;
-            cursor: pointer;
+            font-family: var(--mc-font); font-size: 1rem; cursor: pointer;
         }
         .btn-upload:disabled { background: #cbd5e0; }
 
-        #status {
-            margin-top: 15px; text-align: center;
-            font-size: 0.85rem; color: #7f8c8d;
-            min-height: 1.5em;
+        #status { margin-top: 10px; text-align: center; font-size: 0.8rem; min-height: 1.2em; }
+
+        /* The Live Preview Strip */
+        .preview-label { align-self: flex-start; max-width: 500px; width: 100%; font-family: var(--mc-font); font-size: 0.7rem; color: #7f8c8d; margin-bottom: 5px; }
+        .asset-strip {
+            width: 100%; max-width: 500px; height: 120px;
+            background: #e2e8f0; border-radius: 15px;
+            display: flex; gap: 10px; padding: 10px;
+            overflow-x: auto; box-sizing: border-box;
+            border: 2px dashed #cbd5e0;
+        }
+        .strip-item {
+            min-width: 80px; height: 100%;
+            background-size: cover; background-position: center;
+            border-radius: 8px; background-color: #fff;
+            flex-shrink: 0; border: 2px solid white;
         }
 
         .nav-footer { margin-top: 20px; width: 100%; max-width: 500px; }
         #btn-back {
             width: 100%; padding: 12px; border: none; border-radius: 12px;
-            background: #eee; color: #666; font-family: var(--mc-font);
-            cursor: pointer;
+            background: #eee; color: #666; font-family: var(--mc-font); cursor: pointer;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>AÑADIR PÁGINAS</h1>
+        <h1>AÑADIR PÁGINA</h1>
         <div id="book-title-display">---</div>
         
         <div class="input-group">
-            <label>Seleccionar Imágenes (puedes elegir varias)</label>
-            <input type="file" id="pageFiles" accept="image/*" multiple>
+            <label>Imagen de la Página</label>
+            <input type="file" id="pageFile" accept="image/*">
         </div>
 
-        <button id="uploadBtn" class="btn-upload">SUBIR PÁGINAS</button>
+        <div class="input-group">
+            <label>Texto (Español)</label>
+            <textarea id="textEs" placeholder="Escribe el texto en español..."></textarea>
+        </div>
+
+        <div class="input-group">
+            <label>Texto (Valencià)</label>
+            <textarea id="textVa" placeholder="Escriu el text en valencià..."></textarea>
+        </div>
+
+        <div class="input-group">
+            <label>Text (English)</label>
+            <textarea id="textEn" placeholder="Write the English text..."></textarea>
+        </div>
+
+        <button id="uploadBtn" class="btn-upload">GUARDAR PÁGINA</button>
         <div id="status"></div>
     </div>
 
+    <div class="preview-label">PÁGINAS EN ESTE LIBRO:</div>
+    <div class="asset-strip" id="assetStrip">
+        </div>
+
     <div class="nav-footer">
-        <button id="btn-back" onclick="location.href='pages.html'">VOLVER</button>
+        <button id="btn-back" onclick="location.href='pages.html'">FINALIZAR</button>
     </div>
 
     <script type="module">
-        import { db, storage, collection, doc, setDoc, ref, uploadBytes, getDownloadURL } from "./firebase-bridge.js";
+        import { db, storage, collection, doc, setDoc, getDocs, query, orderBy, ref, uploadBytes, getDownloadURL } from "./firebase-bridge.js";
 
         const bookid = localStorage.getItem('current_book_id');
         const booktitle = localStorage.getItem('current_book_title');
@@ -89,55 +119,83 @@
 
         const uploadBtn = document.getElementById('uploadBtn');
         const status = document.getElementById('status');
+        const strip = document.getElementById('assetStrip');
 
-        async function uploadPages() {
-            const files = document.getElementById('pageFiles').files;
-            if (files.length === 0) {
-                alert("Por favor, selecciona al menos una imagen.");
+        // Load Existing Pages into the Strip
+        async function refreshStrip() {
+            try {
+                const q = query(collection(db, `books/${bookid}/pages`), orderBy("pagenumber", "asc"));
+                const snap = await getDocs(q);
+                strip.innerHTML = "";
+                
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    const item = document.createElement('div');
+                    item.className = 'strip-item';
+                    item.style.backgroundImage = `url('${data.imageurl}')`;
+                    strip.appendChild(item);
+                });
+            } catch (e) { console.error("Strip error:", e); }
+        }
+
+        async function savePage() {
+            const file = document.getElementById('pageFile').files[0];
+            const textEs = document.getElementById('textEs').value;
+            const textVa = document.getElementById('textVa').value;
+            const textEn = document.getElementById('textEn').value;
+
+            if (!file || !textEs) {
+                alert("Por favor, selecciona una imagen y al menos el texto en español.");
                 return;
             }
 
             uploadBtn.disabled = true;
-            status.style.color = "#7f8c8d";
+            status.innerText = "⏳ Guardando página...";
 
             try {
-                for (let i = 0; i < files.length; i++) {
-                    const file = files[i];
-                    const pagenumber = i + 1; // Basic ordering logic
-                    const pageid = `page_${Date.now()}_${i}`;
-                    
-                    status.innerText = `Subiendo página ${pagenumber} de ${files.length}...`;
+                // Determine next page number based on current strip count
+                const currentPages = strip.querySelectorAll('.strip-item').length;
+                const pagenumber = currentPages + 1;
+                const pageid = `page_${Date.now()}`;
 
-                    // 1. Upload to Storage: books/[bookid]/pages/[filename]
-                    const storagePath = `books/${bookid}/pages/${pageid}`;
-                    const pageRef = ref(storage, storagePath);
-                    const snap = await uploadBytes(pageRef, file);
-                    const url = await getDownloadURL(snap.ref);
+                // 1. Upload Image
+                const storagePath = `books/${bookid}/pages/${pageid}`;
+                const pageRef = ref(storage, storagePath);
+                const snap = await uploadBytes(pageRef, file);
+                const url = await getDownloadURL(snap.ref);
 
-                    // 2. Save to Firestore Sub-collection: books/[bookid]/pages/[docid]
-                    const firestorePath = `books/${bookid}/pages`;
-                    const pageDocRef = doc(collection(db, firestorePath));
-                    
-                    await setDoc(pageDocRef, {
-                        imageurl: url,
-                        pagenumber: pagenumber,
-                        uploadedat: Date.now()
-                    });
-                }
+                // 2. Save Data with all 3 languages
+                await setDoc(doc(collection(db, `books/${bookid}/pages`)), {
+                    imageurl: url,
+                    pagenumber: pagenumber,
+                    text_es: textEs,
+                    text_va: textVa,
+                    text_en: textEn,
+                    uploadedat: Date.now()
+                });
 
                 status.style.color = "green";
-                status.innerText = "✅ ¡Todas las páginas se han subido!";
-                setTimeout(() => location.href = 'pages.html', 1500);
+                status.innerText = "✅ ¡Página añadida!";
+                
+                // Clear inputs for next page
+                document.getElementById('pageFile').value = "";
+                document.getElementById('textEs').value = "";
+                document.getElementById('textVa').value = "";
+                document.getElementById('textEn').value = "";
+                
+                refreshStrip();
+                uploadBtn.disabled = false;
 
             } catch (error) {
-                console.error("Upload error:", error);
+                console.error(error);
                 status.style.color = "red";
                 status.innerText = "❌ Error: " + error.message;
                 uploadBtn.disabled = false;
             }
         }
 
-        uploadBtn.onclick = uploadPages;
+        uploadBtn.onclick = savePage;
+        refreshStrip(); // Initial load
     </script>
 </body>
 </html>
