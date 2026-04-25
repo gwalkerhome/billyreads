@@ -150,21 +150,22 @@
         async function processpagewithai(file) {
             status.innerText = "🤖 la ia está leyendo y traduciendo...";
             
-            const prompt = "Perform OCR on this image. 
+            const prompt = `Perform OCR on this image. 
             1. Detect if the text is in Spanish, Valenciano, or English.
             2. Regardless of the original language, provide a translation for all three:
                - "es": The text in Spanish.
                - "va": The text in Valenciano.
                - "en": The text in English.
-            Return ONLY a valid JSON object with these three keys.";
+            Return ONLY a valid JSON object with these three keys. Use lowercase for all keys.`;
 
             try {
                 if (typeof window.callgemini === "function") {
                     const response = await window.callgemini(file, prompt);
-                    return JSON.parse(response);
+                    // Clean response in case AI includes markdown code blocks
+                    const jsonstring = response.replace(/```json|```/gi, '').trim();
+                    return JSON.parse(jsonstring);
                 } else {
-                    console.warn("ai bridge not found. check firebase-bridge.js");
-                    throw new Error("error bridge ai no configured");
+                    throw new Error("ai bridge not configured");
                 }
             } catch (e) {
                 console.error("ai error:", e);
@@ -173,23 +174,33 @@
         }
 
         async function refreshstrip() {
-            const q = query(collection(db, `books/${bookid}/pages`), orderBy("pagenumber", "asc"));
-            const snap = await getDocs(q);
-            strip.innerHTML = "";
-            snap.forEach(docsnap => {
-                const data = docsnap.data();
-                const item = document.createElement('div');
-                item.className = 'strip-item';
-                item.style.backgroundImage = `url('${data.imageurl}')`;
-                item.innerHTML = `<button class="btn-del" onclick="window.deletepage('${docsnap.id}')">✕</button>`;
-                strip.appendChild(item);
-            });
+            try {
+                const q = query(collection(db, `books/${bookid}/pages`), orderBy("pagenumber", "asc"));
+                const snap = await getDocs(q);
+                strip.innerHTML = "";
+                snap.forEach(docsnap => {
+                    const data = docsnap.data();
+                    const item = document.createElement('div');
+                    item.className = 'strip-item';
+                    item.style.backgroundImage = `url('${data.imageurl}')`;
+                    item.innerHTML = `<button class="btn-del" onclick="window.deletepage('${docsnap.id}')">✕</button>`;
+                    strip.appendChild(item);
+                });
+                if (status.innerText === "esperando página...") status.innerText = "galería actualizada.";
+            } catch (err) {
+                console.error("refresh error:", err);
+                status.innerText = "❌ error cargando galería.";
+            }
         }
 
         window.deletepage = async (pageid) => {
             if (!confirm("¿borrar esta página?")) return;
-            await deleteDoc(doc(db, `books/${bookid}/pages`, pageid));
-            refreshstrip();
+            try {
+                await deleteDoc(doc(db, `books/${bookid}/pages`, pageid));
+                refreshstrip();
+            } catch (err) {
+                alert("error al borrar: " + err.message);
+            }
         };
 
         fileinput.onchange = async (e) => {
