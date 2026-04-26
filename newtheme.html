@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Billy Reads | Add New Theme</title>
+    <title>Billy Reads | Añadir Nuevo Theme</title>
     <style>
         :root {
             --mc-font: 'Arial Black', Gadget, sans-serif;
@@ -34,7 +34,7 @@
             <label>Imagen de Fondo</label>
             <input type="file" id="bgImg" accept="image/*">
         </div>
-        <button id="saveBtn" class="btn-save" onclick="saveNewTheme()">GUARDAR THEME</button>
+        <button id="saveBtn" class="btn-save">GUARDAR THEME</button>
         <div id="status"></div>
     </div>
 
@@ -43,11 +43,9 @@
     </div>
 
     <script type="module">
-        // We MUST use module to import from the bridge
         import { db, storage, collection, doc, setDoc, ref, uploadBytes, getDownloadURL } from "./firebase-bridge.js";
 
-        window.saveNewTheme = async function() {
-            console.log("Function triggered");
+        async function saveNewTheme() {
             const titleInput = document.getElementById('themeTitle');
             const fileInput = document.getElementById('bgImg');
             const status = document.getElementById('status');
@@ -59,19 +57,24 @@
             }
 
             const safeName = titleInput.value.trim().toLowerCase().replace(/\s+/g, '_');
+
             saveBtn.disabled = true;
-            status.innerText = "⏳ Procesando...";
+            status.style.color = "#7f8c8d";
+            status.innerText = "⏳ Preparando archivos...";
 
             try {
+                // Using the specific safeName as the Doc ID
                 const themeRef = doc(db, "themes", safeName);
-                const storageRef = ref(storage, `themes/${safeName}/background`);
-                
-                const snap = await uploadBytes(storageRef, fileInput.files[0]);
-                const downloadURL = await getDownloadURL(snap.ref);
 
+                status.innerText = "📤 Subiendo fondo...";
+                const storageRef = ref(storage, `themes/${safeName}/background`);
+                const snap = await uploadBytes(storageRef, fileInput.files[0]);
+                const url = await getDownloadURL(snap.ref);
+
+                status.innerText = "✍️ Escribiendo en la nube...";
                 await setDoc(themeRef, {
                     themeName: safeName,
-                    url: downloadURL,
+                    url: url,
                     storagePath: `themes/${safeName}/background`,
                     createdAt: Date.now(),
                     layout: {
@@ -87,14 +90,21 @@
                 });
 
                 status.style.color = "green";
-                status.innerText = "✅ Éxito";
-                setTimeout(() => location.href = 'themes.html', 1000);
+                status.innerText = "✅ ¡Theme guardado con éxito!";
+                
+                setTimeout(() => {
+                    location.href = 'themes.html';
+                }, 1500);
 
             } catch (error) {
-                alert("Error: " + error.message);
+                console.error("Firebase Error:", error);
+                status.style.color = "red";
+                status.innerText = "❌ Error: " + error.message;
                 saveBtn.disabled = false;
             }
-        };
+        }
+
+        document.getElementById('saveBtn').onclick = saveNewTheme;
     </script>
 </body>
 </html>
