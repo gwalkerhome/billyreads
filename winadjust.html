@@ -13,13 +13,12 @@
             display: flex; justify-content: center; align-items: center;
         }
 
-        /* NEW: The Locked Canvas logic */
         #master-canvas {
             position: relative;
             width: 100vw;
-            height: 56.25vw; /* Lock to 16:9 ratio */
+            height: 56.25vw; 
             max-height: 100vh;
-            max-width: 177.78vh; /* Ensure it doesn't overflow height */
+            max-width: 177.78vh; 
             background-size: 100% 100%;
             background-position: center;
             background-repeat: no-repeat;
@@ -27,12 +26,11 @@
             overflow: hidden;
         }
 
-        /* NEW: Safe Zone Visual Guide */
         #safe-zone-guide {
             position: absolute;
             top: 5%; left: 5%; width: 90%; height: 90%;
             border: 2px dashed rgba(74, 144, 226, 0.5);
-            pointer-events: none; /* Let clicks pass through */
+            pointer-events: none; 
             z-index: 5;
         }
         #safe-zone-guide::after {
@@ -126,7 +124,7 @@
     </div>
 
     <script type="module">
-        import { getGlobalTheme, saveGlobalTheme } from "./firebase-bridge.js";
+        import { db, doc, setDoc, getGlobalTheme, saveGlobalTheme } from "./firebase-bridge.js";
 
         let activeId = null;
         let currentThemeId = null;
@@ -134,34 +132,37 @@
         let positions = {};
 
         async function init() {
-            const cloudState = await getGlobalTheme();
             const canvas = document.getElementById('master-canvas');
             
-            if (cloudState) {
-                currentThemeId = cloudState.activeThemeId;
-                currentThemeUrl = cloudState.activeThemeUrl;
-                positions = cloudState.layout || {};
-            } else {
-                currentThemeId = localStorage.getItem('active_theme_id');
-                currentThemeUrl = localStorage.getItem('bg_url_cloud');
-                positions = JSON.parse(localStorage.getItem('ui_positions')) || {};
-            }
-
-            if (currentThemeUrl) {
-                canvas.style.backgroundImage = `url('${currentThemeUrl}')`;
-            } else {
-                canvas.style.backgroundImage = "url('assets/minecraft.png')";
-            }
-
-            Object.keys(positions).forEach(id => {
-                const el = document.getElementById(id.toLowerCase());
-                if (el) {
-                    const p = positions[id];
-                    el.style.top = p.t + '%'; el.style.left = p.l + '%';
-                    el.style.width = p.w + '%'; el.style.height = p.h + '%';
+            try {
+                const cloudState = await getGlobalTheme();
+                
+                if (cloudState) {
+                    currentThemeId = cloudState.activeThemeId;
+                    currentThemeUrl = cloudState.activeThemeUrl;
+                    positions = cloudState.layout || {};
                 }
-            });
-            document.getElementById('panel-title').innerText = "SELECT A ZONE";
+
+                if (currentThemeUrl) {
+                    canvas.style.backgroundImage = `url('${currentThemeUrl}')`;
+                }
+
+                // Render saved positions onto the panes
+                Object.keys(positions).forEach(id => {
+                    const el = document.getElementById(id.toLowerCase());
+                    if (el) {
+                        const p = positions[id];
+                        el.style.top = p.t + '%'; 
+                        el.style.left = p.l + '%';
+                        el.style.width = p.w + '%'; 
+                        el.style.height = p.h + '%';
+                    }
+                });
+                document.getElementById('panel-title').innerText = "SELECT A ZONE";
+            } catch (err) {
+                console.error("Init Error:", err);
+                document.getElementById('panel-title').innerText = "ERROR LOADING";
+            }
         }
 
         window.selectPane = (id) => {
@@ -202,15 +203,33 @@
         }
 
         window.savePositions = async () => {
+            if (!currentThemeId) {
+                alert("No active theme identified to save to.");
+                return;
+            }
+
             const btn = document.getElementById('save-btn');
-            btn.innerText = "SAVING...";
-            const success = await saveGlobalTheme(currentThemeId, currentThemeUrl, positions);
-            if (success) {
-                btn.innerText = "SAVE TO CLOUD";
-                alert("Calibration Synced Globally!");
-            } else {
-                btn.innerText = "SAVE TO CLOUD";
-                alert("Cloud Sync Failed.");
+            const originalText = btn.innerText;
+            btn.innerText = "⏳ SAVING...";
+            btn.disabled = true;
+
+            try {
+                // 1. Update the Global Setting (immediate effect for Billy)
+                const globalSuccess = await saveGlobalTheme(currentThemeId, currentThemeUrl, positions);
+
+                // 2. Update the Theme Library Entry (permanent storage for this theme)
+                const themeRef = doc(db, "themes", currentThemeId);
+                await setDoc(themeRef, { layout: positions }, { merge: true });
+
+                if (globalSuccess) {
+                    alert("Calibration Synced Globally!");
+                }
+            } catch (error) {
+                console.error("Cloud Sync Error:", error);
+                alert("Cloud Sync Failed: " + error.message);
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
             }
         };
 
