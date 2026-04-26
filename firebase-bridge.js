@@ -37,25 +37,56 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 
 /**
+ * GLOBAL THEME SYNC: Fetches the active theme and layout for the whole app.
+ */
+export async function getGlobalTheme() {
+    try {
+        const docRef = doc(db, "settings", "global_theme");
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            return docSnap.data();
+        }
+        return null;
+    } catch (error) {
+        console.error("Error fetching global theme:", error);
+        return null;
+    }
+}
+
+/**
+ * SAVES THEME SYNC: Used by WinAdjust and Themes pages.
+ */
+export async function saveGlobalTheme(themeId, themeUrl, layout) {
+    try {
+        await setDoc(doc(db, "settings", "global_theme"), {
+            activeThemeId: themeId,
+            activeThemeUrl: themeUrl,
+            layout: layout,
+            lastUpdated: new Date().toISOString()
+        });
+        return true;
+    } catch (error) {
+        console.error("Error saving global theme:", error);
+        return false;
+    }
+}
+
+/**
  * callgemini:
- * Fetches the gemini_key from localstorage, converts the image to base64,
- * and calls the gemini-2.5-flash model for OCR and translation.
+ * OCR and translation using gemini-2.5-flash.
  */
 window.callgemini = async function(file, prompt) {
     const apikey = localStorage.getItem('gemini_key');
     if (!apikey) throw new Error("No Gemini API Key found in settings.");
-
     const gen_ai_url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apikey}`;
 
     try {
-        // Convert image file to Base64
         const base64data = await new Promise((resolve) => {
             const reader = new FileReader();
             reader.onloadend = () => resolve(reader.result.split(',')[1]);
             reader.readAsDataURL(file);
         });
 
-        // Prepare the API payload
         const payload = {
             contents: [{
                 parts: [
@@ -63,9 +94,7 @@ window.callgemini = async function(file, prompt) {
                     { inlineData: { mimeType: file.type, data: base64data } }
                 ]
             }],
-            generationConfig: {
-                responseMimeType: "application/json"
-            }
+            generationConfig: { responseMimeType: "application/json" }
         };
 
         const response = await fetch(gen_ai_url, {
@@ -75,12 +104,8 @@ window.callgemini = async function(file, prompt) {
         });
 
         const data = await response.json();
-        
         if (!response.ok) throw new Error(data.error ? data.error.message : "AI Error");
-
-        // Return the raw text (expected to be JSON string) from the first candidate
         return data.candidates[0].content.parts[0].text;
-
     } catch (error) {
         console.error("Gemini Bridge Error:", error);
         throw error;
@@ -88,21 +113,6 @@ window.callgemini = async function(file, prompt) {
 };
 
 export { 
-    db, 
-    storage, 
-    collection, 
-    doc, 
-    getDoc, 
-    getDocs, 
-    setDoc, 
-    updateDoc, 
-    deleteDoc, 
-    query, 
-    orderBy, 
-    limit, 
-    where,
-    ref, 
-    uploadBytes, 
-    getDownloadURL, 
-    deleteObject 
+    db, storage, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, 
+    query, orderBy, limit, where, ref, uploadBytes, getDownloadURL, deleteObject 
 };
