@@ -1,120 +1,224 @@
-<script type="module">
-    import { 
-        db, storage, ref, deleteObject, 
-        collection, getDocs, deleteDoc, doc, query, orderBy, 
-        saveGlobalTheme, getGlobalTheme 
-    } from "./firebase-bridge.js";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BillyReads | Cloud Theme Library</title>
+    <style>
+        :root { 
+            --mc-font: 'Arial Black', Gadget, sans-serif; 
+            --accent: #4a90e2;
+            --flash-green: #76FF03;
+        }
+        body { 
+            font-family: sans-serif; background: #1a1a1a; color: white;
+            padding: 20px; text-align: center; margin: 0;
+        }
+        h1 { font-family: var(--mc-font); font-size: 1.5rem; color: var(--accent); }
 
-    const BASE_PROMPT = `Role & Context: Act as an Architectural Illustrator specializing in children's educational interface design. 3D style (3:2 aspect ratio). Functional Constraint: Text Windows must be empty. Illustrated features (buttons/toggles) must be physical parts of environment. NO text/labeling. [Layout: Primary 45x27, Subject 41x9, Translation 53x6, Subtitle 57x6]. Theme/mood = `;
+        .nav-hub {
+            display: flex; justify: center; flex-wrap: wrap; gap: 10px; margin-bottom: 30px;
+        }
+        .nav-hub button {
+            padding: 10px 15px; border-radius: 8px; border: none;
+            font-family: var(--mc-font); font-size: 10px; cursor: pointer;
+            background: #333; color: white; transition: 0.2s;
+        }
+        .nav-hub button:hover { background: var(--accent); }
+        .btn-prompt { background: #9c27b0 !important; }
 
-    // Default layout to use if a theme was saved without one
-    const DEFAULT_LAYOUT = {
-        'pane-back': {t:5, l:5, w:10, h:10},
-        'pane-birch': {t:5, l:30, w:40, h:10},
-        'pane-stone': {t:25, l:25, w:50, h:30},
-        'pane-record': {t:65, l:35, w:30, h:15},
-        'pane-speech': {t:40, l:80, w:10, h:15},
-        'pane-valenciano': {t:75, l:25, w:50, h:8},
-        'pane-val-toggle': {t:75, l:15, w:8, h:8},
-        'pane-slab': {t:88, l:20, w:60, h:10}
-    };
+        .theme-grid {
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px; max-width: 1000px; margin: 0 auto;
+            padding-bottom: 100px;
+        }
+        .theme-card {
+            background: #2a2a2a; border-radius: 12px; padding: 10px;
+            border: 3px solid transparent; transition: 0.2s; position: relative;
+        }
+        .theme-card.active { border-color: var(--flash-green); }
+        .thumb { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 10px; }
+        .card-controls { display: flex; flex-direction: column; gap: 5px; }
+        .btn-use { background: var(--flash-green); color: black; font-weight: bold; font-size: 10px; padding: 8px; border:none; border-radius:4px; cursor:pointer;}
+        .btn-del { background: #ff4d4d; color: white; font-size: 10px; opacity: 0.7; padding: 5px; border-radius: 4px; border:none; cursor:pointer;}
 
-    window.updatePromptText = () => {
-        const mood = document.getElementById('moodInput').value;
-        document.getElementById('promptArea').value = BASE_PROMPT + mood;
-    };
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal-content {
+            background: #1a1a1a; padding: 20px; border-radius: 15px; width: 90%; max-width: 600px;
+            border: 2px solid var(--accent); text-align: left;
+        }
+        textarea {
+            width: 100%; height: 250px; background: #000; color: #ddd; font-family: sans-serif;
+            font-size: 12px; padding: 10px; border: 1px solid #333; box-sizing: border-box; resize: none;
+        }
+        .modal-btns { display: flex; gap: 10px; margin-top: 15px; }
 
-    window.openPrompt = () => { 
-        document.getElementById('promptModal').style.display = 'flex'; 
-        updatePromptText();
-    };
-    window.closePrompt = () => { document.getElementById('promptModal').style.display = 'none'; };
+        .back-nav {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: #444; color: white; padding: 15px 40px; border-radius: 30px; border: none; font-family: var(--mc-font); cursor:pointer;
+        }
+        #status-msg { font-size: 12px; color: var(--flash-green); margin-bottom: 10px; display: none; }
+        .theme-title { color: var(--accent); font-family: var(--mc-font); font-size: 0.7rem; margin-bottom: 5px; text-transform: uppercase; }
+    </style>
+</head>
+<body>
 
-    window.copyPrompt = () => {
-        const area = document.getElementById("promptArea");
-        area.select();
-        navigator.clipboard.writeText(area.value);
-        alert("Prompt Copied!");
-    };
+    <h1>CLOUD THEME LIBRARY</h1>
 
-    window.loadThemes = async () => {
-        const grid = document.getElementById('themeGrid');
-        grid.innerHTML = 'Fetching themes...';
-        
-        try {
-            const cloudState = await getGlobalTheme();
-            const activeId = cloudState ? cloudState.activeThemeId : null;
+    <div class="nav-hub">
+        <button class="btn-prompt" onclick="openPrompt()">✨ GENERATE AI PROMPT</button>
+        <button onclick="location.href='winadjust.html'">⚙️ WINGEN (ADJUST)</button>
+        <button onclick="location.href='createbg.html'">🎨 CREATE NEW BACKGROUND</button>
+        <button onclick="location.href='newtheme.html'">+ UPLOAD TO CLOUD</button>
+    </div>
 
-            const q = query(collection(db, "themes"), orderBy("createdAt", "desc"));
-            const querySnapshot = await getDocs(q);
-            grid.innerHTML = '';
+    <div id="status-msg">Connecting to bridge...</div>
 
-            if (querySnapshot.empty) {
-                grid.innerHTML = '<p style="opacity:0.5; margin-top:20px;">Library is empty. Upload your first theme!</p>';
-                return;
+    <div class="theme-grid" id="themeGrid"></div>
+
+    <button class="back-nav" onclick="location.href='settings.html'">BACK TO SETTINGS</button>
+
+    <div id="promptModal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-top:0; color: var(--accent);">V4 Architectural Prompt</h3>
+            <div style="margin-bottom:10px;">
+                <label style="color:var(--flash-green); font-size: 0.8rem; font-family: var(--mc-font);">MOOD / THEME:</label>
+                <input type="text" id="moodInput" placeholder="e.g. Science Lab, Ancient Rome, Deep Sea..." 
+                       style="width:100%; padding:10px; background:#222; border:1px solid #444; color:white; border-radius:5px;"
+                       oninput="updatePromptText()">
+            </div>
+            <textarea id="promptArea" readonly></textarea>
+            <div class="modal-btns">
+                <button class="btn-use" style="flex:1" onclick="copyPrompt()">COPY TO CLIPBOARD</button>
+                <button class="btn-del" style="background:#444; opacity:1" onclick="closePrompt()">CLOSE</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { 
+            db, storage, ref, deleteObject, 
+            collection, getDocs, deleteDoc, doc, query, orderBy, 
+            saveGlobalTheme, getGlobalTheme 
+        } from "./firebase-bridge.js";
+
+        const BASE_PROMPT = `Role & Context: Act as an Architectural Illustrator specializing in children's educational interface design. 3D style (3:2 aspect ratio). Functional Constraint: Text Windows must be empty. Illustrated features (buttons/toggles) must be physical parts of environment. NO text/labeling. [Layout: Primary 45x27, Subject 41x9, Translation 53x6, Subtitle 57x6]. Theme/mood = `;
+
+        // Standard layout for themes uploaded without specific adjustment data
+        const DEFAULT_LAYOUT = {
+            'pane-back': {t:5, l:5, w:10, h:10},
+            'pane-birch': {t:5, l:30, w:40, h:10},
+            'pane-stone': {t:25, l:25, w:50, h:30},
+            'pane-record': {t:65, l:35, w:30, h:15},
+            'pane-speech': {t:40, l:80, w:10, h:15},
+            'pane-valenciano': {t:75, l:25, w:50, h:8},
+            'pane-val-toggle': {t:75, l:15, w:8, h:8},
+            'pane-slab': {t:88, l:20, w:60, h:10}
+        };
+
+        window.updatePromptText = () => {
+            const mood = document.getElementById('moodInput').value;
+            document.getElementById('promptArea').value = BASE_PROMPT + mood;
+        };
+
+        window.openPrompt = () => { 
+            document.getElementById('promptModal').style.display = 'flex'; 
+            updatePromptText();
+        };
+        window.closePrompt = () => { document.getElementById('promptModal').style.display = 'none'; };
+
+        window.copyPrompt = () => {
+            const area = document.getElementById("promptArea");
+            area.select();
+            navigator.clipboard.writeText(area.value);
+            alert("Prompt Copied!");
+        };
+
+        window.loadThemes = async () => {
+            const grid = document.getElementById('themeGrid');
+            const statusMsg = document.getElementById('status-msg');
+            grid.innerHTML = '<p style="grid-column: 1/-1;">Fetching themes...</p>';
+            
+            try {
+                const cloudState = await getGlobalTheme();
+                const activeId = cloudState ? cloudState.activeThemeId : null;
+
+                const q = query(collection(db, "themes"), orderBy("createdAt", "desc"));
+                const querySnapshot = await getDocs(q);
+                grid.innerHTML = '';
+
+                if (querySnapshot.empty) {
+                    grid.innerHTML = '<p style="grid-column: 1/-1; opacity:0.5; margin-top:20px;">Library is empty. Upload your first theme!</p>';
+                    return;
+                }
+
+                querySnapshot.forEach((docSnap) => {
+                    const theme = docSnap.data();
+                    const id = docSnap.id;
+                    const isActive = activeId === id;
+                    
+                    // Use saved layout or fallback to default
+                    const layoutData = theme.layout || DEFAULT_LAYOUT;
+
+                    const card = document.createElement('div');
+                    card.className = `theme-card ${isActive ? 'active' : ''}`;
+                    card.innerHTML = `
+                        <div class="theme-title">${id}</div>
+                        <img src="${theme.url}" class="thumb">
+                        <div class="card-controls">
+                            <button id="use-${id}" class="btn-use">
+                                ${isActive ? '✅ ACTIVE' : 'USE THEME'}
+                            </button>
+                            <button class="btn-del" onclick="deleteTheme('${id}', '${theme.storagePath || ''}')">DELETE</button>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+
+                    // Attach listener directly to avoid object-to-string errors
+                    document.getElementById(`use-${id}`).onclick = () => selectTheme(id, theme.url, layoutData);
+                });
+            } catch (err) {
+                grid.innerHTML = '<p style="grid-column: 1/-1;">Connection error.</p>';
+                console.error(err);
             }
+        };
 
-            querySnapshot.forEach((docSnap) => {
-                const theme = docSnap.data();
-                const id = docSnap.id;
-                const isActive = activeId === id;
-                
-                // Safety check: use theme layout or default
-                const layoutData = theme.layout || DEFAULT_LAYOUT;
-
-                const card = document.createElement('div');
-                card.className = `theme-card ${isActive ? 'active' : ''}`;
-                card.innerHTML = `
-                    <div class="theme-title">${id}</div>
-                    <img src="${theme.url}" class="thumb">
-                    <div class="card-controls">
-                        <button id="btn-${id}" class="btn-use">
-                            ${isActive ? '✅ ACTIVE' : 'USE THEME'}
-                        </button>
-                        <button class="btn-del" onclick="deleteTheme('${id}', '${theme.storagePath || ''}')">DELETE</button>
-                    </div>
-                `;
-                grid.appendChild(card);
-
-                // Attach listener directly to avoid stringification issues
-                document.getElementById(`btn-${id}`).onclick = () => selectTheme(id, theme.url, layoutData);
-            });
-        } catch (err) {
-            grid.innerHTML = 'Connection error.';
-            console.error(err);
-        }
-    };
-
-    window.selectTheme = async (id, url, layout) => {
-        const status = document.getElementById('status-msg');
-        status.style.display = 'block';
-        status.innerText = "⏳ Updating Global Theme...";
-        
-        const success = await saveGlobalTheme(id, url, layout);
-        if (success) {
-            status.innerText = "✅ Theme Updated!";
-            setTimeout(() => { status.style.display = 'none'; }, 2000);
-            loadThemes();
-        } else {
-            alert("Failed to update theme.");
-        }
-    };
-
-    window.deleteTheme = async (id, storagePath) => {
-        if(!confirm(`Delete ${id}?`)) return;
-        try {
-            await deleteDoc(doc(db, "themes", id));
-            // Only try to delete from storage if we have a path
-            if (storagePath) {
-                await deleteObject(ref(storage, storagePath));
+        window.selectTheme = async (id, url, layout) => {
+            const status = document.getElementById('status-msg');
+            status.style.display = 'block';
+            status.innerText = "⏳ Updating Global Theme...";
+            
+            const success = await saveGlobalTheme(id, url, layout);
+            if (success) {
+                status.innerText = "✅ Theme Updated!";
+                setTimeout(() => { status.style.display = 'none'; }, 2000);
+                loadThemes();
+            } else {
+                alert("Failed to update theme.");
+                status.style.display = 'none';
             }
-            loadThemes();
-        } catch (err) {
-            console.error("Delete error:", err);
-            // Even if storage delete fails, we should refresh the list
-            loadThemes();
-        }
-    };
+        };
 
-    loadThemes();
-</script>
+        window.deleteTheme = async (id, storagePath) => {
+            if(!confirm(`Delete theme "${id}"?`)) return;
+            try {
+                await deleteDoc(doc(db, "themes", id));
+                if (storagePath) {
+                    await deleteObject(ref(storage, storagePath));
+                }
+                loadThemes();
+            } catch (err) {
+                console.error("Delete error:", err);
+                loadThemes();
+            }
+        };
+
+        // Initial Load
+        loadThemes();
+    </script>
+</body>
+</html>
