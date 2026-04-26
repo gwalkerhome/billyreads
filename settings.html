@@ -15,24 +15,30 @@
 
         body {
             margin: 0; padding: 20px;
-            background-color: var(--body-bg);
+            /* AMENDED: Background image applied */
+            background-image: linear-gradient(rgba(240, 244, 248, 0.4), rgba(240, 244, 248, 0.4)), url('assets/settingsback.jpeg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: #333;
             display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh;
         }
 
-        h1 { font-family: var(--mc-font); color: #2c3e50; margin-bottom: 5px; }
-        .subtitle { color: #7f8c8d; margin-bottom: 30px; font-size: 0.9rem; }
+        /* AMENDED: Headings removed */
 
         .settings-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 20px; width: 100%; max-width: 1100px;
+            /* AMENDED: Margin top added to account for missing header space */
+            margin-top: 40px;
         }
 
         .card {
             background: var(--card-bg); border-radius: 15px; padding: 25px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; flex-direction: column;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; flex-direction: column;
         }
 
         .card-header {
@@ -76,6 +82,7 @@
 
         .footer-actions {
             margin-top: 40px; display: flex; gap: 20px; width: 100%; max-width: 600px;
+            padding-bottom: 40px;
         }
         .main-btn {
             flex: 1; padding: 20px; border-radius: 12px; border: none;
@@ -86,9 +93,6 @@
     </style>
 </head>
 <body>
-
-    <h1>Command Center</h1>
-    <div class="subtitle">Mission Configuration & Student Profile</div>
 
     <div class="settings-grid">
         
@@ -119,28 +123,28 @@
         </div>
 
         <div class="card">
-    <div class="card-header">🔊 Voice Calibration</div>
-    
-    <label>Iberian Voice (ES/VA)</label>
-    <select id="voice-select-es"><option>Loading voices...</option></select>
-    <button class="admin-btn" style="margin-top:5px; padding: 8px; font-size: 0.7rem;" onclick="testspeech('es')">Test Iberian</button>
+            <div class="card-header">🔊 Voice Calibration</div>
+            
+            <label>Iberian Voice (ES/VA)</label>
+            <select id="voice-select-es"><option>Loading voices...</option></select>
+            <button class="admin-btn" style="margin-top:5px; padding: 8px; font-size: 0.7rem;" onclick="testspeech('es')">Test Iberian</button>
 
-    <label style="margin-top: 20px;">English Voice (EN)</label>
-    <select id="voice-select-en"><option>Loading voices...</option></select>
-    <button class="admin-btn" style="margin-top:5px; padding: 8px; font-size: 0.7rem;" onclick="testspeech('en')">Test English</button>
+            <label style="margin-top: 20px;">English Voice (EN)</label>
+            <select id="voice-select-en"><option>Loading voices...</option></select>
+            <button class="admin-btn" style="margin-top:5px; padding: 8px; font-size: 0.7rem;" onclick="testspeech('en')">Test English</button>
 
-    <label style="margin-top: 20px;">Reading Speed</label>
-    <div class="slider-row">
-        <input type="range" id="rate" min="0.5" max="1.5" step="0.1" oninput="updatevals()">
-        <span class="val-display" id="rate-val">1.0</span>
-    </div>
+            <label style="margin-top: 20px;">Reading Speed</label>
+            <div class="slider-row">
+                <input type="range" id="rate" min="0.5" max="1.5" step="0.1" oninput="updatevals()">
+                <span class="val-display" id="rate-val">1.0</span>
+            </div>
 
-    <label>Tone (Pitch)</label>
-    <div class="slider-row">
-        <input type="range" id="pitch" min="0.5" max="2.0" step="0.1" oninput="updatevals()">
-        <span class="val-display" id="pitch-val">1.0</span>
-    </div>
-</div>
+            <label>Tone (Pitch)</label>
+            <div class="slider-row">
+                <input type="range" id="pitch" min="0.5" max="2.0" step="0.1" oninput="updatevals()">
+                <span class="val-display" id="pitch-val">1.0</span>
+            </div>
+        </div>
 
         
         <div class="card">
@@ -191,7 +195,6 @@
             selectes.innerHTML = esvoices.map(v => `<option value="${v.name}">${v.name}</option>`).join('');
             selecten.innerHTML = envoices.map(v => `<option value="${v.name}">${v.name}</option>`).join('');
             
-            // Keeps original billy_voice for Spanish
             if (localStorage.getItem('billy_voice')) selectes.value = localStorage.getItem('billy_voice');
             if (localStorage.getItem('billy_voice_en')) selecten.value = localStorage.getItem('billy_voice_en');
         }
@@ -238,29 +241,24 @@
         }
 
         function testspeech(lang) {
-    window.speechSynthesis.cancel();
-    
-    const isEn = lang === 'en';
-    const voiceName = isEn 
-        ? document.getElementById('voice-select-en').value 
-        : document.getElementById('voice-select-es').value;
-    
-    const testText = isEn 
-        ? "Testing the English voice for Billy Reads." 
-        : "Probando la voz ibérica para Billy Reads.";
+            window.speechSynthesis.cancel();
+            const isEn = lang === 'en';
+            const voiceName = isEn 
+                ? document.getElementById('voice-select-en').value 
+                : document.getElementById('voice-select-es').value;
+            
+            const testText = isEn 
+                ? "Testing the English voice for Billy Reads." 
+                : "Probando la voz ibérica para Billy Reads.";
 
-    const msg = new SpeechSynthesisUtterance(testText);
-    const voices = window.speechSynthesis.getVoices();
-    
-    msg.voice = voices.find(v => v.name === voiceName);
-    msg.rate = document.getElementById('rate').value;
-    msg.pitch = document.getElementById('pitch').value;
-    
-    // Explicitly set language tag
-    msg.lang = isEn ? "en-US" : "es-ES";
-
-    window.speechSynthesis.speak(msg);
-}
+            const msg = new SpeechSynthesisUtterance(testText);
+            const voices = window.speechSynthesis.getVoices();
+            msg.voice = voices.find(v => v.name === voiceName);
+            msg.rate = document.getElementById('rate').value;
+            msg.pitch = document.getElementById('pitch').value;
+            msg.lang = isEn ? "en-US" : "es-ES";
+            window.speechSynthesis.speak(msg);
+        }
 
         function savekeyonly() {
             localStorage.setItem('gemini_key', document.getElementById('gemini-key').value.trim());
@@ -274,14 +272,10 @@
             localStorage.setItem('billy_dob', document.getElementById('billy-dob').value);
             localStorage.setItem('billy_rate', document.getElementById('rate').value);
             localStorage.setItem('billy_pitch', document.getElementById('pitch').value);
-            
-            // Maintain original billy_voice for Spanish compatibility
             localStorage.setItem('billy_voice', document.getElementById('voice-select-es').value);
             localStorage.setItem('billy_voice_en', document.getElementById('voice-select-en').value);
-            
             localStorage.setItem('billy_level', currentlevel);
             localStorage.setItem('billy_strictness', currentstrictness);
-            
             alert("Settings Synchronized.");
             location.href = 'index.html';
         }
