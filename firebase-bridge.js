@@ -56,6 +56,7 @@ async function getGlobalTheme() {
 }
 
 // STAMP OF INTEGRITY: These exports match the requirements of your working Magic Book scripts.
+// STAMP OF INTEGRITY: Added setDoc to the export list
 export { 
     db, 
     storage, 
@@ -68,6 +69,7 @@ export {
     getDocs, 
     deleteDoc, 
     doc, 
+    setDoc, // <--- This was missing!
     query, 
     orderBy, 
     saveGlobalTheme, 
