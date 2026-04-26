@@ -15,7 +15,7 @@
             padding: 20px; text-align: center; margin: 0;
         }
         h1 { font-family: var(--mc-font); font-size: 1.5rem; color: var(--accent); }
-        
+
         .nav-hub {
             display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-bottom: 30px;
         }
@@ -74,7 +74,7 @@
         <button onclick="location.href='createbg.html'">🎨 CREAR NUEVO FONDO</button>
         <button onclick="document.getElementById('fileInput').click()">+ SUBIR A LA NUBE</button>
     </div>
-    
+
     <div id="status-msg">Conectando con el puente...</div>
 
     <div class="theme-grid" id="themeGrid"></div>
@@ -119,7 +119,7 @@
             updatePromptText();
         };
         window.closePrompt = () => { document.getElementById('promptModal').style.display = 'none'; };
-        
+
         window.copyPrompt = () => {
             const area = document.getElementById("promptArea");
             area.select();
