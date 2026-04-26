@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BillyReads | Add New Theme</title>
+    <style>
+        :root {
+            --mc-font: 'Arial Black', Gadget, sans-serif;
+            --accent-blue: #4a90e2;
+        }
+        body { font-family: sans-serif; background: #1a1a1a; color: white; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 500px; background: #2a2a2a; border-radius: 20px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); box-sizing: border-box; }
+        h1 { font-family: var(--mc-font); color: var(--accent-blue); text-align: center; margin-top: 0; }
+        .input-group { margin-bottom: 20px; }
+        label { display: block; font-weight: bold; margin-bottom: 8px; color: #ddd; font-size: 0.9rem; }
+        input[type="text"], input[type="file"] { width: 100%; padding: 12px; border: 2px solid #333; background: #000; color: white; border-radius: 12px; box-sizing: border-box; font-size: 1rem; }
+        .btn-save { width: 100%; padding: 18px; background: var(--accent-blue); color: white; border: none; border-radius: 15px; font-family: var(--mc-font); font-size: 1.1rem; cursor: pointer; }
+        .btn-save:disabled { background: #444; color: #888; }
+        #status { margin-top: 15px; text-align: center; font-size: 0.85rem; color: #76FF03; min-height: 1.5em; }
+        .nav-footer { margin-top: 20px; width: 100%; max-width: 500px; }
+        #btn-back { width: 100%; padding: 12px; border: none; border-radius: 12px; background: #333; color: #ccc; font-family: var(--mc-font); cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>NEW THEME</h1>
+        <div class="input-group">
+            <label>Theme ID / Name (e.g. seaside)</label>
+            <input type="text" id="themeName" placeholder="lowercase only, no spaces">
+        </div>
+        <div class="input-group">
+            <label>Background Image</label>
+            <input type="file" id="bgImg" accept="image/*">
+        </div>
+        <button id="saveBtn" class="btn-save">SAVE THEME</button>
+        <div id="status"></div>
+    </div>
+
+    <div class="nav-footer">
+        <button id="btn-back" onclick="location.href='themes.html'">CANCEL</button>
+    </div>
+
+    <script type="module">
+        import { db, storage, collection, doc, setDoc, ref, uploadBytes, getDownloadURL, getDocs } from "./firebase-bridge.js";
+
+        async function saveNewTheme() {
+            const nameInput = document.getElementById('themeName');
+            const fileInput = document.getElementById('bgImg');
+            const status = document.getElementById('status');
+            const saveBtn = document.getElementById('saveBtn');
+
+            if (!nameInput.value || !fileInput.files[0]) {
+                alert("Please provide a name and select an image.");
+                return;
+            }
+
+            const rawName = nameInput.value.trim().toLowerCase().replace(/\s+/g, '_');
+            saveBtn.disabled = true;
+            status.innerText = "⏳ Checking for duplicates...";
+
+            try {
+                // Check for unique ID
+                const snapshot = await getDocs(collection(db, "themes"));
+                let existingIds = [];
+                snapshot.forEach(d => existingIds.push(d.id));
+
+                let finalId = rawName;
+                let counter = 2;
+                while (existingIds.includes(finalId)) {
+                    finalId = rawName + counter;
+                    counter++;
+                }
+
+                status.innerText = "📤 Uploading image to cloud...";
+                const storagePath = `themes/${finalId}_${Date.now()}`;
+                const storageRef = ref(storage, storagePath);
+                const uploadSnap = await uploadBytes(storageRef, fileInput.files[0]);
+                const downloadURL = await getDownloadURL(uploadSnap.ref);
+
+                status.innerText = "✍️ Finalizing document...";
+                await setDoc(doc(db, "themes", finalId), {
+                    themeName: finalId,
+                    url: downloadURL,
+                    storagePath: storagePath,
+                    createdAt: Date.now(),
+                    layout: {
+                        'pane-back': {t:5, l:5, w:10, h:10},
+                        'pane-birch': {t:5, l:30, w:40, h:10},
+                        'pane-stone': {t:25, l:25, w:50, h:30},
+                        'pane-record': {t:65, l:35, w:30, h:15},
+                        'pane-speech': {t:40, l:80, w:10, h:15},
+                        'pane-valenciano': {t:75, l:25, w:50, h:8},
+                        'pane-val-toggle': {t:75, l:15, w:8, h:8},
+                        'pane-slab': {t:88, l:20, w:60, h:10}
+                    }
+                });
+
+                status.innerText = "✅ Success! Redirecting...";
+                setTimeout(() => {
+                    location.href = 'themes.html';
+                }, 1500);
+
+            } catch (error) {
+                console.error("Firebase Error:", error);
+                status.style.color = "red";
+                status.innerText = "❌ Error: " + error.message;
+                saveBtn.disabled = false;
+            }
+        }
+
+        document.getElementById('saveBtn').onclick = saveNewTheme;
+    </script>
+</body>
+</html>
