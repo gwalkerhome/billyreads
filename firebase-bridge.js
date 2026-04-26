@@ -41,7 +41,7 @@ const storage = getStorage(app);
  */
 export async function getGlobalTheme() {
     try {
-        const docRef = doc(db, "settings", "global_theme");
+        const docRef = doc(db, "settings", "active_config");
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
             return docSnap.data();
@@ -58,12 +58,16 @@ export async function getGlobalTheme() {
  */
 export async function saveGlobalTheme(themeId, themeUrl, layout) {
     try {
-        await setDoc(doc(db, "settings", "global_theme"), {
+        await setDoc(doc(db, "settings", "active_config"), {
             activeThemeId: themeId,
             activeThemeUrl: themeUrl,
             layout: layout,
             lastUpdated: new Date().toISOString()
         });
+        
+        // Ensure individual theme document layout is also updated
+        await updateDoc(doc(db, "themes", themeId), { layout: layout });
+        
         return true;
     } catch (error) {
         console.error("Error saving global theme:", error);
