@@ -30,7 +30,8 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 20px; width: 100%; max-width: 1100px;
-            margin-top: 40px;
+            /* AMENDED: Pushed down to 30% of screen height */
+            margin-top: 30vh;
         }
 
         .card {
@@ -118,10 +119,8 @@
 
         <div class="card">
             <div class="card-header">📊 DIFFICULTY SETTINGS</div>
-            
             <label>User Date of Birth</label>
             <input type="date" id="billy-dob">
-            
             <label style="margin-top:20px;">Reading Tier (Content)</label>
             <div class="level-selector" style="margin-bottom: 20px;">
                 <button class="lvl-btn" id="lvl-1" onclick="setlevel('1')">T1: FONÉTICO</button>
@@ -129,7 +128,6 @@
                 <button class="lvl-btn" id="lvl-3" onclick="setlevel('3')">T3: AVANZADO</button>
                 <button class="lvl-btn" id="lvl-4" onclick="setlevel('4')">T4: EXPERTO</button>
             </div>
-
             <label>Listening Strictness (Assessment)</label>
             <div class="level-selector">
                 <button class="lvl-btn" id="strict-1" onclick="setstrictness('1')">L1: PERMISIVO</button>
@@ -141,21 +139,17 @@
 
         <div class="card">
             <div class="card-header">🔊 VOICE CALIBRATION</div>
-            
             <label>Iberian Voice (ES/VA)</label>
             <select id="voice-select-es"><option>Loading voices...</option></select>
             <button class="admin-btn" style="margin-top:5px; padding: 8px; font-size: 0.7rem;" onclick="testspeech('es')">Test Iberian</button>
-
             <label style="margin-top: 20px;">English Voice (EN)</label>
             <select id="voice-select-en"><option>Loading voices...</option></select>
             <button class="admin-btn" style="margin-top:5px; padding: 8px; font-size: 0.7rem;" onclick="testspeech('en')">Test English</button>
-
             <label style="margin-top: 20px;">Reading Speed</label>
             <div class="slider-row">
                 <input type="range" id="rate" min="0.5" max="1.5" step="0.1" oninput="updatevals()">
                 <span class="val-display" id="rate-val">1.0</span>
             </div>
-
             <label>Tone (Pitch)</label>
             <div class="slider-row">
                 <input type="range" id="pitch" min="0.5" max="2.0" step="0.1" oninput="updatevals()">
