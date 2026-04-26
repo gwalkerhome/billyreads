@@ -5,12 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Aventura de Español</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            background-image: url('assets/indexback.jpeg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        /* Ensure the main container doesn't have a solid background covering the new image */
+        .container {
+            background: transparent !important;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>¡Hola! ¿Qué vamos a leer hoy?</h1>
-        </header>
+            </header>
         
         <main class="grid-choice">
             <button class="btn-stage-1" onclick="window.location.href='flashcard.html'">
