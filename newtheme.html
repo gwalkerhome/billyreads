@@ -43,7 +43,8 @@
     </div>
 
     <script type="module">
-        import { db, storage, collection, doc, setDoc, ref, uploadBytes, getDownloadURL, getDocs } from "./firebase-bridge.js";
+        // Added 'query' to imports just in case
+        import { db, storage, collection, doc, setDoc, ref, uploadBytes, getDownloadURL, getDocs, query } from "./firebase-bridge.js";
 
         async function saveNewTheme() {
             const nameInput = document.getElementById('themeName');
@@ -58,11 +59,14 @@
 
             const rawName = nameInput.value.trim().toLowerCase().replace(/\s+/g, '_');
             saveBtn.disabled = true;
-            status.innerText = "⏳ Checking for duplicates...";
+            status.innerText = "⏳ Checking connection...";
 
             try {
-                // Check for unique ID
-                const snapshot = await getDocs(collection(db, "themes"));
+                console.log("Starting upload process for:", rawName);
+
+                // 1. Check for Unique ID
+                const themesRef = collection(db, "themes");
+                const snapshot = await getDocs(themesRef);
                 let existingIds = [];
                 snapshot.forEach(d => existingIds.push(d.id));
 
@@ -73,14 +77,19 @@
                     counter++;
                 }
 
-                status.innerText = "📤 Uploading image to cloud...";
+                status.innerText = "📤 Uploading image...";
                 const storagePath = `themes/${finalId}_${Date.now()}`;
                 const storageRef = ref(storage, storagePath);
+                
+                console.log("Uploading to path:", storagePath);
                 const uploadSnap = await uploadBytes(storageRef, fileInput.files[0]);
                 const downloadURL = await getDownloadURL(uploadSnap.ref);
+                console.log("File uploaded, URL obtained.");
 
-                status.innerText = "✍️ Finalizing document...";
-                await setDoc(doc(db, "themes", finalId), {
+                // 2. Save Document
+                status.innerText = "✍️ Saving to Database...";
+                
+                const themeData = {
                     themeName: finalId,
                     url: downloadURL,
                     storagePath: storagePath,
@@ -95,17 +104,21 @@
                         'pane-val-toggle': {t:75, l:15, w:8, h:8},
                         'pane-slab': {t:88, l:20, w:60, h:10}
                     }
-                });
+                };
+
+                console.log("Attempting setDoc for ID:", finalId);
+                await setDoc(doc(db, "themes", finalId), themeData);
+                console.log("Database write successful!");
 
                 status.innerText = "✅ Success! Redirecting...";
                 setTimeout(() => {
                     location.href = 'themes.html';
-                }, 1500);
+                }, 1000);
 
             } catch (error) {
-                console.error("Firebase Error:", error);
+                console.error("FULL ERROR LOG:", error);
                 status.style.color = "red";
-                status.innerText = "❌ Error: " + error.message;
+                status.innerText = "❌ Failed: " + error.message;
                 saveBtn.disabled = false;
             }
         }
