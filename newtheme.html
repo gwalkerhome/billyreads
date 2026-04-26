@@ -34,7 +34,7 @@
             <label>Imagen de Fondo</label>
             <input type="file" id="bgImg" accept="image/*">
         </div>
-        <button id="saveBtn" class="btn-save">GUARDAR THEME</button>
+        <button id="saveBtn" class="btn-save" onclick="saveNewTheme()">GUARDAR THEME</button>
         <div id="status"></div>
     </div>
 
@@ -43,16 +43,11 @@
     </div>
 
     <script type="module">
-        // 1. ATTACH IMMEDIATELY
-        document.getElementById('saveBtn').onclick = () => {
-            console.log("Button clicked!");
-            saveNewTheme();
-        };
-
-        // 2. IMPORT (The likely point of failure)
+        // We MUST use module to import from the bridge
         import { db, storage, collection, doc, setDoc, ref, uploadBytes, getDownloadURL } from "./firebase-bridge.js";
 
-        async function saveNewTheme() {
+        window.saveNewTheme = async function() {
+            console.log("Function triggered");
             const titleInput = document.getElementById('themeTitle');
             const fileInput = document.getElementById('bgImg');
             const status = document.getElementById('status');
@@ -65,18 +60,15 @@
 
             const safeName = titleInput.value.trim().toLowerCase().replace(/\s+/g, '_');
             saveBtn.disabled = true;
-            status.style.color = "#7f8c8d";
-            status.innerText = "⏳ Conectando...";
+            status.innerText = "⏳ Procesando...";
 
             try {
                 const themeRef = doc(db, "themes", safeName);
-
-                status.innerText = "📤 Subiendo imagen...";
                 const storageRef = ref(storage, `themes/${safeName}/background`);
+                
                 const snap = await uploadBytes(storageRef, fileInput.files[0]);
                 const downloadURL = await getDownloadURL(snap.ref);
 
-                status.innerText = "✍️ Guardando...";
                 await setDoc(themeRef, {
                     themeName: safeName,
                     url: downloadURL,
@@ -95,15 +87,14 @@
                 });
 
                 status.style.color = "green";
-                status.innerText = "✅ ¡Hecho!";
-                setTimeout(() => { location.href = 'themes.html'; }, 1000);
+                status.innerText = "✅ Éxito";
+                setTimeout(() => location.href = 'themes.html', 1000);
 
             } catch (error) {
-                console.error(error);
                 alert("Error: " + error.message);
                 saveBtn.disabled = false;
             }
-        }
+        };
     </script>
 </body>
 </html>
