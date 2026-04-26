@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BillyReads | Biblioteca Cloud</title>
+    <title>BillyReads | Cloud Theme Library</title>
     <style>
         :root { 
             --mc-font: 'Arial Black', Gadget, sans-serif; 
@@ -62,24 +62,25 @@
             background: #444; color: white; padding: 15px 40px; border-radius: 30px; border: none; font-family: var(--mc-font); cursor:pointer;
         }
         #status-msg { font-size: 12px; color: var(--flash-green); margin-bottom: 10px; display: none; }
+        .theme-title { color: var(--accent); font-family: var(--mc-font); font-size: 0.7rem; margin-bottom: 5px; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
-    <h1>BIBLIOTECA DE TEMAS CLOUD</h1>
+    <h1>CLOUD THEME LIBRARY</h1>
 
     <div class="nav-hub">
         <button class="btn-prompt" onclick="openPrompt()">✨ GENERATE AI PROMPT</button>
-        <button onclick="location.href='winadjust.html'">⚙️ WINGEN (AJUSTAR)</button>
-        <button onclick="location.href='createbg.html'">🎨 CREAR NUEVO FONDO</button>
-        <button onclick="document.getElementById('fileInput').click()">+ SUBIR A LA NUBE</button>
+        <button onclick="location.href='winadjust.html'">⚙️ WINGEN (ADJUST)</button>
+        <button onclick="location.href='createbg.html'">🎨 CREATE NEW BACKGROUND</button>
+        <button onclick="document.getElementById('fileInput').click()">+ UPLOAD TO CLOUD</button>
     </div>
 
-    <div id="status-msg">Conectando con el puente...</div>
+    <div id="status-msg">Connecting to bridge...</div>
 
     <div class="theme-grid" id="themeGrid"></div>
 
-    <button class="back-nav" onclick="location.href='settings.html'">VOLVER AL CONTROL</button>
+    <button class="back-nav" onclick="location.href='settings.html'">BACK TO SETTINGS</button>
 
     <div id="promptModal" class="modal">
         <div class="modal-content">
@@ -103,7 +104,7 @@
     <script type="module">
         import { 
             db, storage, ref, uploadBytes, getDownloadURL, deleteObject, 
-            collection, addDoc, getDocs, deleteDoc, doc, query, orderBy, 
+            collection, setDoc, getDocs, deleteDoc, doc, query, orderBy, 
             saveGlobalTheme, getGlobalTheme 
         } from "./firebase-bridge.js";
 
@@ -130,47 +131,68 @@
         window.handleUpload = async (event) => {
             const file = event.target.files[0];
             if (!file) return;
+
+            // Prompt for Theme Name
+            let themeName = prompt("Enter a name for this theme (e.g., 'seaside'):", file.name.split('.')[0].toLowerCase());
+            if (!themeName) return;
+            themeName = themeName.trim().toLowerCase().replace(/\s+/g, '_');
+
             const status = document.getElementById('status-msg');
-            status.innerText = "Subiendo a la nube...";
+            status.innerText = "Checking name and uploading...";
             status.style.display = "block";
 
             try {
+                // Check for duplicates and auto-suffix
+                const themesRef = collection(db, "themes");
+                const snapshotDocs = await getDocs(themesRef);
+                let existingIds = [];
+                snapshotDocs.forEach(d => existingIds.push(d.id));
+
+                let finalId = themeName;
+                let counter = 2;
+                while (existingIds.includes(finalId)) {
+                    finalId = themeName + counter;
+                    counter++;
+                }
+
+                // Upload Image
                 const storageRef = ref(storage, `themes/${Date.now()}_${file.name}`);
                 const snapshot = await uploadBytes(storageRef, file);
                 const downloadURL = await getDownloadURL(snapshot.ref);
 
-                await addDoc(collection(db, "themes"), {
-                    name: file.name,
+                // Save Theme as named document
+                await setDoc(doc(db, "themes", finalId), {
+                    themeName: finalId,
                     url: downloadURL,
                     storagePath: storageRef.fullPath,
                     createdAt: Date.now(),
                     layout: {
-                        'pane-back': {t:12, l:3, w:9, h:15},
-                        'pane-birch': {t:5, l:30, w:41, h:9},
-                        'pane-stone': {t:27, l:28, w:45, h:27},
-                        'pane-record': {t:66, l:37, w:27, h:11},
-                        'pane-speech': {t:39, l:75, w:10, h:18},
-                        'pane-valenciano': {t:75, l:26, w:53, h:6},
-                        'pane-val-toggle': {t:75, l:18, w:6, h:12},
-                        'pane-slab': {t:90, l:22, w:57, h:6}
+                        'pane-back': {t:5, l:5, w:10, h:10},
+                        'pane-birch': {t:5, l:30, w:40, h:10},
+                        'pane-stone': {t:25, l:25, w:50, h:30},
+                        'pane-record': {t:65, l:35, w:30, h:15},
+                        'pane-speech': {t:40, l:80, w:10, h:15},
+                        'pane-valenciano': {t:75, l:25, w:50, h:8},
+                        'pane-val-toggle': {t:75, l:15, w:8, h:8},
+                        'pane-slab': {t:88, l:20, w:60, h:10}
                     }
                 });
+                
                 status.style.display = "none";
                 loadThemes();
             } catch (err) {
                 console.error(err);
-                alert("Error subiendo. Verifica las reglas de Firebase.");
+                alert("Upload Error. Check Firebase rules.");
                 status.style.display = "none";
             }
         };
 
         window.loadThemes = async () => {
             const grid = document.getElementById('themeGrid');
-            grid.innerHTML = 'Cargando temas cloud...';
+            grid.innerHTML = 'Loading cloud themes...';
             
-            // Get active theme from Cloud first
             const cloudState = await getGlobalTheme();
-            const activeId = cloudState ? cloudState.activeThemeId : localStorage.getItem('bg_flashcard_cloud');
+            const activeId = cloudState ? cloudState.activeThemeId : null;
 
             try {
                 const q = query(collection(db, "themes"), orderBy("createdAt", "desc"));
@@ -185,18 +207,19 @@
                     const card = document.createElement('div');
                     card.className = `theme-card ${isActive ? 'active' : ''}`;
                     card.innerHTML = `
+                        <div class="theme-title">${id}</div>
                         <img src="${theme.url}" class="thumb">
                         <div class="card-controls">
                             <button class="btn-use" onclick="selectTheme('${id}', '${theme.url}', ${JSON.stringify(theme.layout).replace(/"/g, '&quot;')})">
-                                ${isActive ? '✅ ACTIVO' : 'USAR FONDO'}
+                                ${isActive ? '✅ ACTIVE' : 'USE THEME'}
                             </button>
-                            <button class="btn-del" onclick="deleteTheme('${id}', '${theme.storagePath}')">ELIMINAR</button>
+                            <button class="btn-del" onclick="deleteTheme('${id}', '${theme.storagePath}')">DELETE</button>
                         </div>
                     `;
                     grid.appendChild(card);
                 });
             } catch (err) {
-                grid.innerHTML = 'Error de conexión. Revisa las reglas de seguridad.';
+                grid.innerHTML = 'Connection Error.';
             }
         };
 
@@ -205,12 +228,12 @@
             if (success) {
                 loadThemes();
             } else {
-                alert("Error al sincronizar con la nube.");
+                alert("Cloud Sync Failed.");
             }
         };
 
         window.deleteTheme = async (id, storagePath) => {
-            if(!confirm("¿Borrar permanentemente?")) return;
+            if(!confirm(`Delete theme "${id}" permanently?`)) return;
             try {
                 await deleteDoc(doc(db, "themes", id));
                 await deleteObject(ref(storage, storagePath));
