@@ -6,7 +6,6 @@
     <title>Misión: BillyReads</title>
     <link rel="stylesheet" href="flashstyle.css">
     <style>
-        /* Base styles for the dynamic layout */
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
             overflow: hidden; background: #000;
@@ -35,7 +34,7 @@
             background: rgba(0,0,0,0.5); z-index: 100;
         }
         #energy-bar {
-            height: 100%; width: 0%; background: var(--flash-green, #76FF03);
+            height: 100%; width: 0%; background: #76FF03;
             transition: width 0.3s;
         }
         .mc-btn { cursor: pointer; }
@@ -52,7 +51,8 @@
         <div id="pane-stone" class="dynamic-pane"><span id="target-sentence">CARGANDO MISIÓN...</span></div>
         <div id="pane-valenciano" class="dynamic-pane"><span id="val-translation"></span></div>
         
-        <button id="pane-record" class="dynamic-pane mc-btn" id="record-btn"></button>
+        <button id="pane-record" class="dynamic-pane mc-btn"></button>
+        
         <button id="pane-speech" class="dynamic-pane mc-btn" onclick="playSpeech()"></button>
         <button id="pane-val-toggle" class="dynamic-pane mc-btn" onclick="toggleValenciano()">V</button>
         
@@ -61,11 +61,18 @@
     </div>
 
     <script>
-        // Simple UI toggle for Valenciano layer
         function toggleValenciano() {
             const trans = document.getElementById('val-translation');
             if (trans) trans.classList.toggle('visible');
         }
+
+        // iPad Compatibility: Explicitly trigger the mic function from the module
+        window.triggerMic = () => {
+            if (window.toggleMicModule) {
+                window.toggleMicModule();
+            }
+        };
+        document.getElementById('pane-record').onclick = window.triggerMic;
     </script>
 
     <script type="module" src="flashapp.js"></script>
