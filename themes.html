@@ -73,7 +73,7 @@
         <button class="btn-prompt" onclick="openPrompt()">✨ GENERATE AI PROMPT</button>
         <button onclick="location.href='winadjust.html'">⚙️ WINGEN (ADJUST)</button>
         <button onclick="location.href='createbg.html'">🎨 CREATE NEW BACKGROUND</button>
-        <button onclick="document.getElementById('fileInput').click()">+ UPLOAD TO CLOUD</button>
+        <button onclick="triggerNamedUpload()">+ UPLOAD TO CLOUD</button>
     </div>
 
     <div id="status-msg">Connecting to bridge...</div>
@@ -99,7 +99,7 @@
         </div>
     </div>
 
-    <input type="file" id="fileInput" hidden accept="image/*" onchange="handleUpload(event)">
+    <input type="file" id="fileInput" hidden accept="image/*">
 
     <script type="module">
         import { 
@@ -128,47 +128,48 @@
             alert("Prompt Copied!");
         };
 
-        window.handleUpload = async (event) => {
+        let pendingThemeName = "";
+
+        // AMENDED: This is the user-initiated trigger that browsers trust for prompts
+        window.triggerNamedUpload = () => {
+            const name = prompt("Enter a name for this theme (e.g. 'seaside'):");
+            if (!name) return; // User cancelled
+            pendingThemeName = name.trim().toLowerCase().replace(/\s+/g, '_');
+            document.getElementById('fileInput').click();
+        };
+
+        // AMENDED: Use addEventListener for more robust mobile support
+        const fileInput = document.getElementById('fileInput');
+        fileInput.addEventListener('change', async (event) => {
             const file = event.target.files[0];
-            if (!file) return;
-
-            // 1. Prompt immediately for name
-            let inputName = prompt("Enter a name for this theme (e.g. 'seaside'):");
-            
-            // 2. Fallback to filename if prompt is empty or cancelled
-            if (!inputName || inputName.trim() === "") {
-                inputName = file.name.split('.')[0];
-            }
-
-            // Sanitize name for lowercase and no spaces
-            let themeName = inputName.trim().toLowerCase().replace(/\s+/g, '_');
+            if (!file || !pendingThemeName) return;
 
             const status = document.getElementById('status-msg');
-            status.innerText = `Preparing ${themeName}...`;
+            status.innerText = `Connecting to Cloud...`;
             status.style.display = "block";
 
             try {
-                // Check for duplicates in Firebase to handle suffixing
+                // Duplicate checking for final ID
                 const themesRef = collection(db, "themes");
                 const snapshotDocs = await getDocs(themesRef);
                 let existingIds = [];
                 snapshotDocs.forEach(d => existingIds.push(d.id));
 
-                let finalId = themeName;
+                let finalId = pendingThemeName;
                 let counter = 2;
                 while (existingIds.includes(finalId)) {
-                    finalId = themeName + counter;
+                    finalId = pendingThemeName + counter;
                     counter++;
                 }
 
-                status.innerText = `Uploading ${finalId} to Cloud...`;
+                status.innerText = `Uploading theme: ${finalId}...`;
 
-                // Upload Image to Storage
+                // Upload Image
                 const storageRef = ref(storage, `themes/${Date.now()}_${file.name}`);
                 const snapshot = await uploadBytes(storageRef, file);
                 const downloadURL = await getDownloadURL(snapshot.ref);
 
-                // Save Theme Document (setDoc ensures the ID is the name)
+                // Save Theme Metadata and Default Layout
                 await setDoc(doc(db, "themes", finalId), {
                     themeName: finalId,
                     url: downloadURL,
@@ -187,17 +188,18 @@
                 });
                 
                 status.style.display = "none";
-                alert(`Successfully saved theme: ${finalId}`);
+                alert(`SUCCESS: Theme "${finalId}" is now in the library.`);
                 loadThemes();
             } catch (err) {
                 console.error(err);
-                alert("Upload Error. Please check your connection.");
+                alert("Upload Failed. Please verify your connection.");
                 status.style.display = "none";
             }
             
-            // Clear input so same file can be uploaded again if needed
-            event.target.value = '';
-        };
+            // Clean up
+            fileInput.value = '';
+            pendingThemeName = "";
+        });
 
         window.loadThemes = async () => {
             const grid = document.getElementById('themeGrid');
@@ -212,7 +214,7 @@
                 grid.innerHTML = '';
 
                 if (querySnapshot.empty) {
-                    grid.innerHTML = 'No themes found. Upload your first one!';
+                    grid.innerHTML = 'No themes found.';
                     return;
                 }
 
@@ -236,7 +238,7 @@
                     grid.appendChild(card);
                 });
             } catch (err) {
-                grid.innerHTML = 'Error loading library.';
+                grid.innerHTML = 'Error loading themes.';
             }
         };
 
