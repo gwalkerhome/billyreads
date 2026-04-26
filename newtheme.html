@@ -3,108 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Billy Reads | Añadir Nuevo Theme</title>
+    <title>Billy Reads | Test Connection</title>
     <style>
-        :root {
-            --mc-font: 'Arial Black', Gadget, sans-serif;
-            --accent-blue: #4a90e2;
-        }
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .container { width: 100%; max-width: 500px; background: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); box-sizing: border-box; }
-        h1 { font-family: var(--mc-font); color: #2c3e50; text-align: center; margin-top: 0; }
-        .input-group { margin-bottom: 20px; }
-        label { display: block; font-weight: bold; margin-bottom: 8px; color: #34495e; font-size: 0.9rem; }
-        input[type="text"], input[type="file"] { width: 100%; padding: 12px; border: 2px solid #edf2f7; border-radius: 12px; box-sizing: border-box; font-size: 1rem; }
-        .btn-save { width: 100%; padding: 18px; background: var(--accent-blue); color: white; border: none; border-radius: 15px; font-family: var(--mc-font); font-size: 1.1rem; cursor: pointer; }
-        .btn-save:disabled { background: #cbd5e0; }
-        #status { margin-top: 15px; text-align: center; font-size: 0.85rem; color: #7f8c8d; min-height: 1.5em; }
-        .nav-footer { margin-top: 20px; width: 100%; max-width: 500px; }
-        #btn-back { width: 100%; padding: 12px; border: none; border-radius: 12px; background: #eee; color: #666; font-family: var(--mc-font); cursor: pointer; }
+        :root { --mc-font: 'Arial Black', Gadget, sans-serif; --accent-blue: #4a90e2; }
+        body { font-family: sans-serif; background: #f0f4f8; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 400px; background: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        h1 { font-family: var(--mc-font); font-size: 1.2rem; text-align: center; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #edf2f7; border-radius: 12px; box-sizing: border-box; }
+        .btn-save { width: 100%; padding: 18px; background: var(--accent-blue); color: white; border: none; border-radius: 15px; font-family: var(--mc-font); cursor: pointer; }
+        #status { margin-top: 15px; text-align: center; font-size: 0.85rem; color: #7f8c8d; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>NUEVO THEME</h1>
-        <div class="input-group">
-            <label>Nombre del Theme</label>
-            <input type="text" id="themeTitle" placeholder="Ej: seaside">
-        </div>
-        <div class="input-group">
-            <label>Imagen de Fondo</label>
-            <input type="file" id="bgImg" accept="image/*">
-        </div>
-        <button id="saveBtn" class="btn-save">GUARDAR THEME</button>
-        <div id="status"></div>
-    </div>
-
-    <div class="nav-footer">
-        <button id="btn-back" onclick="location.href='themes.html'">CANCELAR</button>
+        <h1>DB CONNECTION TEST</h1>
+        <input type="text" id="testName" placeholder="Enter test name here">
+        <button id="saveBtn" class="btn-save">TEST SAVE</button>
+        <div id="status">Ready to test...</div>
     </div>
 
     <script type="module">
-        import { db, storage, collection, doc, setDoc, ref, uploadBytes, getDownloadURL } from "./firebase-bridge.js";
+        import { db, doc, setDoc } from "./firebase-bridge.js";
 
-        async function saveNewTheme() {
-            const titleInput = document.getElementById('themeTitle');
-            const fileInput = document.getElementById('bgImg');
+        async function runTest() {
+            const nameInput = document.getElementById('testName');
             const status = document.getElementById('status');
             const saveBtn = document.getElementById('saveBtn');
 
-            if (!titleInput.value || !fileInput.files[0]) {
-                alert("Por favor, rellena todos los campos.");
+            if (!nameInput.value) {
+                alert("Type a name first");
                 return;
             }
 
-            const safeName = titleInput.value.trim().toLowerCase().replace(/\s+/g, '_');
-
+            const safeName = nameInput.value.trim().toLowerCase().replace(/\s+/g, '_');
+            
             saveBtn.disabled = true;
-            status.style.color = "#7f8c8d";
-            status.innerText = "⏳ Preparando archivos...";
+            status.innerText = "⏳ Attempting DB write...";
 
             try {
-                // Using the specific safeName as the Doc ID
-                const themeRef = doc(db, "themes", safeName);
-
-                status.innerText = "📤 Subiendo fondo...";
-                const storageRef = ref(storage, `themes/${safeName}/background`);
-                const snap = await uploadBytes(storageRef, fileInput.files[0]);
-                const url = await getDownloadURL(snap.ref);
-
-                status.innerText = "✍️ Escribiendo en la nube...";
-                await setDoc(themeRef, {
+                // Testing direct write to 'themes' collection
+                const testRef = doc(db, "themes", safeName);
+                
+                await setDoc(testRef, {
                     themeName: safeName,
-                    url: url,
-                    storagePath: `themes/${safeName}/background`,
-                    createdAt: Date.now(),
-                    layout: {
-                        'pane-back': {t:5, l:5, w:10, h:10},
-                        'pane-birch': {t:5, l:30, w:40, h:10},
-                        'pane-stone': {t:25, l:25, w:50, h:30},
-                        'pane-record': {t:65, l:35, w:30, h:15},
-                        'pane-speech': {t:40, l:80, w:10, h:15},
-                        'pane-valenciano': {t:75, l:25, w:50, h:8},
-                        'pane-val-toggle': {t:75, l:15, w:8, h:8},
-                        'pane-slab': {t:88, l:20, w:60, h:10}
-                    }
+                    testDate: Date.now(),
+                    status: "connection_test_successful"
                 });
 
                 status.style.color = "green";
-                status.innerText = "✅ ¡Theme guardado con éxito!";
-                
-                setTimeout(() => {
-                    location.href = 'themes.html';
-                }, 1500);
+                status.innerText = "✅ DB WRITE SUCCESSFUL!";
+                console.log("Success for ID:", safeName);
 
             } catch (error) {
-                console.error("Firebase Error:", error);
+                console.error("DB Error:", error);
                 status.style.color = "red";
-                status.innerText = "❌ Error: " + error.message;
+                status.innerText = "❌ ERROR: " + error.message;
                 saveBtn.disabled = false;
             }
         }
 
-        document.getElementById('saveBtn').onclick = saveNewTheme;
+        document.getElementById('saveBtn').onclick = runTest;
     </script>
 </body>
 </html>
