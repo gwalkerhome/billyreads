@@ -15,25 +15,26 @@
         }
 
         body {
-            margin: 0; padding: 20px;
-            background-image: url('assets/settingsback.jpeg');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: var(--text-color);
-            display: flex; flex-direction: column; align-items: center;
-            min-height: 100vh;
-        }
+    margin: 0; padding: 20px;
+    background-image: url('assets/settingsback.jpeg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text-color);
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; /* This keeps them centered horizontally (left to right) */
+    justify-content: flex-start; /* AMENDED: This allows the margin-top to work */
+    min-height: 100vh;
+}
 
-        .settings-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 20px; width: 100%; max-width: 1100px;
-            /* AMENDED: Pushed down to 30% of screen height */
-            margin-top: 10vh;
-        }
-
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px; width: 100%; max-width: 1100px;
+    margin-top: 30vh; /* Now this number will actually move the boxes */
+}
         .card {
             background: var(--glass-bg);
             backdrop-filter: blur(12px);
