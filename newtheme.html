@@ -3,96 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BillyReads | Add New Theme</title>
+    <title>Billy Reads | Add New Theme</title>
     <style>
         :root {
             --mc-font: 'Arial Black', Gadget, sans-serif;
             --accent-blue: #4a90e2;
         }
-        body { font-family: sans-serif; background: #1a1a1a; color: white; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .container { width: 100%; max-width: 500px; background: #2a2a2a; border-radius: 20px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); box-sizing: border-box; }
-        h1 { font-family: var(--mc-font); color: var(--accent-blue); text-align: center; margin-top: 0; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 500px; background: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); box-sizing: border-box; }
+        h1 { font-family: var(--mc-font); color: #2c3e50; text-align: center; margin-top: 0; }
         .input-group { margin-bottom: 20px; }
-        label { display: block; font-weight: bold; margin-bottom: 8px; color: #ddd; font-size: 0.9rem; }
-        input[type="text"], input[type="file"] { width: 100%; padding: 12px; border: 2px solid #333; background: #000; color: white; border-radius: 12px; box-sizing: border-box; font-size: 1rem; }
+        label { display: block; font-weight: bold; margin-bottom: 8px; color: #34495e; font-size: 0.9rem; }
+        input[type="text"], input[type="file"] { width: 100%; padding: 12px; border: 2px solid #edf2f7; border-radius: 12px; box-sizing: border-box; font-size: 1rem; }
         .btn-save { width: 100%; padding: 18px; background: var(--accent-blue); color: white; border: none; border-radius: 15px; font-family: var(--mc-font); font-size: 1.1rem; cursor: pointer; }
-        .btn-save:disabled { background: #444; color: #888; }
-        #status { margin-top: 15px; text-align: center; font-size: 0.85rem; color: #76FF03; min-height: 1.5em; }
+        .btn-save:disabled { background: #cbd5e0; }
+        #status { margin-top: 15px; text-align: center; font-size: 0.85rem; color: #7f8c8d; min-height: 1.5em; }
         .nav-footer { margin-top: 20px; width: 100%; max-width: 500px; }
-        #btn-back { width: 100%; padding: 12px; border: none; border-radius: 12px; background: #333; color: #ccc; font-family: var(--mc-font); cursor: pointer; }
+        #btn-back { width: 100%; padding: 12px; border: none; border-radius: 12px; background: #eee; color: #666; font-family: var(--mc-font); cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>NEW THEME</h1>
+        <h1>NUEVO THEME</h1>
         <div class="input-group">
-            <label>Theme ID / Name (e.g. seaside)</label>
-            <input type="text" id="themeName" placeholder="lowercase only, no spaces">
+            <label>Nombre del Theme</label>
+            <input type="text" id="themeTitle" placeholder="Ej: seaside">
         </div>
         <div class="input-group">
-            <label>Background Image</label>
+            <label>Imagen de Fondo</label>
             <input type="file" id="bgImg" accept="image/*">
         </div>
-        <button id="saveBtn" class="btn-save">SAVE THEME</button>
+        <button id="saveBtn" class="btn-save">GUARDAR THEME</button>
         <div id="status"></div>
     </div>
 
     <div class="nav-footer">
-        <button id="btn-back" onclick="location.href='themes.html'">CANCEL</button>
+        <button id="btn-back" onclick="location.href='themes.html'">CANCELAR</button>
     </div>
 
     <script type="module">
-        // Added 'query' to imports just in case
-        import { db, storage, collection, doc, setDoc, ref, uploadBytes, getDownloadURL, getDocs, query } from "./firebase-bridge.js";
+        import { db, storage, collection, doc, setDoc, ref, uploadBytes, getDownloadURL } from "./firebase-bridge.js";
 
         async function saveNewTheme() {
-            const nameInput = document.getElementById('themeName');
+            const titleInput = document.getElementById('themeTitle');
             const fileInput = document.getElementById('bgImg');
             const status = document.getElementById('status');
             const saveBtn = document.getElementById('saveBtn');
 
-            if (!nameInput.value || !fileInput.files[0]) {
-                alert("Please provide a name and select an image.");
+            if (!titleInput.value || !fileInput.files[0]) {
+                alert("Por favor, rellena todos los campos.");
                 return;
             }
 
-            const rawName = nameInput.value.trim().toLowerCase().replace(/\s+/g, '_');
+            // Force lowercase and underscores to prevent Mac capitalization issues
+            const safeName = titleInput.value.trim().toLowerCase().replace(/\s+/g, '_');
+
             saveBtn.disabled = true;
-            status.innerText = "⏳ Checking connection...";
+            status.style.color = "#7f8c8d";
+            status.innerText = "⏳ Preparando archivo...";
 
             try {
-                console.log("Starting upload process for:", rawName);
+                // Using setDoc with safeName as the ID so we don't get random character IDs
+                const themeRef = doc(db, "themes", safeName);
 
-                // 1. Check for Unique ID
-                const themesRef = collection(db, "themes");
-                const snapshot = await getDocs(themesRef);
-                let existingIds = [];
-                snapshot.forEach(d => existingIds.push(d.id));
+                status.innerText = "📤 Subiendo imagen...";
+                const storageRef = ref(storage, `themes/${safeName}/background`);
+                const snap = await uploadBytes(storageRef, fileInput.files[0]);
+                const downloadURL = await getDownloadURL(snap.ref);
 
-                let finalId = rawName;
-                let counter = 2;
-                while (existingIds.includes(finalId)) {
-                    finalId = rawName + counter;
-                    counter++;
-                }
-
-                status.innerText = "📤 Uploading image...";
-                const storagePath = `themes/${finalId}_${Date.now()}`;
-                const storageRef = ref(storage, storagePath);
-                
-                console.log("Uploading to path:", storagePath);
-                const uploadSnap = await uploadBytes(storageRef, fileInput.files[0]);
-                const downloadURL = await getDownloadURL(uploadSnap.ref);
-                console.log("File uploaded, URL obtained.");
-
-                // 2. Save Document
-                status.innerText = "✍️ Saving to Database...";
-                
-                const themeData = {
-                    themeName: finalId,
+                status.innerText = "✍️ Escribiendo en la nube...";
+                await setDoc(themeRef, {
+                    themeName: safeName,
                     url: downloadURL,
-                    storagePath: storagePath,
+                    storagePath: `themes/${safeName}/background`,
                     createdAt: Date.now(),
                     layout: {
                         'pane-back': {t:5, l:5, w:10, h:10},
@@ -104,21 +88,19 @@
                         'pane-val-toggle': {t:75, l:15, w:8, h:8},
                         'pane-slab': {t:88, l:20, w:60, h:10}
                     }
-                };
+                });
 
-                console.log("Attempting setDoc for ID:", finalId);
-                await setDoc(doc(db, "themes", finalId), themeData);
-                console.log("Database write successful!");
-
-                status.innerText = "✅ Success! Redirecting...";
+                status.style.color = "green";
+                status.innerText = "✅ ¡Theme guardado!";
+                
                 setTimeout(() => {
                     location.href = 'themes.html';
-                }, 1000);
+                }, 1500);
 
             } catch (error) {
-                console.error("FULL ERROR LOG:", error);
+                console.error("Firebase Error:", error);
                 status.style.color = "red";
-                status.innerText = "❌ Failed: " + error.message;
+                status.innerText = "❌ Error: " + error.message;
                 saveBtn.disabled = false;
             }
         }
