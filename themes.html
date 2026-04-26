@@ -73,7 +73,7 @@
         <button class="btn-prompt" onclick="openPrompt()">✨ GENERATE AI PROMPT</button>
         <button onclick="location.href='winadjust.html'">⚙️ WINGEN (ADJUST)</button>
         <button onclick="location.href='createbg.html'">🎨 CREATE NEW BACKGROUND</button>
-        <button onclick="triggerNamedUpload()">+ UPLOAD TO CLOUD</button>
+        <button onclick="triggerUpload()">+ UPLOAD TO CLOUD</button>
     </div>
 
     <div id="status-msg">Connecting to bridge...</div>
@@ -128,52 +128,55 @@
             alert("Prompt Copied!");
         };
 
-        let pendingThemeName = "";
+        // --- THEME UPLOAD LOGIC ---
 
-        // AMENDED: This is the user-initiated trigger that browsers trust for prompts
-        window.triggerNamedUpload = () => {
-            const name = prompt("Enter a name for this theme (e.g. 'seaside'):");
-            if (!name) return; // User cancelled
-            pendingThemeName = name.trim().toLowerCase().replace(/\s+/g, '_');
-            document.getElementById('fileInput').click();
+        const fileInput = document.getElementById('fileInput');
+        let themeNameDraft = "";
+
+        window.triggerUpload = () => {
+            const name = prompt("Enter a name for this theme (e.g. seaside):");
+            if (!name) return;
+            themeNameDraft = name.trim().toLowerCase().replace(/\s+/g, '_');
+            
+            // Clear input so selecting the same file twice still triggers the 'change' event
+            fileInput.value = '';
+            fileInput.click();
         };
 
-        // AMENDED: Use addEventListener for more robust mobile support
-        const fileInput = document.getElementById('fileInput');
-        fileInput.addEventListener('change', async (event) => {
-            const file = event.target.files[0];
-            if (!file || !pendingThemeName) return;
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file || !themeNameDraft) return;
 
             const status = document.getElementById('status-msg');
-            status.innerText = `Connecting to Cloud...`;
+            status.innerText = "Syncing with cloud...";
             status.style.display = "block";
 
             try {
-                // Duplicate checking for final ID
-                const themesRef = collection(db, "themes");
-                const snapshotDocs = await getDocs(themesRef);
+                // 1. Determine the final unique ID (suffixing)
+                const snapshot = await getDocs(collection(db, "themes"));
                 let existingIds = [];
-                snapshotDocs.forEach(d => existingIds.push(d.id));
+                snapshot.forEach(d => existingIds.push(d.id));
 
-                let finalId = pendingThemeName;
+                let finalId = themeNameDraft;
                 let counter = 2;
                 while (existingIds.includes(finalId)) {
-                    finalId = pendingThemeName + counter;
+                    finalId = themeNameDraft + counter;
                     counter++;
                 }
 
-                status.innerText = `Uploading theme: ${finalId}...`;
+                status.innerText = `Uploading ${finalId}...`;
 
-                // Upload Image
-                const storageRef = ref(storage, `themes/${Date.now()}_${file.name}`);
-                const snapshot = await uploadBytes(storageRef, file);
-                const downloadURL = await getDownloadURL(snapshot.ref);
+                // 2. Upload to Storage
+                const storagePath = `themes/${Date.now()}_${file.name}`;
+                const storageRef = ref(storage, storagePath);
+                const uploadResult = await uploadBytes(storageRef, file);
+                const url = await getDownloadURL(uploadResult.ref);
 
-                // Save Theme Metadata and Default Layout
+                // 3. Save to Firestore
                 await setDoc(doc(db, "themes", finalId), {
                     themeName: finalId,
-                    url: downloadURL,
-                    storagePath: storageRef.fullPath,
+                    url: url,
+                    storagePath: storagePath,
                     createdAt: Date.now(),
                     layout: {
                         'pane-back': {t:5, l:5, w:10, h:10},
@@ -186,35 +189,33 @@
                         'pane-slab': {t:88, l:20, w:60, h:10}
                     }
                 });
-                
+
                 status.style.display = "none";
-                alert(`SUCCESS: Theme "${finalId}" is now in the library.`);
+                alert(`SUCCESS: ${finalId} created.`);
                 loadThemes();
             } catch (err) {
-                console.error(err);
-                alert("Upload Failed. Please verify your connection.");
+                console.error("Upload Error:", err);
+                alert("Upload failed. Check console/network.");
                 status.style.display = "none";
+            } finally {
+                themeNameDraft = "";
             }
-            
-            // Clean up
-            fileInput.value = '';
-            pendingThemeName = "";
         });
 
         window.loadThemes = async () => {
             const grid = document.getElementById('themeGrid');
-            grid.innerHTML = 'Loading cloud library...';
+            grid.innerHTML = 'Fetching themes...';
             
-            const cloudState = await getGlobalTheme();
-            const activeId = cloudState ? cloudState.activeThemeId : null;
-
             try {
+                const cloudState = await getGlobalTheme();
+                const activeId = cloudState ? cloudState.activeThemeId : null;
+
                 const q = query(collection(db, "themes"), orderBy("createdAt", "desc"));
                 const querySnapshot = await getDocs(q);
                 grid.innerHTML = '';
 
                 if (querySnapshot.empty) {
-                    grid.innerHTML = 'No themes found.';
+                    grid.innerHTML = '<p style="opacity:0.5">Library is empty.</p>';
                     return;
                 }
 
@@ -238,27 +239,24 @@
                     grid.appendChild(card);
                 });
             } catch (err) {
-                grid.innerHTML = 'Error loading themes.';
+                grid.innerHTML = 'Connection error.';
+                console.error(err);
             }
         };
 
         window.selectTheme = async (id, url, layout) => {
             const success = await saveGlobalTheme(id, url, layout);
-            if (success) {
-                loadThemes();
-            } else {
-                alert("Sync Error.");
-            }
+            if (success) loadThemes();
         };
 
         window.deleteTheme = async (id, storagePath) => {
-            if(!confirm(`Delete theme "${id}"?`)) return;
+            if(!confirm(`Delete ${id}?`)) return;
             try {
                 await deleteDoc(doc(db, "themes", id));
                 await deleteObject(ref(storage, storagePath));
                 loadThemes();
             } catch (err) {
-                alert("Delete failed.");
+                console.error("Delete error:", err);
             }
         };
 
