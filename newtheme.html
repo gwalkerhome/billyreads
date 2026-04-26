@@ -43,9 +43,13 @@
     </div>
 
     <script type="module">
-        // If you don't see this alert, the bridge import is crashing.
-        alert("Bridge Check: Script is running!");
+        // 1. ATTACH IMMEDIATELY
+        document.getElementById('saveBtn').onclick = () => {
+            console.log("Button clicked!");
+            saveNewTheme();
+        };
 
+        // 2. IMPORT (The likely point of failure)
         import { db, storage, collection, doc, setDoc, ref, uploadBytes, getDownloadURL } from "./firebase-bridge.js";
 
         async function saveNewTheme() {
@@ -60,10 +64,9 @@
             }
 
             const safeName = titleInput.value.trim().toLowerCase().replace(/\s+/g, '_');
-
             saveBtn.disabled = true;
             status.style.color = "#7f8c8d";
-            status.innerText = "⏳ Preparando archivo...";
+            status.innerText = "⏳ Conectando...";
 
             try {
                 const themeRef = doc(db, "themes", safeName);
@@ -73,7 +76,7 @@
                 const snap = await uploadBytes(storageRef, fileInput.files[0]);
                 const downloadURL = await getDownloadURL(snap.ref);
 
-                status.innerText = "✍️ Guardando datos...";
+                status.innerText = "✍️ Guardando...";
                 await setDoc(themeRef, {
                     themeName: safeName,
                     url: downloadURL,
@@ -92,21 +95,15 @@
                 });
 
                 status.style.color = "green";
-                status.innerText = "✅ ¡Theme guardado!";
-                
-                setTimeout(() => {
-                    location.href = 'themes.html';
-                }, 1200);
+                status.innerText = "✅ ¡Hecho!";
+                setTimeout(() => { location.href = 'themes.html'; }, 1000);
 
             } catch (error) {
-                console.error("Firebase Error:", error);
-                status.style.color = "red";
-                status.innerText = "❌ Error: " + error.message;
+                console.error(error);
+                alert("Error: " + error.message);
                 saveBtn.disabled = false;
             }
         }
-
-        document.getElementById('saveBtn').onclick = saveNewTheme;
     </script>
 </body>
 </html>
