@@ -86,7 +86,8 @@ function assessSpeech(spoken, target, keywords, strictness) {
 }
 
 async function fetchJourneyCards() {
-    const apiKey = localStorage.getItem('gemini_key');
+    // AMENDED: Now correctly pulls the OpenAI key for the OpenAI endpoint
+    const apiKey = localStorage.getItem('openai_key');
     const dob = localStorage.getItem('billy_dob') || '2019-01-01';
     const readingLevel = localStorage.getItem('billy_level') || '2'; 
     const targetDisplay = document.getElementById('target-sentence');
@@ -109,7 +110,8 @@ async function fetchJourneyCards() {
     
     const selectedDifficulty = difficultyMap[readingLevel] || difficultyMap["2"];
 
-    const prompt = `Act as a Primary School Encyclopedia for students in Spain. Generate 20 JSON objects for Year ${currentYear}. Difficulty: ${selectedDifficulty}. JSON FORMAT: [{"es": "Fact", "val": "Translation", "cat": "SUBJECT", "keywords": ["key"]}]`;
+    // AMENDED: Explicitly added Spanish (Spain) instruction
+    const prompt = `Act as a Primary School Encyclopedia for students in Spain. Generate 20 JSON objects for Year ${currentYear}. Difficulty: ${selectedDifficulty}. Use Spanish (Spain). JSON FORMAT: [{"es": "Fact", "val": "Translation", "cat": "SUBJECT", "keywords": ["key"]}]`;
 
     if (targetDisplay) targetDisplay.innerText = "Syncing Curriculum...";
 
