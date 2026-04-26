@@ -7,6 +7,7 @@ let isListening = false;
 
 /**
  * Applies the Cloud Theme and Layout coordinates to the UI
+ * Optimized for the 16:9 Master Canvas system
  */
 async function syncAppTheme() {
     const cloudState = await getGlobalTheme();
@@ -14,31 +15,31 @@ async function syncAppTheme() {
     // Fallback logic for Theme URL
     const themeUrl = cloudState?.activeThemeUrl || localStorage.getItem('bg_url_cloud');
     
-    // Fallback logic for Layout - provides default positions if cloud and local are both empty
+    // Fallback logic for Layout
     const layout = cloudState?.layout || JSON.parse(localStorage.getItem('ui_positions')) || {
         "pane-birch": { t: 5, l: 30, w: 40, h: 10 },
         "pane-stone": { t: 25, l: 25, w: 50, h: 30 },
         "pane-back": { t: 2, l: 2, w: 10, h: 10 }
     };
 
-    if (themeUrl) {
-        const container = document.getElementById('game-container');
-        if (container) {
-            container.style.backgroundImage = `url('${themeUrl}')`;
-        } else {
-            document.body.style.backgroundImage = `url('${themeUrl}')`;
-        }
+    // AMENDED: Target the Master Canvas instead of the body
+    const canvas = document.getElementById('master-canvas');
+    if (canvas && themeUrl) {
+        canvas.style.backgroundImage = `url('${themeUrl}')`;
+    } else if (themeUrl) {
+        // Ultimate fallback if HTML hasn't been updated to use #master-canvas
+        document.body.style.backgroundImage = `url('${themeUrl}')`;
         document.body.style.backgroundSize = "cover";
         document.body.style.backgroundPosition = "center";
     }
 
     if (layout) {
         Object.keys(layout).forEach(paneId => {
-            // Handle potential Mac capitalization by converting to lowercase for the search
             const element = document.getElementById(paneId.toLowerCase());
             if (element) {
                 const pos = layout[paneId];
-                element.style.position = 'fixed';
+                // AMENDED: Use 'absolute' so buttons stay relative to the canvas
+                element.style.position = 'absolute';
                 element.style.top = pos.t + '%';
                 element.style.left = pos.l + '%';
                 element.style.width = pos.w + '%';
@@ -86,7 +87,6 @@ function assessSpeech(spoken, target, keywords, strictness) {
 }
 
 async function fetchJourneyCards() {
-    // AMENDED: Now correctly pulls the OpenAI key for the OpenAI endpoint
     const apiKey = localStorage.getItem('openai_key');
     const dob = localStorage.getItem('billy_dob') || '2019-01-01';
     const readingLevel = localStorage.getItem('billy_level') || '2'; 
@@ -110,7 +110,6 @@ async function fetchJourneyCards() {
     
     const selectedDifficulty = difficultyMap[readingLevel] || difficultyMap["2"];
 
-    // AMENDED: Explicitly added Spanish (Spain) instruction
     const prompt = `Act as a Primary School Encyclopedia for students in Spain. Generate 20 JSON objects for Year ${currentYear}. Difficulty: ${selectedDifficulty}. Use Spanish (Spain). JSON FORMAT: [{"es": "Fact", "val": "Translation", "cat": "SUBJECT", "keywords": ["key"]}]`;
 
     if (targetDisplay) targetDisplay.innerText = "Syncing Curriculum...";
@@ -180,13 +179,19 @@ if (SpeechRecognition) {
             }
         }
     };
-    const recordBtn = document.getElementById('record-btn');
-    if (recordBtn) {
-        recordBtn.onclick = () => {
-            if (!isListening) { recognition.start(); isListening = true; recordBtn.style.background = "rgba(255,0,0,0.4)"; }
-            else { recognition.stop(); isListening = false; recordBtn.style.background = "none"; }
-        };
-    }
+    
+    // Explicit trigger for our pane-record button
+    window.toggleMicModule = () => {
+        if (!isListening) { 
+            recognition.start(); 
+            isListening = true; 
+            document.getElementById('pane-record').style.background = "rgba(255,0,0,0.4)"; 
+        } else { 
+            recognition.stop(); 
+            isListening = false; 
+            document.getElementById('pane-record').style.background = "none"; 
+        }
+    };
 }
 
 syncAppTheme();
