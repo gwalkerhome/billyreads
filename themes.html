@@ -132,17 +132,23 @@
             const file = event.target.files[0];
             if (!file) return;
 
-            // Prompt for Theme Name
-            let themeName = prompt("Enter a name for this theme (e.g., 'seaside'):", file.name.split('.')[0].toLowerCase());
-            if (!themeName) return;
-            themeName = themeName.trim().toLowerCase().replace(/\s+/g, '_');
+            // 1. Prompt immediately for name
+            let inputName = prompt("Enter a name for this theme (e.g. 'seaside'):");
+            
+            // 2. Fallback to filename if prompt is empty or cancelled
+            if (!inputName || inputName.trim() === "") {
+                inputName = file.name.split('.')[0];
+            }
+
+            // Sanitize name for lowercase and no spaces
+            let themeName = inputName.trim().toLowerCase().replace(/\s+/g, '_');
 
             const status = document.getElementById('status-msg');
-            status.innerText = "Checking name and uploading...";
+            status.innerText = `Preparing ${themeName}...`;
             status.style.display = "block";
 
             try {
-                // Check for duplicates and auto-suffix
+                // Check for duplicates in Firebase to handle suffixing
                 const themesRef = collection(db, "themes");
                 const snapshotDocs = await getDocs(themesRef);
                 let existingIds = [];
@@ -155,12 +161,14 @@
                     counter++;
                 }
 
-                // Upload Image
+                status.innerText = `Uploading ${finalId} to Cloud...`;
+
+                // Upload Image to Storage
                 const storageRef = ref(storage, `themes/${Date.now()}_${file.name}`);
                 const snapshot = await uploadBytes(storageRef, file);
                 const downloadURL = await getDownloadURL(snapshot.ref);
 
-                // Save Theme as named document
+                // Save Theme Document (setDoc ensures the ID is the name)
                 await setDoc(doc(db, "themes", finalId), {
                     themeName: finalId,
                     url: downloadURL,
@@ -179,17 +187,21 @@
                 });
                 
                 status.style.display = "none";
+                alert(`Successfully saved theme: ${finalId}`);
                 loadThemes();
             } catch (err) {
                 console.error(err);
-                alert("Upload Error. Check Firebase rules.");
+                alert("Upload Error. Please check your connection.");
                 status.style.display = "none";
             }
+            
+            // Clear input so same file can be uploaded again if needed
+            event.target.value = '';
         };
 
         window.loadThemes = async () => {
             const grid = document.getElementById('themeGrid');
-            grid.innerHTML = 'Loading cloud themes...';
+            grid.innerHTML = 'Loading cloud library...';
             
             const cloudState = await getGlobalTheme();
             const activeId = cloudState ? cloudState.activeThemeId : null;
@@ -198,6 +210,11 @@
                 const q = query(collection(db, "themes"), orderBy("createdAt", "desc"));
                 const querySnapshot = await getDocs(q);
                 grid.innerHTML = '';
+
+                if (querySnapshot.empty) {
+                    grid.innerHTML = 'No themes found. Upload your first one!';
+                    return;
+                }
 
                 querySnapshot.forEach((docSnap) => {
                     const theme = docSnap.data();
@@ -219,7 +236,7 @@
                     grid.appendChild(card);
                 });
             } catch (err) {
-                grid.innerHTML = 'Connection Error.';
+                grid.innerHTML = 'Error loading library.';
             }
         };
 
@@ -228,17 +245,19 @@
             if (success) {
                 loadThemes();
             } else {
-                alert("Cloud Sync Failed.");
+                alert("Sync Error.");
             }
         };
 
         window.deleteTheme = async (id, storagePath) => {
-            if(!confirm(`Delete theme "${id}" permanently?`)) return;
+            if(!confirm(`Delete theme "${id}"?`)) return;
             try {
                 await deleteDoc(doc(db, "themes", id));
                 await deleteObject(ref(storage, storagePath));
                 loadThemes();
-            } catch (err) {}
+            } catch (err) {
+                alert("Delete failed.");
+            }
         };
 
         loadThemes();
