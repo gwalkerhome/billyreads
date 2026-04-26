@@ -115,7 +115,7 @@
             const cloudState = await getGlobalTheme();
             const container = document.getElementById('game-container');
             
-            if (cloudState && cloudState.activeThemeUrl) {
+            if (cloudState) {
                 currentThemeId = cloudState.activeThemeId;
                 currentThemeUrl = cloudState.activeThemeUrl;
                 positions = cloudState.layout || {};
@@ -125,7 +125,6 @@
                 positions = JSON.parse(localStorage.getItem('ui_positions')) || {};
             }
 
-            // Bind asset to #game-container to match flashcard.html logic
             if (currentThemeUrl) {
                 container.style.backgroundImage = `url('${currentThemeUrl}')`;
             } else {
@@ -133,7 +132,8 @@
             }
 
             Object.keys(positions).forEach(id => {
-                const el = document.getElementById(id);
+                // AMENDED: Ensure lowercase ID for element matching
+                const el = document.getElementById(id.toLowerCase());
                 if (el) {
                     const p = positions[id];
                     el.style.top = p.t + '%'; el.style.left = p.l + '%';
