@@ -9,66 +9,87 @@
             --mc-font: 'Arial Black', Gadget, sans-serif;
             --accent-blue: #4a90e2;
             --mc-green: #76FF03;
-            --card-bg: #ffffff;
-            --body-bg: #f0f4f8;
+            /* Glass theme colors */
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-color: #ffffff;
         }
 
         body {
             margin: 0; padding: 20px;
-            /* AMENDED: Background image applied */
-            background-image: linear-gradient(rgba(240, 244, 248, 0.4), rgba(240, 244, 248, 0.4)), url('assets/settingsback.jpeg');
+            /* AMENDED: Clean background with no overlay */
+            background-image: url('assets/settingsback.jpeg');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #333;
+            color: var(--text-color);
             display: flex; flex-direction: column; align-items: center;
             min-height: 100vh;
         }
-
-        /* AMENDED: Headings removed */
 
         .settings-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 20px; width: 100%; max-width: 1100px;
-            /* AMENDED: Margin top added to account for missing header space */
             margin-top: 40px;
         }
 
         .card {
-            background: var(--card-bg); border-radius: 15px; padding: 25px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; flex-direction: column;
+            /* AMENDED: Transparent glass style */
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px; 
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3); 
+            display: flex; flex-direction: column;
         }
 
         .card-header {
             display: flex; align-items: center; gap: 10px;
-            color: #7f8c8d; font-weight: bold; text-transform: uppercase;
-            font-size: 0.8rem; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;
+            color: var(--mc-green); 
+            font-weight: bold; text-transform: uppercase;
+            font-size: 0.8rem; margin-bottom: 20px; 
+            border-bottom: 1px solid var(--glass-border); 
+            padding-bottom: 10px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
         }
 
-        label { display: block; font-weight: bold; margin: 15px 0 5px; font-size: 0.85rem; color: #444; }
+        label { 
+            display: block; font-weight: bold; margin: 15px 0 5px; 
+            font-size: 0.85rem; color: #fff; 
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
 
         input[type="text"], input[type="password"], input[type="date"], select {
-            width: 100%; padding: 12px; border: 1px solid #e0e0e0;
-            border-radius: 8px; box-sizing: border-box; background: #fafafa;
+            width: 100%; padding: 12px; border: 1px solid var(--glass-border);
+            border-radius: 8px; box-sizing: border-box; 
+            background: rgba(255, 255, 255, 0.1); 
+            color: white;
         }
+        
+        option { background: #2c3e50; color: white; }
 
         .slider-row { display: flex; justify-content: space-between; align-items: center; }
-        input[type="range"] { flex-grow: 1; margin: 0 15px; }
-        .val-display { font-weight: bold; color: var(--accent-blue); width: 30px; }
+        input[type="range"] { flex-grow: 1; margin: 0 15px; cursor: pointer; }
+        .val-display { font-weight: bold; color: var(--mc-green); width: 30px; }
 
         .level-selector { display: flex; gap: 8px; margin-top: 5px; }
         .lvl-btn {
-            flex: 1; padding: 10px 5px; border-radius: 8px; border: 1px solid #e0e0e0;
-            background: #fff; cursor: pointer; font-weight: bold; font-size: 0.65rem;
-            transition: all 0.2s;
+            flex: 1; padding: 10px 5px; border-radius: 8px; 
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.1); 
+            cursor: pointer; font-weight: bold; font-size: 0.65rem;
+            color: white; transition: all 0.2s;
         }
         .lvl-btn.active { background: var(--accent-blue); border-color: var(--accent-blue); color: #fff; }
 
         .admin-btn {
-            background: #f8f9fa; border: 1px solid #ddd; padding: 15px;
-            border-radius: 8px; cursor: pointer; font-weight: bold; color: #555;
+            background: rgba(255, 255, 255, 0.1); 
+            border: 1px solid var(--glass-border); padding: 15px;
+            border-radius: 8px; cursor: pointer; font-weight: bold; color: white;
             margin-top: 10px; text-transform: uppercase; font-size: 0.8rem;
             width: 100%; text-align: center; text-decoration: none; display: block;
             box-sizing: border-box;
@@ -87,9 +108,10 @@
         .main-btn {
             flex: 1; padding: 20px; border-radius: 12px; border: none;
             font-family: var(--mc-font); font-size: 1rem; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
         #save-btn { background: var(--accent-blue); color: white; }
-        #cancel-btn { background: #cbd5e0; color: #4a5568; }
+        #cancel-btn { background: rgba(255, 255, 255, 0.2); color: white; border: 1px solid var(--glass-border); }
     </style>
 </head>
 <body>
@@ -100,7 +122,7 @@
             <div class="card-header">👤 Student Profile</div>
             <label>Date of Birth</label>
             <input type="date" id="billy-dob">
-            <p style="font-size: 0.75rem; color: #888; margin-top: 15px;">Determines the target curriculum year group.</p>
+            <p style="font-size: 0.75rem; color: #ddd; margin-top: 15px;">Determines the target curriculum year group.</p>
         </div>
 
         <div class="card">
@@ -146,7 +168,6 @@
             </div>
         </div>
 
-        
         <div class="card">
             <div class="card-header">⚙️ System Core</div>
             <label>OpenAI API Key</label>
@@ -156,7 +177,7 @@
             <input type="password" id="gemini-key">
             
             <div style="display: flex; gap: 10px; align-items: center; justify-content: flex-end; margin-top: 10px;">
-                <button class="admin-btn" style="color: #d9534f; padding: 8px; flex: 1; margin-top:0;" onclick="location.href='testing.html'">🛠️ API TESTER</button>
+                <button class="admin-btn" style="color: #ff6b6b; padding: 8px; flex: 1; margin-top:0;" onclick="location.href='testing.html'">🛠️ API TESTER</button>
                 <button class="inner-save-btn" onclick="savekeyonly()" style="flex: 0.5; margin-top:0;">Save Keys</button>
             </div>
         </div>
@@ -168,7 +189,7 @@
 
         <div class="card">
             <div class="card-header">📚 Magic Books</div>
-            <button class="admin-btn" style="color: #6d4c41;" onclick="location.href='bookmanager.html'">📖 LIBRARY MANAGER</button>
+            <button class="admin-btn" style="color: #ffd166;" onclick="location.href='bookmanager.html'">📖 LIBRARY MANAGER</button>
         </div>
 
     </div>
@@ -185,23 +206,18 @@
         function loadvoices() {
             const voices = window.speechSynthesis.getVoices();
             if (voices.length === 0) return;
-
             const selectes = document.getElementById('voice-select-es');
             const selecten = document.getElementById('voice-select-en');
-
             const esvoices = voices.filter(v => v.lang.includes('es'));
             const envoices = voices.filter(v => v.lang.includes('en'));
-
             selectes.innerHTML = esvoices.map(v => `<option value="${v.name}">${v.name}</option>`).join('');
             selecten.innerHTML = envoices.map(v => `<option value="${v.name}">${v.name}</option>`).join('');
-            
             if (localStorage.getItem('billy_voice')) selectes.value = localStorage.getItem('billy_voice');
             if (localStorage.getItem('billy_voice_en')) selecten.value = localStorage.getItem('billy_voice_en');
         }
 
         const voiceinterval = setInterval(() => {
-            const voices = window.speechSynthesis.getVoices();
-            if (voices.length > 0) {
+            if (window.speechSynthesis.getVoices().length > 0) {
                 loadvoices();
                 clearInterval(voiceinterval);
             }
@@ -215,7 +231,6 @@
             document.getElementById('billy-dob').value = localStorage.getItem('billy_dob') || '';
             document.getElementById('rate').value = localStorage.getItem('billy_rate') || 1.0;
             document.getElementById('pitch').value = localStorage.getItem('billy_pitch') || 1.0;
-            
             setlevel(localStorage.getItem('billy_level') || '2');
             setstrictness(localStorage.getItem('billy_strictness') || '2');
             updatevals();
@@ -243,17 +258,11 @@
         function testspeech(lang) {
             window.speechSynthesis.cancel();
             const isEn = lang === 'en';
-            const voiceName = isEn 
-                ? document.getElementById('voice-select-en').value 
-                : document.getElementById('voice-select-es').value;
-            
-            const testText = isEn 
-                ? "Testing the English voice for Billy Reads." 
-                : "Probando la voz ibérica para Billy Reads.";
-
+            const selectId = isEn ? 'voice-select-en' : 'voice-select-es';
+            const voiceName = document.getElementById(selectId).value;
+            const testText = isEn ? "Testing the English voice." : "Probando la voz ibérica.";
             const msg = new SpeechSynthesisUtterance(testText);
-            const voices = window.speechSynthesis.getVoices();
-            msg.voice = voices.find(v => v.name === voiceName);
+            msg.voice = window.speechSynthesis.getVoices().find(v => v.name === voiceName);
             msg.rate = document.getElementById('rate').value;
             msg.pitch = document.getElementById('pitch').value;
             msg.lang = isEn ? "en-US" : "es-ES";
