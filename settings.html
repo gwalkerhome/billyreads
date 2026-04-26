@@ -9,7 +9,6 @@
             --mc-font: 'Arial Black', Gadget, sans-serif;
             --accent-blue: #4a90e2;
             --mc-green: #76FF03;
-            /* Glass theme colors */
             --glass-bg: rgba(255, 255, 255, 0.15);
             --glass-border: rgba(255, 255, 255, 0.2);
             --text-color: #ffffff;
@@ -17,7 +16,6 @@
 
         body {
             margin: 0; padding: 20px;
-            /* AMENDED: Clean background with no overlay */
             background-image: url('assets/settingsback.jpeg');
             background-size: cover;
             background-position: center;
@@ -36,7 +34,6 @@
         }
 
         .card {
-            /* AMENDED: Transparent glass style */
             background: var(--glass-bg);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
@@ -63,7 +60,7 @@
             text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
         }
 
-        input[type="text"], input[type="password"], input[type="date"], select {
+        input[type="date"], select {
             width: 100%; padding: 12px; border: 1px solid var(--glass-border);
             border-radius: 8px; box-sizing: border-box; 
             background: rgba(255, 255, 255, 0.1); 
@@ -95,12 +92,6 @@
             box-sizing: border-box;
         }
 
-        .inner-save-btn {
-            background: var(--mc-green); color: #000; border: none; padding: 8px;
-            border-radius: 5px; font-weight: bold; margin-top: 10px; cursor: pointer;
-            font-size: 0.7rem; text-transform: uppercase; align-self: flex-end;
-        }
-
         .footer-actions {
             margin-top: 40px; display: flex; gap: 20px; width: 100%; max-width: 600px;
             padding-bottom: 40px;
@@ -119,15 +110,19 @@
     <div class="settings-grid">
         
         <div class="card">
-            <div class="card-header">👤 Student Profile</div>
-            <label>Date of Birth</label>
-            <input type="date" id="billy-dob">
-            <p style="font-size: 0.75rem; color: #ddd; margin-top: 15px;">Determines the target curriculum year group.</p>
+            <div class="card-header">⚙️ GENERAL</div>
+            <button class="admin-btn" style="color: #ffd166;" onclick="location.href='bookmanager.html'">📖 LIBRARY MANAGER</button>
+            <button class="admin-btn" onclick="location.href='themes.html'">🎨 MANAGE THEMES</button>
+            <button class="admin-btn" style="color: #ff6b6b;" onclick="location.href='testing.html'">🛠️ API TESTER & KEYS</button>
         </div>
 
         <div class="card">
-            <div class="card-header">📊 Difficulty Settings</div>
-            <label>Reading Tier (Content)</label>
+            <div class="card-header">📊 DIFFICULTY SETTINGS</div>
+            
+            <label>User Date of Birth</label>
+            <input type="date" id="billy-dob">
+            
+            <label style="margin-top:20px;">Reading Tier (Content)</label>
             <div class="level-selector" style="margin-bottom: 20px;">
                 <button class="lvl-btn" id="lvl-1" onclick="setlevel('1')">T1: FONÉTICO</button>
                 <button class="lvl-btn" id="lvl-2" onclick="setlevel('2')">T2: FLUIDEZ</button>
@@ -145,7 +140,7 @@
         </div>
 
         <div class="card">
-            <div class="card-header">🔊 Voice Calibration</div>
+            <div class="card-header">🔊 VOICE CALIBRATION</div>
             
             <label>Iberian Voice (ES/VA)</label>
             <select id="voice-select-es"><option>Loading voices...</option></select>
@@ -166,30 +161,6 @@
                 <input type="range" id="pitch" min="0.5" max="2.0" step="0.1" oninput="updatevals()">
                 <span class="val-display" id="pitch-val">1.0</span>
             </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">⚙️ System Core</div>
-            <label>OpenAI API Key</label>
-            <input type="password" id="openai-key">
-
-            <label>Gemini API Key</label>
-            <input type="password" id="gemini-key">
-            
-            <div style="display: flex; gap: 10px; align-items: center; justify-content: flex-end; margin-top: 10px;">
-                <button class="admin-btn" style="color: #ff6b6b; padding: 8px; flex: 1; margin-top:0;" onclick="location.href='testing.html'">🛠️ API TESTER</button>
-                <button class="inner-save-btn" onclick="savekeyonly()" style="flex: 0.5; margin-top:0;">Save Keys</button>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">🖼️ Background Themes</div>
-            <button class="admin-btn" onclick="location.href='themes.html'">🎨 MANAGE THEMES</button>
-        </div>
-
-        <div class="card">
-            <div class="card-header">📚 Magic Books</div>
-            <button class="admin-btn" style="color: #ffd166;" onclick="location.href='bookmanager.html'">📖 LIBRARY MANAGER</button>
         </div>
 
     </div>
@@ -226,8 +197,6 @@
         window.speechSynthesis.onvoiceschanged = loadvoices;
 
         window.onload = () => {
-            document.getElementById('openai-key').value = localStorage.getItem('openai_key') || '';
-            document.getElementById('gemini-key').value = localStorage.getItem('gemini_key') || '';
             document.getElementById('billy-dob').value = localStorage.getItem('billy_dob') || '';
             document.getElementById('rate').value = localStorage.getItem('billy_rate') || 1.0;
             document.getElementById('pitch').value = localStorage.getItem('billy_pitch') || 1.0;
@@ -269,15 +238,7 @@
             window.speechSynthesis.speak(msg);
         }
 
-        function savekeyonly() {
-            localStorage.setItem('gemini_key', document.getElementById('gemini-key').value.trim());
-            localStorage.setItem('openai_key', document.getElementById('openai-key').value.trim());
-            alert("API Keys Locked.");
-        }
-
         function saveall() {
-            localStorage.setItem('openai_key', document.getElementById('openai-key').value.trim());
-            localStorage.setItem('gemini_key', document.getElementById('gemini-key').value.trim());
             localStorage.setItem('billy_dob', document.getElementById('billy-dob').value);
             localStorage.setItem('billy_rate', document.getElementById('rate').value);
             localStorage.setItem('billy_pitch', document.getElementById('pitch').value);
