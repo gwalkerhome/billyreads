@@ -27,8 +27,8 @@
         /* MAGIC FLOAT ANIMATION */
         @keyframes magicFloat {
             0% { transform: translateY(0px) rotate(0deg); }
-            33% { transform: translateY(-10px) rotate(1deg); }
-            66% { transform: translateY(5px) rotate(-1deg); }
+            33% { transform: translateY(-12px) rotate(1.5deg); }
+            66% { transform: translateY(6px) rotate(-1.5deg); }
             100% { transform: translateY(0px) rotate(0deg); }
         }
 
@@ -36,37 +36,38 @@
             position: absolute;
             cursor: pointer;
             transition: filter 0.3s ease, scale 0.3s ease;
-            animation: magicFloat 6s ease-in-out infinite;
+            animation: magicFloat 7s ease-in-out infinite;
+            /* width is auto to maintain proportions based on height */
+            width: auto; 
         }
 
-        /* Offset the animation start for the second book so they don't move in perfect sync */
         .delay-float {
-            animation-delay: -3s;
+            animation-delay: -3.5s;
         }
 
         .img-nav:hover {
-            filter: brightness(1.2) drop-shadow(0 0 15px rgba(255,255,255,0.5));
-            scale: 1.05;
+            filter: brightness(1.2) drop-shadow(0 0 20px rgba(255,255,255,0.4));
+            scale: 1.03;
         }
 
-        /* BUTTON POSITIONS & SIZES */
+        /* BUTTON HEIGHTS & POSITIONS */
         #btn-read {
-            width: 35%; /* Increased size */
+            height: 45%; /* Set height, width scales automatically */
             top: 25%;
-            left: 10%;
+            left: 8%;
         }
 
         #btn-magic {
-            width: 35%; /* Increased size */
+            height: 45%; /* Same height as the other button for visual balance */
             top: 25%;
-            right: 10%;
+            right: 8%;
         }
 
         #btn-settings {
-            width: 18%; /* Size 200 equivalent in 16:9 scale */
+            height: 22%; /* Adjusting height for the 200px look */
             bottom: 5%;
-            right: 5%;
-            animation-duration: 8s; /* Slower float for settings */
+            right: 4%;
+            animation-duration: 9s; 
         }
     </style>
 </head>
