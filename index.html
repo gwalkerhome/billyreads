@@ -12,33 +12,83 @@
             background-position: center;
             background-repeat: no-repeat;
             background-attachment: fixed;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
-        /* Ensure the main container doesn't have a solid background covering the new image */
+
         .container {
             background: transparent !important;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Container for the main two assets */
+        .grid-choice {
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 50px;
+        }
+
+        /* Image Button Styling */
+        .img-nav {
+            cursor: pointer;
+            transition: transform 0.2s ease, filter 0.2s ease;
+            max-width: 280px; /* Adjust based on your actual image sizes */
+            height: auto;
+        }
+
+        .img-nav:hover {
+            transform: scale(1.05);
+            filter: brightness(1.1);
+        }
+
+        .img-nav:active {
+            transform: scale(0.98);
+        }
+
+        /* Settings specific sizing (usually smaller than main buttons) */
+        .img-settings {
+            max-width: 80px;
+            margin-top: 20px;
+        }
+
+        footer {
+            width: 100%;
+            display: flex;
+            justify-content: center;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            </header>
         
         <main class="grid-choice">
-            <button class="btn-stage-1" onclick="window.location.href='flashcard.html'">
-                <span class="icon">🚀</span>
-                <span class="label">Práctica Rápida</span>
-            </button>
+            <img src="assets/readprac.png" 
+                 alt="Práctica Rápida" 
+                 class="img-nav" 
+                 onclick="window.location.href='flashcard.html'">
             
-            <button class="btn-stage-1" onclick="window.location.href='magicbook.html'">
-                <span class="icon">📖</span>
-                <span class="label">Mi Libro Mágico</span>
-            </button>
+            <img src="assets/magicbook.png" 
+                 alt="Mi Libro Mágico" 
+                 class="img-nav" 
+                 onclick="window.location.href='magicbook.html'">
         </main>
 
         <footer>
-            <button class="btn-settings" onclick="window.location.href='settings.html'">⚙️ Configuración</button>
+            <img src="assets/settings.png" 
+                 alt="Configuración" 
+                 class="img-nav img-settings" 
+                 onclick="window.location.href='settings.html'">
         </footer>
+
     </div>
 </body>
 </html>
