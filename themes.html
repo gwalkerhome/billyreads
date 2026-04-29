@@ -11,13 +11,17 @@
             --flash-green: #76FF03;
         }
         body { 
-            font-family: sans-serif; background: #1a1a1a; color: white;
+            font-family: sans-serif; 
+            /* Added background asset only */
+            background: url('assets/newthemeback.png') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
             padding: 20px; text-align: center; margin: 0;
         }
         h1 { font-family: var(--mc-font); font-size: 1.5rem; color: var(--accent); }
 
         .nav-hub {
-            display: flex; justify: center; flex-wrap: wrap; gap: 10px; margin-bottom: 30px;
+            display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-bottom: 30px;
         }
         .nav-hub button {
             padding: 10px 15px; border-radius: 8px; border: none;
@@ -108,7 +112,6 @@
 
         const BASE_PROMPT = `Role & Context: Act as an Architectural Illustrator specializing in children's educational interface design. 3D style (3:2 aspect ratio). Functional Constraint: Text Windows must be empty. Illustrated features (buttons/toggles) must be physical parts of environment. NO text/labeling. [Layout: Primary 45x27, Subject 41x9, Translation 53x6, Subtitle 57x6]. Theme/mood = `;
 
-        // Standard layout for themes uploaded without specific adjustment data
         const DEFAULT_LAYOUT = {
             'pane-back': {t:5, l:5, w:10, h:10},
             'pane-birch': {t:5, l:30, w:40, h:10},
@@ -161,7 +164,6 @@
                     const id = docSnap.id;
                     const isActive = activeId === id;
                     
-                    // Use saved layout or fallback to default
                     const layoutData = theme.layout || DEFAULT_LAYOUT;
 
                     const card = document.createElement('div');
@@ -178,7 +180,6 @@
                     `;
                     grid.appendChild(card);
 
-                    // Attach listener directly to avoid object-to-string errors
                     document.getElementById(`use-${id}`).onclick = () => selectTheme(id, theme.url, layoutData);
                 });
             } catch (err) {
@@ -217,7 +218,6 @@
             }
         };
 
-        // Initial Load
         loadThemes();
     </script>
 </body>
