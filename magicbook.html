@@ -30,7 +30,19 @@
             z-index: 100;
         }
         #btn-back { top: 2%; left: 2%; width: 10%; height: 10%; }
-        #btn-new { bottom: 5%; right: 5%; width: 15%; height: 10%; border: 2px solid var(--accent-gold); border-radius: 50px; display: flex; align-items: center; justify-content: center; color: var(--accent-gold); font-size: 0.8rem; text-decoration: none; }
+        
+        #btn-new { 
+            bottom: 5%; right: 5%; 
+            padding: 15px 30px;
+            border: 2px solid var(--accent-gold); 
+            border-radius: 50px; 
+            display: flex; align-items: center; justify-content: center; 
+            color: var(--accent-gold); font-size: 0.8rem; 
+            text-decoration: none;
+            background: rgba(0,0,0,0.5);
+            transition: 0.3s;
+        }
+        #btn-new:active { transform: scale(0.9); }
 
         .book-track {
             position: absolute;
@@ -38,8 +50,8 @@
             display: flex;
             align-items: center;
             height: 100%;
-            padding: 0 15vw;
-            gap: 100px;
+            padding: 0 20vw;
+            gap: 120px;
             overflow-x: auto;
             scroll-snap-type: x mandatory;
             -webkit-overflow-scrolling: touch;
@@ -48,7 +60,7 @@
 
         .book-container {
             position: relative;
-            min-width: 350px; height: 500px;
+            min-width: 300px; height: 450px;
             scroll-snap-align: center;
             transform-style: preserve-3d;
             display: flex; align-items: center; justify-content: center;
@@ -56,7 +68,8 @@
 
         .book-assembly {
             position: relative;
-            width: 300px; height: 450px;
+            /* Scaled assembly to match your cover size better */
+            width: 260px; height: 390px;
             transform-style: preserve-3d;
             animation: float 5s ease-in-out infinite;
             animation-delay: var(--float-delay);
@@ -64,41 +77,43 @@
         }
 
         @keyframes float {
-            0%, 100% { transform: rotateY(-10deg) translateY(0); }
-            50% { transform: rotateY(10deg) translateY(-25px); }
+            0%, 100% { transform: rotateY(-12deg) translateY(0); }
+            50% { transform: rotateY(8deg) translateY(-20px); }
         }
 
-        /* The Template sits as the BASE layer */
+        /* The Template - now fits snug to the cover dimensions */
         .book-template {
             position: absolute;
-            inset: 0;
+            inset: -10%; /* Grows slightly larger than the container to provide the border */
             background: url('assets/flbk.png') no-repeat center center;
             background-size: contain;
-            z-index: 1; /* Lowest in the assembly */
+            z-index: 1;
+            filter: drop-shadow(0 15px 25px rgba(0,0,0,0.7));
+            pointer-events: none;
         }
 
-        /* The Art sits ON TOP of the template */
+        /* The Art - Centered and scaled to the inner gold frame */
         .book-cover-art {
             position: absolute;
-            /* Adjust these values to line up with the gold frame in flbk.png */
-            top: 15.5%; 
-            left: 24.5%;
-            width: 61%; 
-            height: 68.5%;
+            /* Coordinates tuned for flbk.png inner window */
+            top: 15%; 
+            left: 21%;
+            width: 63%; 
+            height: 69%;
             background-size: cover;
             background-position: center;
-            z-index: 10; /* Highest in the assembly */
+            z-index: 10;
             border-radius: 2px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.4);
+            /* mix-blend-mode: multiply; /* Optional: merges art with template texture */
         }
 
         .book-shadow {
             position: absolute;
-            bottom: -50px; left: 50%;
-            width: 180px; height: 25px;
+            bottom: -40px; left: 50%;
+            width: 160px; height: 20px;
             background: rgba(0,0,0,0.6);
             border-radius: 50%;
-            filter: blur(12px);
+            filter: blur(10px);
             transform: translateX(-50%);
             z-index: 0;
         }
@@ -134,7 +149,7 @@
                 track.innerHTML = "";
 
                 if (snap.empty) {
-                    track.innerHTML = "<div style='color:white; width: 70vw; text-align:center;'>La biblioteca está vacía.</div>";
+                    track.innerHTML = "<div style='color:white; width: 60vw; text-align:center;'>La biblioteca está vacía.</div>";
                     loader.style.display = 'none';
                     return;
                 }
@@ -142,9 +157,7 @@
                 snap.forEach((docSnap, index) => {
                     const book = docSnap.data();
                     const bookid = docSnap.id;
-                    const coverUrl = book.coverURL || book.imageurl; // Handling both potential var names
-
-                    console.log("Loading book:", book.title, coverUrl);
+                    const coverUrl = book.coverURL || book.imageurl;
 
                     const container = document.createElement('div');
                     container.className = 'book-container';
