@@ -12,25 +12,58 @@
 
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
-            overflow: hidden; background: #00ff00; /* Green Screen */
+            overflow: hidden; background: #000;
             font-family: var(--mc-font);
         }
 
         .library-stage {
             position: relative;
             width: 100vw; height: 100vh;
-            background: #00ff00; 
+            /* 16:9 Background Image */
+            background: url('assets/magicback.png') no-repeat center center;
+            background-size: cover; 
             perspective: 2000px;
             overflow: hidden;
         }
 
-        .hitbox {
+        /* Asset-based Buttons */
+        .ui-btn {
             position: absolute;
             cursor: pointer;
             z-index: 100;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            transition: transform 0.1s;
         }
-        #btn-back { top: 2%; left: 2%; width: 10%; height: 10%; background: rgba(0,0,0,0.2); border-radius: 50%; }
-        #btn-new { bottom: 5%; right: 5%; width: 15%; height: 10%; border: 2px solid #000; border-radius: 50px; display: flex; align-items: center; justify-content: center; color: #000; font-size: 0.8rem; text-decoration: none; background: var(--accent-gold); }
+        .ui-btn:active { transform: scale(0.9); }
+
+        #btn-back { 
+            top: 2%; left: 2%; 
+            width: 80px; height: 80px; 
+            background-image: url('assets/back1.png');
+        }
+
+        #btn-settings { 
+            bottom: 2%; right: 2%; 
+            width: 80px; height: 80px; 
+            background-image: url('assets/settings.png');
+        }
+
+        /* The hidden button to add new books - keeping logic but removing CSS styling */
+        #btn-new-logic {
+            position: absolute;
+            bottom: 2%;
+            right: 12%;
+            padding: 10px 20px;
+            background: rgba(0,0,0,0.5);
+            color: var(--accent-gold);
+            text-decoration: none;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            z-index: 101;
+            border: 1px solid var(--accent-gold);
+        }
 
         .book-track {
             position: absolute;
@@ -38,8 +71,8 @@
             display: flex;
             align-items: center;
             height: 100%;
-            padding: 0 10vw; /* Reduced padding */
-            gap: 40px; /* SHORTER SPACING: Reduced from 100px to 40px */
+            padding: 0 10vw;
+            gap: 40px;
             overflow-x: auto;
             scroll-snap-type: x mandatory;
             -webkit-overflow-scrolling: touch;
@@ -48,7 +81,7 @@
 
         .book-container {
             position: relative;
-            min-width: 250px; /* SHORTER SPACING: Reduced from 350px to 250px */
+            min-width: 250px;
             height: 500px;
             scroll-snap-align: center;
             transform-style: preserve-3d;
@@ -69,7 +102,6 @@
             50% { transform: rotateY(10deg) translateY(-25px); }
         }
 
-        /* The Template sits as the BASE layer */
         .book-template {
             position: absolute;
             inset: 0;
@@ -78,7 +110,6 @@
             z-index: 1;
         }
 
-        /* The Art - Integrated with Texture */
         .book-cover-art {
             position: absolute;
             top: 5%; 
@@ -91,16 +122,14 @@
             border-radius: 2px;
             box-shadow: 0 0 15px rgba(0,0,0,0.4);
             background-color: #333;
-            
-            /* INTEGRATION SETTINGS */
-            opacity: 0.9; /* Helps the blend feel more natural */
+            opacity: 0.9;
         }
 
         .book-shadow {
             position: absolute;
             bottom: -30px; left: 50%;
             width: 150px; height: 20px;
-            background: rgba(0,0,0,0.2);
+            background: rgba(0,0,0,0.4);
             border-radius: 50%;
             filter: blur(12px);
             transform: translateX(-50%);
@@ -118,8 +147,10 @@
     <div id="loading-overlay">leyendo pergaminos...</div>
 
     <div class="library-stage">
-        <a href="index.html" id="btn-back" class="hitbox"></a>
-        <a href="newbook.html" id="btn-new" class="hitbox">+ añadir libro</a>
+        <a href="index.html" id="btn-back" class="ui-btn"></a>
+        <a href="settings.html" id="btn-settings" class="ui-btn"></a>
+        
+        <a href="newbook.html" id="btn-new-logic">+ añadir</a>
 
         <div class="book-track" id="book-track"></div>
     </div>
@@ -138,12 +169,12 @@
                 track.innerHTML = "";
 
                 if (snap.empty) {
-                    track.innerHTML = "<div style='color:black; width: 70vw; text-align:center;'>La biblioteca está vacía.</div>";
+                    track.innerHTML = "<div style='color:white; width: 70vw; text-align:center;'>La biblioteca está vacía.</div>";
                     loader.style.display = 'none';
                     return;
                 }
 
-                snap.forEach((docSnap, index) => {
+                snap.forEach((docSnap) => {
                     const book = docSnap.data();
                     const bookid = docSnap.id;
                     const coverUrl = book.coverURL || book.imageurl;
