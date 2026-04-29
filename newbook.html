@@ -9,17 +9,38 @@
             --mc-font: 'Arial Black', Gadget, sans-serif;
             --accent-blue: #4a90e2;
         }
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .container { width: 100%; max-width: 500px; background: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: url('assets/addbook.jpg') no-repeat center center fixed;
+            background-size: cover;
+            margin: 0; 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            min-height: 100vh;
+        }
+        .container { 
+            width: 100%; 
+            max-width: 500px; 
+            background: rgba(255, 255, 255, 0.9); /* Semi-transparent white */
+            backdrop-filter: blur(5px); /* Softens background behind form */
+            border-radius: 20px; 
+            padding: 30px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); 
+            box-sizing: border-box; 
+            margin-top: 20px;
+        }
         h1 { font-family: var(--mc-font); color: #2c3e50; text-align: center; margin-top: 0; }
         .input-group { margin-bottom: 20px; }
         label { display: block; font-weight: bold; margin-bottom: 8px; color: #34495e; font-size: 0.9rem; }
-        input[type="text"], input[type="file"] { width: 100%; padding: 12px; border: 2px solid #edf2f7; border-radius: 12px; box-sizing: border-box; font-size: 1rem; }
-        .btn-save { width: 100%; padding: 18px; background: var(--accent-blue); color: white; border: none; border-radius: 15px; font-family: var(--mc-font); font-size: 1.1rem; cursor: pointer; }
+        input[type="text"], input[type="file"] { width: 100%; padding: 12px; border: 2px solid #edf2f7; border-radius: 12px; box-sizing: border-box; font-size: 1rem; background: white; }
+        .btn-save { width: 100%; padding: 18px; background: var(--accent-blue); color: white; border: none; border-radius: 15px; font-family: var(--mc-font); font-size: 1.1rem; cursor: pointer; transition: background 0.2s; }
+        .btn-save:active { background: #357abd; }
         .btn-save:disabled { background: #cbd5e0; }
-        #status { margin-top: 15px; text-align: center; font-size: 0.85rem; color: #7f8c8d; min-height: 1.5em; }
+        #status { margin-top: 15px; text-align: center; font-size: 0.85rem; color: #2c3e50; font-weight: bold; min-height: 1.5em; }
         .nav-footer { margin-top: 20px; width: 100%; max-width: 500px; }
-        #btn-back { width: 100%; padding: 12px; border: none; border-radius: 12px; background: #eee; color: #666; font-family: var(--mc-font); cursor: pointer; }
+        #btn-back { width: 100%; padding: 12px; border: none; border-radius: 12px; background: rgba(0, 0, 0, 0.6); color: white; font-family: var(--mc-font); cursor: pointer; }
     </style>
 </head>
 <body>
@@ -62,7 +83,7 @@
             }
 
             saveBtn.disabled = true;
-            status.style.color = "#7f8c8d";
+            status.style.color = "#2c3e50";
             status.innerText = "⏳ Preparando archivos...";
 
             try {
