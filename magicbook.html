@@ -38,8 +38,8 @@
             display: flex;
             align-items: center;
             height: 100%;
-            padding: 0 15vw;
-            gap: 100px;
+            padding: 0 10vw; /* Reduced padding */
+            gap: 40px; /* SHORTER SPACING: Reduced from 100px to 40px */
             overflow-x: auto;
             scroll-snap-type: x mandatory;
             -webkit-overflow-scrolling: touch;
@@ -48,7 +48,8 @@
 
         .book-container {
             position: relative;
-            min-width: 350px; height: 500px;
+            min-width: 250px; /* SHORTER SPACING: Reduced from 350px to 250px */
+            height: 500px;
             scroll-snap-align: center;
             transform-style: preserve-3d;
             display: flex; align-items: center; justify-content: center;
@@ -68,7 +69,7 @@
             50% { transform: rotateY(10deg) translateY(-25px); }
         }
 
-        /* The Template - assets/flbktmp.png */
+        /* The Template sits as the BASE layer */
         .book-template {
             position: absolute;
             inset: 0;
@@ -77,7 +78,7 @@
             z-index: 1;
         }
 
-        /* The Art - Recalibrated for flbktmp.png */
+        /* The Art - Integrated with Texture */
         .book-cover-art {
             position: absolute;
             top: 5%; 
@@ -89,13 +90,17 @@
             z-index: 10;
             border-radius: 2px;
             box-shadow: 0 0 15px rgba(0,0,0,0.4);
-            background-color: #333; /* Visual check: if you see dark grey, image is missing */
+            background-color: #333;
+            
+            /* INTEGRATION SETTINGS */
+            mix-blend-mode: multiply; /* Blends art with template leather/paper texture */
+            opacity: 0.92; /* Helps the blend feel more natural */
         }
 
         .book-shadow {
             position: absolute;
-            bottom: -50px; left: 50%;
-            width: 180px; height: 25px;
+            bottom: -30px; left: 50%;
+            width: 150px; height: 20px;
             background: rgba(0,0,0,0.2);
             border-radius: 50%;
             filter: blur(12px);
