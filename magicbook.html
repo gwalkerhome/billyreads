@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>billy reads | mi biblioteca 3d</title>
+    <style>
+        :root {
+            --mc-font: 'Arial Black', Gadget, sans-serif;
+            --accent-gold: #ffd700;
+        }
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background: #0a0a0a;
+            font-family: var(--mc-font);
+        }
+
+        /* The Stage */
+        .library-stage {
+            position: relative;
+            width: 100vw; height: 100vh;
+            background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
+            perspective: 1500px;
+            overflow: hidden;
+        }
+
+        /* Navigation Hitboxes */
+        .hitbox {
+            position: absolute;
+            cursor: pointer;
+            z-index: 100;
+            /* background: rgba(255,0,0,0.2); /* Uncomment to debug hitboxes */
+        }
+        #btn-back { top: 2%; left: 2%; width: 10%; height: 10%; }
+        #btn-new { bottom: 5%; right: 5%; width: 15%; height: 10%; border: 2px solid var(--accent-gold); border-radius: 50px; display: flex; align-items: center; justify-content: center; color: var(--accent-gold); font-size: 0.8rem; }
+
+        /* Floating Horizontal Track */
+        .book-track {
+            position: absolute;
+            top: 0; left: 0;
+            display: flex;
+            align-items: center;
+            height: 100%;
+            padding: 0 10vw;
+            gap: 80px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+        }
+        .book-track::-webkit-scrollbar { display: none; }
+
+        /* The 3D Book Assembly */
+        .book-container {
+            position: relative;
+            min-width: 320px; height: 480px;
+            scroll-snap-align: center;
+            transform-style: preserve-3d;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .book-assembly {
+            position: relative;
+            width: 300px; height: 450px;
+            transform-style: preserve-3d;
+            animation: float 4s ease-in-out infinite;
+            animation-delay: var(--float-delay);
+            cursor: pointer;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotateY(-5deg) rotateX(2deg); }
+            50% { transform: translateY(-30px) rotateY(10deg) rotateX(-2deg); }
+        }
+
+        /* The Template PNG Layer */
+        .book-template {
+            position: absolute;
+            inset: 0;
+            background: url('assets/flbk.png') no-repeat center center;
+            background-size: cover;
+            z-index: 5;
+            filter: drop-shadow(0 20px 30px rgba(0,0,0,0.8));
+            pointer-events: none;
+        }
+
+        /* The Dynamic Cover (Inside the frame) */
+        .book-cover-art {
+            position: absolute;
+            /* Adjust these percentages to fit exactly in your flbk.png frame */
+            top: 15%; left: 24%;
+            width: 61%; height: 68%;
+            background-size: cover;
+            background-position: center;
+            z-index: 2;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        /* Book Shadow on "Floor" */
+        .book-shadow {
+            position: absolute;
+            bottom: -60px; left: 50%;
+            width: 200px; height: 30px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 50%;
+            filter: blur(15px);
+            transform: translateX(-50%) scale(var(--shadow-scale, 1));
+            transition: 0.3s;
+            z-index: 1;
+        }
+
+        #loading-overlay {
+            position: fixed; inset: 0; background: black; z-index: 1000;
+            display: flex; align-items: center; justify-content: center; color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loading-overlay">abriendo biblioteca...</div>
+
+    <div class="library-stage">
+        <div id="btn-back" class="hitbox" onclick="location.href='index.html'"></div>
+        <div id="btn-new" class="hitbox" onclick="location.href='newbook.html'">+ añadir libro</div>
+
+        <div class="book-track" id="book-track">
+            </div>
+    </div>
+
+    <script type="module">
+        import { db, collection, getDocs, query, orderBy } from "./firebase-bridge.js";
+
+        async function init3dLibrary() {
+            const track = document.getElementById('book-track');
+            const loader = document.getElementById('loading-overlay');
+
+            try {
+                const q = query(collection(db, "books"), orderBy("createdAt", "desc"));
+                const snap = await getDocs(q);
+                
+                track.innerHTML = "";
+
+                if (snap.empty) {
+                    track.innerHTML = "<div style='color:white; width: 100vw; text-align:center;'>La biblioteca está vacía.</div>";
+                    loader.style.display = 'none';
+                    return;
+                }
+
+                snap.forEach((docSnap, index) => {
+                    const book = docSnap.data();
+                    const bookid = docSnap.id;
+
+                    const container = document.createElement('div');
+                    container.className = 'book-container';
+                    
+                    // Randomized floating feel
+                    const delay = (Math.random() * -5).toFixed(2) + "s";
+                    
+                    container.innerHTML = `
+                        <div class="book-shadow" id="shadow-${index}"></div>
+                        <div class="book-assembly" style="--float-delay: ${delay}" onclick="selectBook('${bookid}', '${book.title}', '${book.backdropURL}')">
+                            <div class="book-cover-art" style="background-image: url('${book.coverURL}')"></div>
+                            <div class="book-template"></div>
+                        </div>
+                    `;
+
+                    track.appendChild(container);
+                });
+
+                loader.style.display = 'none';
+
+            } catch (error) {
+                console.error("Library load error:", error);
+                track.innerHTML = "<div style='color:red;'>Error al conectar con la nube.</div>";
+                loader.style.display = 'none';
+            }
+        }
+
+        window.selectBook = (id, title, backdrop) => {
+            localStorage.setItem('current_book_id', id);
+            localStorage.setItem('current_book_title', title);
+            localStorage.setItem('current_book_backdrop', backdrop);
+            location.href = 'pages.html';
+        };
+
+        window.onload = init3dLibrary;
+    </script>
+</body>
+</html>
