@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>v9 | billy reads editor</title>
+    <title>v11 | billy reads editor</title>
     <style>
         :root {
             --mc-font: 'Arial Black', Gadget, sans-serif;
@@ -38,12 +38,11 @@
         .upload-zone {
             border: 3px dashed #cbd5e0; border-radius: 15px;
             padding: 40px 20px; margin: 20px 0; cursor: pointer;
-            transition: background 0.2s;
         }
 
         #file-input { display: none; }
 
-        #status { font-size: 0.9rem; color: #7f8c8d; margin-top: 15px; min-height: 1.5em; }
+        #status { font-size: 0.9rem; color: #7f8c8d; margin-top: 15px; }
 
         .bottom-strip-container { width: 100%; max-width: 600px; margin-top: 20px; }
         .strip-label { font-family: var(--mc-font); font-size: 0.7rem; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; }
@@ -84,14 +83,13 @@
         <h1 id="book-title-display">cargando...</h1>
         <div class="upload-zone" onclick="document.getElementById('file-input').click()">
             <strong style="color: var(--accent-blue);">+ añadir página</strong>
-            <p style="font-size: 0.8rem; color: #94a3b8;">asegúrate de seleccionar un archivo .jpg o .png, no una carpeta.</p>
         </div>
-        <input type="file" id="file-input" accept="image/*">
+        <input type="file" id="file-input">
         <div id="status">esperando página...</div>
     </div>
 
     <div class="bottom-strip-container">
-        <div class="strip-label">páginas guardadas:</div>
+        <div class="strip-label">páginas:</div>
         <div class="asset-strip" id="asset-strip"></div>
     </div>
 
@@ -100,7 +98,7 @@
     </div>
 
     <script type="module">
-        // UPDATE_VERSION: 9
+        // UPDATE_VERSION: 11
         import { db, storage, collection, doc, setDoc, getDocs, deleteDoc, query, orderBy, ref, uploadBytes, getDownloadURL } from "./firebase-bridge.js";
 
         const bookid = localStorage.getItem('current_book_id');
@@ -127,7 +125,7 @@
                 contents: [{
                     parts: [
                         { text: prompt },
-                        { inline_data: { mime_type: file.type, data: base64Data } }
+                        { inline_data: { mime_type: file.type || "image/jpeg", data: base64Data } }
                     ]
                 }]
             };
@@ -142,25 +140,18 @@
             if (data.candidates && data.candidates[0].content) {
                 return data.candidates[0].content.parts[0].text;
             }
-            throw new Error("La IA no devolvió texto. Revisa que sea una imagen clara.");
+            throw new Error("Empty AI Response");
         }
 
         async function processpagewithai(file) {
-            status.innerText = "🤖 analizando libro infantil...";
-            
-            const prompt = `Here is a picture of the inside of a children's reading book. 
-            Perform OCR and provide translations for:
-            "es": Spanish.
-            "va": Valenciano.
-            "en": English.
-            Return ONLY a JSON object with these three keys.`;
+            status.innerText = "🤖 leyendo...";
+            const prompt = `Children's book OCR. Return JSON: {"es": "Spanish", "va": "Valenciano", "en": "English"}`;
 
             try {
                 let raw = await callgemini(file, prompt);
                 const cleanJson = raw.replace(/```json|```/gi, '').trim();
                 return JSON.parse(cleanJson);
             } catch (e) {
-                console.error("AI Error:", e);
                 throw e;
             }
         }
@@ -181,7 +172,7 @@
         }
 
         window.deletepage = async (pageid) => {
-            if (!confirm("¿borrar página?")) return;
+            if (!confirm("¿borrar?")) return;
             await deleteDoc(doc(db, `books/${bookid}/pages`, pageid));
             refreshstrip();
         };
@@ -190,13 +181,8 @@
             const file = e.target.files[0];
             if (!file) return;
 
-            // Simple check to ensure it's not a folder
-            if (file.size === 0 || !file.type.startsWith('image/')) {
-                status.innerText = "❌ Error: Selecciona un archivo de imagen válido.";
-                return;
-            }
-
-            status.innerText = "📤 procesando...";
+            status.style.color = "blue";
+            status.innerText = "📤 enviando...";
 
             try {
                 const aidata = await processpagewithai(file);
@@ -215,9 +201,11 @@
                     uploadedat: Date.now()
                 });
 
-                status.innerText = "✅ página guardada.";
+                status.style.color = "green";
+                status.innerText = "✅ hecho.";
                 refreshstrip();
             } catch (err) {
+                status.style.color = "red";
                 status.innerText = "❌ error: " + err.message;
             }
         };
