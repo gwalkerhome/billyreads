@@ -16,7 +16,6 @@
             font-family: var(--mc-font);
         }
 
-        /* 16:9 Backdrop - Fills left 50% visually but sits behind everything */
         #main-backdrop {
             position: fixed; top: 0; left: 0;
             width: 100vw; height: 100vh;
@@ -25,24 +24,26 @@
             z-index: 1;
         }
 
-        /* The scrolling window covering the right half */
+        /* Completely transparent window */
         .asset-window {
             position: absolute;
             right: 5%; top: 10%;
-            width: 45%; height: 70%;
+            width: 45%; height: 75%;
             padding: 20px;
             overflow-y: auto;
             z-index: 10;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
+            gap: 25px;
             box-sizing: border-box;
+            background: transparent; /* Transparent as requested */
         }
         .asset-window::-webkit-scrollbar { width: 0px; }
 
-        /* Parchment Thumbnail */
+        /* Small Floating Parchment Thumbnail */
         .page-thumb {
             position: relative;
+            width: 80px; /* Smaller thumbnail size */
             aspect-ratio: 3/4;
             background: url('assets/paper1.png') no-repeat center center;
             background-size: contain;
@@ -51,37 +52,55 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 15% 10%;
+            padding: 10px;
             box-sizing: border-box;
             text-align: center;
+            
+            /* The Magic Effect */
+            animation: magicWiggle 4s ease-in-out infinite;
+        }
+
+        /* Randomizing the wiggle for each child so they don't sync up */
+        .page-thumb:nth-child(even) { animation-duration: 5s; animation-delay: 0.5s; }
+        .page-thumb:nth-child(3n) { animation-duration: 4.5s; animation-delay: 0.2s; }
+
+        @keyframes magicWiggle {
+            0% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-8px) rotate(2deg); }
+            50% { transform: translateY(0) rotate(-1deg); }
+            75% { transform: translateY(-5px) rotate(1deg); }
+            100% { transform: translateY(0) rotate(0deg); }
         }
 
         .page-thumb.selected {
             filter: drop-shadow(var(--gold-glow));
-            transform: scale(1.05) translateY(-5px);
+            transform: scale(1.15) !important;
+            animation-play-state: paused; /* Stop wiggling when selected */
+            z-index: 20;
         }
 
         .page-num-label {
-            font-size: 1.2rem;
+            font-size: 0.9rem;
             color: #4a3728;
-            margin-bottom: 5px;
+            margin-top: 15px;
+            pointer-events: none;
         }
 
-        /* Scribbled text effect */
         .page-text-preview {
             font-family: serif;
-            font-size: 5px; /* Intentionally tiny */
-            line-height: 1.2;
+            font-size: 4px;
+            line-height: 1.1;
             color: #5d4a3a;
             overflow: hidden;
             display: -webkit-box;
-            -webkit-line-clamp: 10;
+            -webkit-line-clamp: 6;
             -webkit-box-orient: vertical;
-            opacity: 0.7;
+            opacity: 0.6;
             font-style: italic;
+            pointer-events: none;
         }
 
-        /* Button Positioning */
+        /* Buttons */
         .ui-btn {
             position: absolute;
             cursor: pointer;
@@ -96,37 +115,37 @@
         .ui-btn:active { transform: scale(0.9); }
 
         #btn-back { 
-            top: 2%; left: 2%; 
-            width: 80px; height: 80px; 
+            top: 5%; left: 3%; 
+            width: 70px; height: 70px; 
             background-image: url('assets/back1.png');
         }
 
         #btn-settings { 
-            bottom: 2%; right: 2%; 
-            width: 80px; height: 80px; 
+            bottom: 3%; right: 3%; 
+            width: 60px; height: 60px; 
             background-image: url('assets/settings.png');
         }
 
         #btn-add {
-            bottom: 5%; right: 15%;
-            width: 150px; height: 60px;
-            background: #4a90e2; color: white;
-            border-radius: 15px; font-family: var(--mc-font);
-            font-size: 0.8rem;
+            bottom: 5%; left: 3%;
+            width: 140px; height: 50px;
+            background: rgba(74, 144, 226, 0.8); 
+            color: white; border-radius: 12px; 
+            font-family: var(--mc-font); font-size: 0.7rem;
         }
 
         #btn-go {
             left: 25%; top: 50%;
             transform: translate(-50%, -50%);
-            padding: 25px 50px;
+            padding: 20px 45px;
             background: #4caf50; color: white;
             border-radius: 20px; font-family: var(--mc-font);
-            font-size: 1.5rem;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            font-size: 1.4rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
         }
 
         #loading-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95);
             display: flex; align-items: center; justify-content: center;
             color: white; z-index: 1000; font-family: var(--mc-font);
         }
@@ -134,11 +153,10 @@
 </head>
 <body>
 
-    <div id="loading-overlay">ABRIENDO LIBRO MÁGICO...</div>
+    <div id="loading-overlay">PREPARANDO PÁGINAS...</div>
     <div id="main-backdrop"></div>
 
     <button id="btn-back" class="ui-btn" onclick="location.href='magicbook.html'"></button>
-
     <button id="btn-go" class="ui-btn" onclick="goToActivity()">¡A LEER!</button>
 
     <div class="asset-window" id="pageList"></div>
@@ -169,7 +187,7 @@
                 document.getElementById('loading-overlay').style.display = 'none';
 
                 if (snap.empty) {
-                    list.innerHTML = "<p style='color:white; grid-column: 1/-1; text-align:center; font-size:0.8rem;'>Este libro está en blanco.</p>";
+                    list.innerHTML = "<p style='color:white; grid-column: 1/-1; text-align:center; opacity:0.7;'>Este libro está en blanco.</p>";
                     return;
                 }
 
@@ -178,7 +196,9 @@
                     const thumb = document.createElement('div');
                     thumb.className = 'page-thumb';
                     
-                    // Create the textual parchment thumbnail content
+                    // Random animation delay for the magic effect
+                    thumb.style.animationDelay = (Math.random() * 2) + "s";
+                    
                     thumb.innerHTML = `
                         <div class="page-num-label">${data.pagenumber}</div>
                         <div class="page-text-preview">${data.text_es || ''}</div>
