@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>5 Billy reads | mi biblioteca 3d</title>
+    <title>billy reads | mi biblioteca 3d</title>
     <style>
         :root {
             --mc-font: 'Arial Black', Gadget, sans-serif;
@@ -16,6 +16,9 @@
             --book-width: 18vw;
             --book-height: 27vw; 
             --book-gap: 6vw;
+            
+            /* If the last book still feels cut off, increase this number */
+            --end-spacer: 50vw; 
             /* --------------------------- */
         }
 
@@ -53,11 +56,11 @@
         .book-track {
             position: absolute;
             top: 0; left: 0;
-            width: 100vw; 
+            width: 100vw; /* Takes full viewport width */
             height: 100%;
             display: flex;
             align-items: center;
-            padding: 0 10vw; 
+            padding: 0 5vw; 
             gap: var(--book-gap);
             overflow-x: auto;
             overflow-y: hidden;
@@ -69,12 +72,20 @@
 
         .book-container {
             position: relative;
-            flex: 0 0 auto; 
+            flex: 0 0 auto; /* Stops books from shrinking to fit the screen */
             width: var(--book-width);
             height: var(--book-height);
             scroll-snap-align: center;
             transform-style: preserve-3d;
             display: flex; align-items: center; justify-content: center;
+        }
+
+        /* This is the magic invisible anchor at the end */
+        .scroll-spacer {
+            flex: 0 0 auto;
+            width: var(--end-spacer);
+            height: 10px;
+            visibility: hidden;
         }
 
         .book-assembly {
@@ -163,6 +174,11 @@
                     `;
                     track.appendChild(container);
                 });
+
+                // Add the spacer to the end of the flex list
+                const spacer = document.createElement('div');
+                spacer.className = 'scroll-spacer';
+                track.appendChild(spacer);
 
                 loader.style.display = 'none';
             } catch (error) {
