@@ -12,18 +12,18 @@
             /* --- LAYOUT CONTROL PANEL --- */
             
             /* 1. ASSET WINDOW POSITION & SIZE */
-            --window-right: 1%;      /* Distance from right edge */
-            --window-top: 10%;       /* Distance from top edge */
-            --window-width: 40%;     /* Total width of the invisible floating area */
-            --window-height: 75%;    /* Total height of the scrollable area */
+            --window-right: 1%;      
+            --window-top: 10%;       
+            --window-width: 50%;     
+            --window-height: 75%;    
 
             /* 2. PAGE THUMBNAIL SIZE */
-            --page-width: 100px;     /* Width of each parchment page */
+            --page-width: 100px;     
             
             /* 3. GRID SPACING (Columns and Rows) */
-            --grid-cols: 4;          /* How many pages per row */
-            --column-gap: 6px;       /* Space between pages horizontally */
-            --row-gap: 6px;         /* Space between pages vertically */
+            --grid-cols: 4;          
+            --column-gap: 8px;       
+            --row-gap: 15px;         /* This should now respond correctly! */
             
             /* --------------------------- */
         }
@@ -42,7 +42,6 @@
             z-index: 1;
         }
 
-        /* The invisible container for the floating pages */
         .asset-window {
             position: absolute;
             right: var(--window-right);
@@ -54,6 +53,11 @@
             z-index: 10;
             display: grid;
             grid-template-columns: repeat(var(--grid-cols), 1fr);
+            
+            /* CRITICAL FIX: align-content: start forces rows to pack together 
+               at the top, making row-gap the boss of the spacing. */
+            align-content: start; 
+            
             column-gap: var(--column-gap);
             row-gap: var(--row-gap);
             box-sizing: border-box;
@@ -61,7 +65,6 @@
         }
         .asset-window::-webkit-scrollbar { width: 0px; }
 
-        /* Each individual floating parchment */
         .page-thumb {
             position: relative;
             width: var(--page-width);
@@ -77,6 +80,7 @@
             box-sizing: border-box;
             text-align: center;
             animation: magicWiggle 4s ease-in-out infinite;
+            justify-self: center; /* Keeps thumb centered in its grid cell */
         }
 
         .page-thumb:nth-child(even) { animation-duration: 5s; animation-delay: 0.5s; }
@@ -118,7 +122,6 @@
             pointer-events: none;
         }
 
-        /* Buttons and Overlays */
         .ui-btn {
             position: absolute; cursor: pointer; z-index: 100; border: none;
             background-color: transparent; background-size: contain;
