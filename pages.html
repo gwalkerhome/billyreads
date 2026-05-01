@@ -8,6 +8,24 @@
         :root {
             --mc-font: 'Arial Black', Gadget, sans-serif;
             --gold-glow: 0 0 20px #ffd700, 0 0 40px rgba(255, 215, 0, 0.5);
+
+            /* --- LAYOUT CONTROL PANEL --- */
+            
+            /* 1. ASSET WINDOW POSITION & SIZE */
+            --window-right: 1%;      /* Distance from right edge */
+            --window-top: 10%;       /* Distance from top edge */
+            --window-width: 50%;     /* Total width of the invisible floating area */
+            --window-height: 75%;    /* Total height of the scrollable area */
+
+            /* 2. PAGE THUMBNAIL SIZE */
+            --page-width: 100px;     /* Width of each parchment page */
+            
+            /* 3. GRID SPACING (Columns and Rows) */
+            --grid-cols: 4;          /* How many pages per row */
+            --column-gap: 8px;       /* Space between pages horizontally */
+            --row-gap: 15px;         /* Space between pages vertically */
+            
+            /* --------------------------- */
         }
 
         body, html {
@@ -24,26 +42,29 @@
             z-index: 1;
         }
 
-        /* Transparent window - Docked to the right */
+        /* The invisible container for the floating pages */
         .asset-window {
             position: absolute;
-            right: 1%; top: 10%;
-            width: 50%; height: 75%;
+            right: var(--window-right);
+            top: var(--window-top);
+            width: var(--window-width);
+            height: var(--window-height);
             padding: 10px;
             overflow-y: auto;
             z-index: 10;
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px; /* Gap reduced by half */
+            grid-template-columns: repeat(var(--grid-cols), 1fr);
+            column-gap: var(--column-gap);
+            row-gap: var(--row-gap);
             box-sizing: border-box;
             background: transparent;
         }
         .asset-window::-webkit-scrollbar { width: 0px; }
 
-        /* Floating parchment */
+        /* Each individual floating parchment */
         .page-thumb {
             position: relative;
-            width: 100px;
+            width: var(--page-width);
             aspect-ratio: 3/4;
             background: url('assets/paper1.png') no-repeat center center;
             background-size: contain;
@@ -97,55 +118,21 @@
             pointer-events: none;
         }
 
-        /* UI Buttons */
+        /* Buttons and Overlays */
         .ui-btn {
-            position: absolute;
-            cursor: pointer;
-            z-index: 100;
-            border: none;
-            background-color: transparent;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
+            position: absolute; cursor: pointer; z-index: 100; border: none;
+            background-color: transparent; background-size: contain;
+            background-repeat: no-repeat; background-position: center;
             transition: transform 0.1s;
         }
         .ui-btn:active { transform: scale(0.9); }
 
-        #btn-back { 
-            top: 5%; left: 3%; 
-            width: 70px; height: 70px; 
-            background-image: url('assets/back1.png');
-        }
+        #btn-back { top: 5%; left: 3%; width: 70px; height: 70px; background-image: url('assets/back1.png'); }
+        #btn-settings { bottom: 3%; right: 3%; width: 60px; height: 60px; background-image: url('assets/settings.png'); }
+        #btn-add { bottom: 5%; left: 3%; width: 140px; height: 50px; background: rgba(74, 144, 226, 0.8); color: white; border-radius: 12px; font-family: var(--mc-font); font-size: 0.7rem; }
+        #btn-go { left: 25%; top: 50%; transform: translate(-50%, -50%); padding: 20px 45px; background: #4caf50; color: white; border-radius: 20px; font-family: var(--mc-font); font-size: 1.4rem; box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
 
-        #btn-settings { 
-            bottom: 3%; right: 3%; 
-            width: 60px; height: 60px; 
-            background-image: url('assets/settings.png');
-        }
-
-        #btn-add {
-            bottom: 5%; left: 3%;
-            width: 140px; height: 50px;
-            background: rgba(74, 144, 226, 0.8); 
-            color: white; border-radius: 12px; 
-            font-family: var(--mc-font); font-size: 0.7rem;
-        }
-
-        #btn-go {
-            left: 25%; top: 50%;
-            transform: translate(-50%, -50%);
-            padding: 20px 45px;
-            background: #4caf50; color: white;
-            border-radius: 20px; font-family: var(--mc-font);
-            font-size: 1.4rem;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
-        }
-
-        #loading-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.9);
-            display: flex; align-items: center; justify-content: center;
-            color: white; z-index: 1000; font-family: var(--mc-font);
-        }
+        #loading-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; color: white; z-index: 1000; font-family: var(--mc-font); }
     </style>
 </head>
 <body>
@@ -169,17 +156,13 @@
         let selectedpages = [];
 
         if (!bookid) location.href = 'magicbook.html';
-
-        if (backdropurl) {
-            document.getElementById('main-backdrop').style.backgroundImage = `url('${backdropurl}')`;
-        }
+        if (backdropurl) document.getElementById('main-backdrop').style.backgroundImage = `url('${backdropurl}')`;
 
         async function loadPages() {
             const list = document.getElementById('pageList');
             try {
                 const q = query(collection(db, `books/${bookid}/pages`), orderBy("pagenumber", "asc"));
                 const snap = await getDocs(q);
-                
                 list.innerHTML = "";
                 document.getElementById('loading-overlay').style.display = 'none';
 
@@ -193,12 +176,7 @@
                     const thumb = document.createElement('div');
                     thumb.className = 'page-thumb';
                     thumb.style.animationDelay = (Math.random() * 2) + "s";
-                    
-                    thumb.innerHTML = `
-                        <div class="page-num-label">${data.pagenumber}</div>
-                        <div class="page-text-preview">${data.text_es || ''}</div>
-                    `;
-                    
+                    thumb.innerHTML = `<div class="page-num-label">${data.pagenumber}</div><div class="page-text-preview">${data.text_es || ''}</div>`;
                     thumb.onclick = () => {
                         const index = selectedpages.indexOf(data.imageurl);
                         if (index > -1) {
@@ -209,20 +187,16 @@
                             thumb.classList.add('selected');
                         }
                     };
-                    
                     list.appendChild(thumb);
                 });
             } catch (e) {
-                console.error("Error loading pages:", e);
+                console.error(e);
                 document.getElementById('loading-overlay').innerText = "Error al abrir el libro.";
             }
         }
 
         window.goToActivity = () => {
-            if (selectedpages.length === 0) {
-                alert("Selecciona las páginas que quieres leer.");
-                return;
-            }
+            if (selectedpages.length === 0) { alert("Selecciona las páginas que quieres leer."); return; }
             localStorage.setItem('selected_pages_json', JSON.stringify(selectedpages));
             location.href = 'readassist.html';
         };
