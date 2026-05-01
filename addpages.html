@@ -147,7 +147,6 @@
         const status = document.getElementById('status');
         const strip = document.getElementById('asset-strip');
 
-        // LOCAL AI BRIDGE - Isolated to ensure no handshake errors
         async function callgemini(file, prompt) {
             const API_KEY = "AIzaSyAwysHSBZTEwZ8IrmgzrTnJwv9nEv6QJPo"; 
             const MODEL = "gemini-2.5-flash"; 
@@ -160,49 +159,55 @@
                 reader.onerror = rej;
             });
 
-            const base64Data = await toBase64(file);
-            const payload = {
-                contents: [{
-                    parts: [
-                        { text: prompt },
-                        { inline_data: { mime_type: file.type, data: base64Data } }
-                    ]
-                }]
-            };
+            try {
+                const base64Data = await toBase64(file);
+                const payload = {
+                    contents: [{
+                        parts: [
+                            { text: prompt },
+                            { inline_data: { mime_type: file.type, data: base64Data } }
+                        ]
+                    }],
+                    generationConfig: {
+                        response_mime_type: "application/json"
+                    }
+                };
 
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
 
-            const data = await response.json();
-            
-            if (data.candidates && data.candidates[0].content.parts[0].text) {
-                return data.candidates[0].content.parts[0].text;
-            } else {
-                throw new Error("AI response empty. Check image clarity.");
+                const data = await response.json();
+                
+                // Enhanced check for the nested response structure
+                if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
+                    return data.candidates[0].content.parts[0].text;
+                } else {
+                    console.error("Raw AI Data Error:", data);
+                    throw new Error("AI response empty. Check image clarity.");
+                }
+            } catch (err) {
+                console.error("Fetch/API Error:", err);
+                throw err;
             }
         }
 
         async function processpagewithai(file) {
             status.innerText = "🤖 la ia está leyendo y traduciendo...";
             
-            const prompt = `Perform OCR on this image. 
-            1. Detect if the text is in Spanish, Valenciano, or English.
-            2. Regardless of the original language, provide a translation for all three:
-               - "es": The text in Spanish.
-               - "va": The text in Valenciano.
-               - "en": The text in English.
-            Return ONLY a valid JSON object with these three keys. Use lowercase for all keys.`;
+            const prompt = `Perform OCR on this image and return a JSON object with these EXACT keys:
+            "es": The text in Spanish.
+            "va": The text in Valenciano.
+            "en": The text in English.
+            If the text is missing, use an empty string. Return ONLY the JSON.`;
 
             try {
-                // Calling the local bridge function defined above
                 const response = await callgemini(file, prompt);
-                const jsonstring = response.replace(/```json|```/gi, '').trim();
-                return JSON.parse(jsonstring);
+                return JSON.parse(response);
             } catch (e) {
-                console.error("ai error:", e);
+                console.error("ai processing error:", e);
                 throw e;
             }
         }
@@ -256,9 +261,9 @@
                 await setDoc(doc(collection(db, `books/${bookid}/pages`)), {
                     imageurl: url,
                     pagenumber: currentcount + 1,
-                    text_es: aidata.es,
-                    text_va: aidata.va,
-                    text_en: aidata.en,
+                    text_es: aidata.es || "",
+                    text_va: aidata.va || "",
+                    text_en: aidata.en || "",
                     uploadedat: Date.now()
                 });
 
