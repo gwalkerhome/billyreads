@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>v11 | billy reads editor</title>
+    <title>v12 | billy reads editor</title>
     <style>
         :root {
             --mc-font: 'Arial Black', Gadget, sans-serif;
@@ -42,7 +42,7 @@
 
         #file-input { display: none; }
 
-        #status { font-size: 0.9rem; color: #7f8c8d; margin-top: 15px; }
+        #status { font-size: 0.9rem; color: #7f8c8d; margin-top: 15px; min-height: 1.5em; }
 
         .bottom-strip-container { width: 100%; max-width: 600px; margin-top: 20px; }
         .strip-label { font-family: var(--mc-font); font-size: 0.7rem; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; }
@@ -83,8 +83,9 @@
         <h1 id="book-title-display">cargando...</h1>
         <div class="upload-zone" onclick="document.getElementById('file-input').click()">
             <strong style="color: var(--accent-blue);">+ añadir página</strong>
+            <p style="font-size: 0.8rem; color: #94a3b8;">toca para subir foto del libro.</p>
         </div>
-        <input type="file" id="file-input">
+        <input type="file" id="file-input" accept="image/*">
         <div id="status">esperando página...</div>
     </div>
 
@@ -98,66 +99,70 @@
     </div>
 
     <script type="module">
-        // UPDATE_VERSION: 11
+        // UPDATE_VERSION: 12
         import { db, storage, collection, doc, setDoc, getDocs, deleteDoc, query, orderBy, ref, uploadBytes, getDownloadURL } from "./firebase-bridge.js";
 
         const bookid = localStorage.getItem('current_book_id');
         const booktitle = localStorage.getItem('current_book_title');
+        if (!bookid) location.href = 'magicbook.html';
         document.getElementById('book-title-display').innerText = booktitle ? booktitle.toLowerCase() : "libro";
 
+        const fileinput = document.getElementById('file-input');
         const status = document.getElementById('status');
         const strip = document.getElementById('asset-strip');
 
-        async function callgemini(file, prompt) {
+        // Restore the functional internal AI caller
+        async function internalCallGemini(file, prompt) {
             const API_KEY = "AIzaSyAwysHSBZTEwZ8IrmgzrTnJwv9nEv6QJPo"; 
-            const MODEL = "gemini-2.5-flash"; 
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`;
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
             
-            const toBase64 = f => new Promise((res, rej) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(f);
-                reader.onload = () => res(reader.result.split(',')[1]);
-                reader.onerror = rej;
+            const base64 = await new Promise((res) => {
+                const r = new FileReader();
+                r.onload = () => res(r.result.split(',')[1]);
+                r.readAsDataURL(file);
             });
-
-            const base64Data = await toBase64(file);
-            const payload = {
-                contents: [{
-                    parts: [
-                        { text: prompt },
-                        { inline_data: { mime_type: file.type || "image/jpeg", data: base64Data } }
-                    ]
-                }]
-            };
 
             const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{ text: prompt }, { inline_data: { mime_type: file.type, data: base64 } }]
+                    }]
+                })
             });
 
             const data = await response.json();
             if (data.candidates && data.candidates[0].content) {
                 return data.candidates[0].content.parts[0].text;
             }
-            throw new Error("Empty AI Response");
+            throw new Error("No text returned from AI");
         }
 
         async function processpagewithai(file) {
-            status.innerText = "🤖 leyendo...";
-            const prompt = `Children's book OCR. Return JSON: {"es": "Spanish", "va": "Valenciano", "en": "English"}`;
+            status.innerText = "🤖 la ia está leyendo y traduciendo...";
+            
+            // Reverted to your exact historic prompt + children's book context
+            const prompt = `Here is a picture of the inside of a children's reading book. 
+            Perform OCR on this image. 
+            1. Detect if the text is in Spanish, Valenciano, or English.
+            2. Regardless of the original language, provide a translation for all three:
+               - "es": The text in Spanish.
+               - "va": The text in Valenciano.
+               - "en": The text in English.
+            Return ONLY a valid JSON object with these three keys. Use lowercase for all keys.`;
 
             try {
-                let raw = await callgemini(file, prompt);
-                const cleanJson = raw.replace(/```json|```/gi, '').trim();
-                return JSON.parse(cleanJson);
+                const response = await internalCallGemini(file, prompt);
+                const jsonstring = response.replace(/```json|```/gi, '').trim();
+                return JSON.parse(jsonstring);
             } catch (e) {
+                console.error("ai error:", e);
                 throw e;
             }
         }
 
         async function refreshstrip() {
-            if(!bookid) return;
             const q = query(collection(db, `books/${bookid}/pages`), orderBy("pagenumber", "asc"));
             const snap = await getDocs(q);
             strip.innerHTML = "";
@@ -177,12 +182,12 @@
             refreshstrip();
         };
 
-        document.getElementById('file-input').onchange = async (e) => {
+        fileinput.onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
 
-            status.style.color = "blue";
-            status.innerText = "📤 enviando...";
+            status.style.color = "#4a90e2";
+            status.innerText = "📤 procesando imagen...";
 
             try {
                 const aidata = await processpagewithai(file);
@@ -195,14 +200,14 @@
                 await setDoc(doc(collection(db, `books/${bookid}/pages`)), {
                     imageurl: url,
                     pagenumber: currentcount + 1,
-                    text_es: aidata.es || "",
-                    text_va: aidata.va || "",
-                    text_en: aidata.en || "",
+                    text_es: aidata.es,
+                    text_va: aidata.va,
+                    text_en: aidata.en,
                     uploadedat: Date.now()
                 });
 
                 status.style.color = "green";
-                status.innerText = "✅ hecho.";
+                status.innerText = "✅ guardado correctamente.";
                 refreshstrip();
             } catch (err) {
                 status.style.color = "red";
