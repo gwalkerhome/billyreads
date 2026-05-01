@@ -20,10 +20,21 @@
             /* 2. PAGE THUMBNAIL SIZE */
             --page-width: 100px;     
             
-            /* 3. GRID SPACING (Columns and Rows) */
+            /* 3. GRID SPACING */
             --grid-cols: 4;          
             --column-gap: 6px;       
-            --row-gap: 24px;         /* This should now respond correctly! */
+            --row-gap: 24px;         
+
+            /* 4. ASSET BUTTONS POSITIONING */
+            /* Add Page Button (roughly 75% across) */
+            --btn-add-left: 75%;     
+            --btn-add-top: 88%;      
+            --btn-add-width: 180px;
+
+            /* Let's Read Button (Middle of left side) */
+            --btn-go-left: 25%;      
+            --btn-go-top: 50%;       
+            --btn-go-width: 220px;
             
             /* --------------------------- */
         }
@@ -53,11 +64,7 @@
             z-index: 10;
             display: grid;
             grid-template-columns: repeat(var(--grid-cols), 1fr);
-            
-            /* CRITICAL FIX: align-content: start forces rows to pack together 
-               at the top, making row-gap the boss of the spacing. */
             align-content: start; 
-            
             column-gap: var(--column-gap);
             row-gap: var(--row-gap);
             box-sizing: border-box;
@@ -80,7 +87,7 @@
             box-sizing: border-box;
             text-align: center;
             animation: magicWiggle 4s ease-in-out infinite;
-            justify-self: center; /* Keeps thumb centered in its grid cell */
+            justify-self: center; 
         }
 
         .page-thumb:nth-child(even) { animation-duration: 5s; animation-delay: 0.5s; }
@@ -130,10 +137,28 @@
         }
         .ui-btn:active { transform: scale(0.9); }
 
+        /* Standard Navigation */
         #btn-back { top: 5%; left: 3%; width: 70px; height: 70px; background-image: url('assets/back1.png'); }
         #btn-settings { bottom: 3%; right: 3%; width: 60px; height: 60px; background-image: url('assets/settings.png'); }
-        #btn-add { bottom: 5%; left: 3%; width: 140px; height: 50px; background: rgba(74, 144, 226, 0.8); color: white; border-radius: 12px; font-family: var(--mc-font); font-size: 0.7rem; }
-        #btn-go { left: 25%; top: 50%; transform: translate(-50%, -50%); padding: 20px 45px; background: #4caf50; color: white; border-radius: 20px; font-family: var(--mc-font); font-size: 1.4rem; box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
+
+        /* Custom Asset Buttons */
+        #btn-add { 
+            left: var(--btn-add-left); 
+            top: var(--btn-add-top); 
+            width: var(--btn-add-width); 
+            aspect-ratio: 4/1;
+            transform: translateX(-50%); /* Centers on the 75% mark */
+            background-image: url('assets/addpages.png'); 
+        }
+
+        #btn-go { 
+            left: var(--btn-go-left); 
+            top: var(--btn-go-top); 
+            width: var(--btn-go-width);
+            aspect-ratio: 2/1;
+            transform: translate(-50%, -50%); /* True middle center */
+            background-image: url('assets/leamos.png'); 
+        }
 
         #loading-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; color: white; z-index: 1000; font-family: var(--mc-font); }
     </style>
@@ -144,11 +169,11 @@
     <div id="main-backdrop"></div>
 
     <button id="btn-back" class="ui-btn" onclick="location.href='magicbook.html'"></button>
-    <button id="btn-go" class="ui-btn" onclick="goToActivity()">¡A LEER!</button>
+    <button id="btn-go" class="ui-btn" onclick="goToActivity()"></button>
 
     <div class="asset-window" id="pageList"></div>
 
-    <button id="btn-add" class="ui-btn" onclick="location.href='addpages.html'">AÑADIR PÁGINAS</button>
+    <button id="btn-add" class="ui-btn" onclick="location.href='addpages.html'"></button>
     <button id="btn-settings" class="ui-btn" onclick="location.href='settings.html'"></button>
 
     <script type="module">
