@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>v13 | billy reads editor</title>
+    <title>v14 | billy reads editor</title>
     <style>
         :root {
             --mc-font: 'Arial Black', Gadget, sans-serif;
@@ -99,7 +99,7 @@
     </div>
 
     <script type="module">
-        // UPDATE_VERSION: 13
+        // UPDATE_VERSION: 14
         import { db, storage, collection, doc, setDoc, getDocs, deleteDoc, query, orderBy, ref, uploadBytes, getDownloadURL } from "./firebase-bridge.js";
 
         const bookid = localStorage.getItem('current_book_id');
@@ -116,8 +116,8 @@
         async function internalCallGemini(file, prompt) {
             if (!geminikey) throw new Error("API Key missing. Please check settings.");
             
-            // Standardizing to the most common stable model name
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminikey}`;
+            // Strictly using gemini-2.5-flash as instructed
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminikey}`;
             
             const base64 = await new Promise((res) => {
                 const r = new FileReader();
@@ -193,7 +193,6 @@
             status.innerText = "📤 procesando imagen...";
 
             try {
-                // Get fresh count before setting page number
                 const currentcount = await refreshstrip();
                 
                 const aidata = await processpagewithai(file);
