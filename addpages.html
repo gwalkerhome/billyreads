@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>v8 | billy reads editor</title>
+    <title>v9 | billy reads editor</title>
     <style>
         :root {
             --mc-font: 'Arial Black', Gadget, sans-serif;
@@ -84,7 +84,7 @@
         <h1 id="book-title-display">cargando...</h1>
         <div class="upload-zone" onclick="document.getElementById('file-input').click()">
             <strong style="color: var(--accent-blue);">+ añadir página</strong>
-            <p style="font-size: 0.8rem; color: #94a3b8;">sube una foto del libro infantil.</p>
+            <p style="font-size: 0.8rem; color: #94a3b8;">asegúrate de seleccionar un archivo .jpg o .png, no una carpeta.</p>
         </div>
         <input type="file" id="file-input" accept="image/*">
         <div id="status">esperando página...</div>
@@ -100,7 +100,7 @@
     </div>
 
     <script type="module">
-        // UPDATE_VERSION: 8
+        // UPDATE_VERSION: 9
         import { db, storage, collection, doc, setDoc, getDocs, deleteDoc, query, orderBy, ref, uploadBytes, getDownloadURL } from "./firebase-bridge.js";
 
         const bookid = localStorage.getItem('current_book_id');
@@ -142,7 +142,7 @@
             if (data.candidates && data.candidates[0].content) {
                 return data.candidates[0].content.parts[0].text;
             }
-            throw new Error("La IA no devolvió texto.");
+            throw new Error("La IA no devolvió texto. Revisa que sea una imagen clara.");
         }
 
         async function processpagewithai(file) {
@@ -189,6 +189,13 @@
         document.getElementById('file-input').onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
+
+            // Simple check to ensure it's not a folder
+            if (file.size === 0 || !file.type.startsWith('image/')) {
+                status.innerText = "❌ Error: Selecciona un archivo de imagen válido.";
+                return;
+            }
+
             status.innerText = "📤 procesando...";
 
             try {
