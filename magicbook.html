@@ -10,41 +10,39 @@
             --accent-gold: #ffd700;
 
             /* --- LAYOUT CONTROL PANEL --- */
-            /* Buttons */
             --btn-size: 8vw;
             --btn-margin: 2%;
 
-            /* Book Sizing */
             --book-width: 18vw;
-            --book-height: 27vw; /* Proportional to width */
+            --book-height: 27vw; 
             --book-gap: 5vw;
             
+            /* Increase this if the last book still feels too shy */
+            --track-padding-end: 25vw; 
             /* --------------------------- */
         }
 
         body, html {
             margin: 0; padding: 0; 
             width: 100vw; height: 100vh;
-            background: #000; /* Letterbox bars color */
+            background: #000; 
             display: flex; align-items: center; justify-content: center;
             overflow: hidden;
             font-family: var(--mc-font);
         }
 
-        /* 16:9 STAGE LOCK */
         .stage-container {
             position: relative;
             width: 100vw;
-            height: 56.25vw; /* 16:9 Ratio */
+            height: 56.25vw; 
             max-height: 100vh;
-            max-width: 177.78vh; /* Prevents overflow on ultra-wide */
+            max-width: 177.78vh; 
             background: url('assets/libraryback.jpeg') no-repeat center center;
             background-size: cover;
             perspective: 2000px;
             overflow: hidden;
         }
 
-        /* Buttons responsive positioning */
         .ui-btn {
             position: absolute;
             cursor: pointer;
@@ -75,7 +73,6 @@
             border: 1px solid var(--accent-gold);
         }
 
-        /* SCROLLABLE TRACK */
         .book-track {
             position: absolute;
             top: 0; left: 0;
@@ -83,23 +80,25 @@
             height: 100%;
             display: flex;
             align-items: center;
-            padding: 0 10vw; /* Padding so first/last books don't hit edges */
+            /* Added heavy padding-right so the last book can slide into the center */
+            padding: 0 var(--track-padding-end) 0 10vw; 
             gap: var(--book-gap);
             overflow-x: auto;
             overflow-y: hidden;
-            scroll-snap-type: x mandatory;
+            /* Changed to 'proximity' so it doesn't fight you at the edges */
+            scroll-snap-type: x proximity; 
             -webkit-overflow-scrolling: touch;
             z-index: 10;
         }
-        /* Hide Scrollbar but keep functionality */
         .book-track::-webkit-scrollbar { display: none; }
 
         .book-container {
             position: relative;
-            flex: 0 0 auto; /* CRITICAL: Prevents books from shrinking */
+            flex: 0 0 auto; 
             width: var(--book-width);
             height: var(--book-height);
             scroll-snap-align: center;
+            scroll-snap-stop: always;
             transform-style: preserve-3d;
             display: flex; align-items: center; justify-content: center;
         }
@@ -188,29 +187,25 @@
 
                 snap.forEach((docSnap) => {
                     const book = docSnap.data();
-                    const bookid = docSnap.id;
-                    const coverUrl = book.coverURL || book.imageurl;
-
                     const container = document.createElement('div');
                     container.className = 'book-container';
                     
                     const delay = (Math.random() * -5).toFixed(2) + "s";
+                    const coverUrl = book.coverURL || book.imageurl;
                     
                     container.innerHTML = `
                         <div class="book-shadow"></div>
-                        <div class="book-assembly" style="--float-delay: ${delay}" onclick="selectBook('${bookid}', '${book.title}', '${book.backdropURL}')">
+                        <div class="book-assembly" style="--float-delay: ${delay}" onclick="selectBook('${docSnap.id}', '${book.title}', '${book.backdropURL}')">
                             <div class="book-template"></div>
                             <div class="book-cover-art" style="background-image: url('${coverUrl}')"></div>
                         </div>
                     `;
-
                     track.appendChild(container);
                 });
 
                 loader.style.display = 'none';
-
             } catch (error) {
-                console.error("Library load error:", error);
+                console.error(error);
                 loader.innerText = "Error de conexión.";
             }
         }
