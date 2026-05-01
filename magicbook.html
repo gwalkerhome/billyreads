@@ -10,15 +10,20 @@
             --accent-gold: #ffd700;
 
             /* --- LAYOUT CONTROL PANEL --- */
+            
+            /* 1. NAVIGATION BUTTONS (Back/Settings) */
             --btn-size: 8vw;
             --btn-margin: 2%;
 
+            /* 2. NEW "ADD BOOK" ASSET BUTTON (Center Bottom) */
+            --btn-add-width: 15vw;       /* Responsive Width of the new asset */
+            --btn-add-bottom-margin: 2%;  /* Distance from the bottom edge */
+
+            /* 3. BOOK TRACK AND SIZING */
             --book-width: 18vw;
             --book-height: 27vw; 
             --book-gap: 6vw;
             
-            /* If the last book still feels cut off, increase this number */
-            --end-spacer: 50vw; 
             /* --------------------------- */
         }
 
@@ -31,61 +36,92 @@
             font-family: var(--mc-font);
         }
 
+        /* 16:9 STAGE LOCK */
         .stage-container {
             position: relative;
             width: 100vw;
-            height: 56.25vw; 
+            height: 56.25vw; /* 16:9 Ratio */
             max-height: 100vh;
-            max-width: 177.78vh; 
+            max-width: 177.78vh; /* Prevents overflow on ultra-wide */
             background: url('assets/libraryback.jpeg') no-repeat center center;
             background-size: cover;
             perspective: 2000px;
             overflow: hidden;
         }
 
+        /* Standard Asset-based Buttons (Back/Settings) */
         .ui-btn {
-            position: absolute; cursor: pointer; z-index: 100;
-            width: var(--btn-size); height: var(--btn-size);
-            background-size: contain; background-repeat: no-repeat; background-position: center;
+            position: absolute;
+            cursor: pointer;
+            z-index: 100;
+            width: var(--btn-size);
+            height: var(--btn-size);
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
             transition: transform 0.1s;
         }
+        .ui-btn:active { transform: scale(0.9); }
 
         #btn-back { top: var(--btn-margin); left: var(--btn-margin); background-image: url('assets/back1.png'); }
         #btn-settings { bottom: var(--btn-margin); right: var(--btn-margin); background-image: url('assets/settings.png'); }
+        
+        /* NEW CUSTOM ASSET BUTTON (Add Book) */
+        .ui-btn-custom {
+            position: absolute;
+            cursor: pointer;
+            z-index: 105; /* Slightly higher than other buttons */
+            
+            /* Load the new children's magical pixie book asset */
+            background-image: url('assets/addbook1.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            transition: transform 0.1s;
 
+            /* Positioning & Sizing from the Control Panel */
+            width: var(--btn-add-width);
+            
+            /* Maintain the book's 3D perspective ratio (roughly 3:4 or 4:5 based on sample) */
+            aspect-ratio: 4/5; 
+
+            /* true center horizontally */
+            left: 50%;
+            transform: translateX(-50%);
+            
+            /* custom margin from bottom */
+            bottom: var(--btn-add-bottom-margin);
+        }
+        .ui-btn-custom:active { transform: translateX(-50%) scale(0.9); }
+
+
+        /* SCROLLABLE TRACK */
         .book-track {
             position: absolute;
             top: 0; left: 0;
-            width: 100vw; /* Takes full viewport width */
+            width: 100vw;
             height: 100%;
             display: flex;
             align-items: center;
-            padding: 0 5vw; 
+            padding: 0 10vw; /* Padding so first/last books don't hit edges */
             gap: var(--book-gap);
             overflow-x: auto;
             overflow-y: hidden;
-            scroll-snap-type: x mandatory; 
+            scroll-snap-type: x mandatory;
             -webkit-overflow-scrolling: touch;
             z-index: 10;
         }
+        /* Hide Scrollbar */
         .book-track::-webkit-scrollbar { display: none; }
 
         .book-container {
             position: relative;
-            flex: 0 0 auto; /* Stops books from shrinking to fit the screen */
+            flex: 0 0 auto; /* Prevents books from shrinking */
             width: var(--book-width);
             height: var(--book-height);
             scroll-snap-align: center;
             transform-style: preserve-3d;
             display: flex; align-items: center; justify-content: center;
-        }
-
-        /* This is the magic invisible anchor at the end */
-        .scroll-spacer {
-            flex: 0 0 auto;
-            width: var(--end-spacer);
-            height: 10px;
-            visibility: hidden;
         }
 
         .book-assembly {
@@ -103,23 +139,33 @@
         }
 
         .book-template {
-            position: absolute; inset: 0;
+            position: absolute;
+            inset: 0;
             background: url('assets/flbktmp.png') no-repeat center center;
-            background-size: contain; z-index: 1;
+            background-size: contain;
+            z-index: 1;
         }
 
         .book-cover-art {
-            position: absolute; top: 5%; left: 4%;
+            position: absolute;
+            top: 5%; left: 4%;
             width: 90%; height: 90%;
-            background-size: cover; background-position: center;
-            z-index: 10; border-radius: 2px; background-color: #333;
+            background-size: cover;
+            background-position: center;
+            z-index: 10;
+            border-radius: 2px;
+            background-color: #333;
         }
 
         .book-shadow {
-            position: absolute; bottom: -5vh; left: 50%;
-            width: 80%; height: 2vh; background: rgba(0,0,0,0.4);
-            border-radius: 50%; filter: blur(15px);
-            transform: translateX(-50%); z-index: 0;
+            position: absolute;
+            bottom: -5vh; left: 50%;
+            width: 80%; height: 2vh;
+            background: rgba(0,0,0,0.4);
+            border-radius: 50%;
+            filter: blur(15px);
+            transform: translateX(-50%);
+            z-index: 0;
         }
 
         #loading-overlay {
@@ -136,6 +182,8 @@
         <a href="index.html" id="btn-back" class="ui-btn"></a>
         <a href="settings.html" id="btn-settings" class="ui-btn"></a>
         
+        <a href="newbook.html" id="btn-add-new" class="ui-btn-custom"></a>
+
         <div class="book-track" id="book-track"></div>
     </div>
 
@@ -160,29 +208,29 @@
 
                 snap.forEach((docSnap) => {
                     const book = docSnap.data();
+                    const bookid = docSnap.id;
+                    const coverUrl = book.coverURL || book.imageurl;
+
                     const container = document.createElement('div');
                     container.className = 'book-container';
+                    
                     const delay = (Math.random() * -5).toFixed(2) + "s";
-                    const coverUrl = book.coverURL || book.imageurl;
                     
                     container.innerHTML = `
                         <div class="book-shadow"></div>
-                        <div class="book-assembly" style="--float-delay: ${delay}" onclick="selectBook('${docSnap.id}', '${book.title}', '${book.backdropURL}')">
+                        <div class="book-assembly" style="--float-delay: ${delay}" onclick="selectBook('${bookid}', '${book.title}', '${book.backdropURL}')">
                             <div class="book-template"></div>
                             <div class="book-cover-art" style="background-image: url('${coverUrl}')"></div>
                         </div>
                     `;
+
                     track.appendChild(container);
                 });
 
-                // Add the spacer to the end of the flex list
-                const spacer = document.createElement('div');
-                spacer.className = 'scroll-spacer';
-                track.appendChild(spacer);
-
                 loader.style.display = 'none';
+
             } catch (error) {
-                console.error(error);
+                console.error("Library load error:", error);
                 loader.innerText = "Error de conexión.";
             }
         }
