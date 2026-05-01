@@ -9,39 +9,39 @@
             --mc-font: 'Arial Black', Gadget, sans-serif;
             --gold-glow: 0 0 20px #ffd700, 0 0 40px rgba(255, 215, 0, 0.5);
 
-            /* --- LAYOUT CONTROL PANEL --- */
+            /* --- LAYOUT CONTROL PANEL (Fluid Units) --- */
             
             /* 1. ASSET WINDOW (The invisible scrolling area) */
             --window-right: 1%;      
             --window-top: 10%;       
-            --window-width: 40%;     
-            --window-height: 75%;    
+            --window-width: 45vw;    /* Responsive width */
+            --window-height: 75vh;   /* Responsive height */
 
             /* 2. PAGE THUMBNAILS (The floating parchments) */
-            --page-width: 100px;     
+            --page-width: 8vw;       /* Scale with screen width */
             --grid-cols: 4;          
-            --column-gap: 6px;       
-            --row-gap: 24px;         
+            --column-gap: 1vw;       
+            --row-gap: 3vh;         
 
             /* 3. "LEAMOS" BUTTON (Let's Read) */
             --btn-go-left: 25%;      
             --btn-go-top: 50%;       
-            --btn-go-width: 300px;   /* Increased size */
+            --btn-go-width: 25vw;    
 
             /* 4. "ADD PAGE" BUTTON */
             --btn-add-left: 75%;     
             --btn-add-top: 88%;      
-            --btn-add-width: 220px;  /* Increased size */
+            --btn-add-width: 18vw;  
 
             /* 5. BACK BUTTON (Top Left) */
             --btn-back-left: 3%;
             --btn-back-top: 5%;
-            --btn-back-size: 100px;  /* Increased size */
+            --btn-back-size: 8vw;   
 
             /* 6. SETTINGS BUTTON (Bottom Right) */
             --btn-settings-right: 3%;
             --btn-settings-bottom: 3%;
-            --btn-settings-size: 90px; /* Increased size */
+            --btn-settings-size: 7vw; 
             
             /* --------------------------- */
         }
@@ -66,7 +66,7 @@
             top: var(--window-top);
             width: var(--window-width);
             height: var(--window-height);
-            padding: 10px;
+            padding: 1vw;
             overflow-y: auto;
             z-index: 10;
             display: grid;
@@ -90,7 +90,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 12px;
+            padding: 1vw;
             box-sizing: border-box;
             text-align: center;
             animation: magicWiggle 4s ease-in-out infinite;
@@ -99,9 +99,9 @@
 
         @keyframes magicWiggle {
             0% { transform: translateY(0) rotate(0deg); }
-            25% { transform: translateY(-6px) rotate(1.5deg); }
+            25% { transform: translateY(-0.8vh) rotate(1.5deg); }
             50% { transform: translateY(0) rotate(-1deg); }
-            75% { transform: translateY(-4px) rotate(1deg); }
+            75% { transform: translateY(-0.5vh) rotate(1deg); }
             100% { transform: translateY(0) rotate(0deg); }
         }
 
@@ -113,14 +113,14 @@
         }
 
         .page-num-label {
-            font-size: 1rem;
+            font-size: 1.2vw; /* Text scales too! */
             color: #4a3728;
-            margin-top: 15px;
+            margin-top: 1.5vh;
             pointer-events: none;
         }
 
         .page-text-preview {
-            font-family: serif; font-size: 5px; line-height: 1.1; color: #5d4a3a;
+            font-family: serif; font-size: 0.4vw; line-height: 1.1; color: #5d4a3a;
             overflow: hidden; display: -webkit-box; -webkit-line-clamp: 7;
             -webkit-box-orient: vertical; opacity: 0.7; font-style: italic; pointer-events: none;
         }
@@ -133,7 +133,6 @@
         }
         .ui-btn:active { transform: scale(0.9); }
 
-        /* BACK BUTTON */
         #btn-back { 
             top: var(--btn-back-top); 
             left: var(--btn-back-left); 
@@ -142,7 +141,6 @@
             background-image: url('assets/back1.png'); 
         }
 
-        /* SETTINGS BUTTON */
         #btn-settings { 
             bottom: var(--btn-settings-bottom); 
             right: var(--btn-settings-right); 
@@ -151,7 +149,6 @@
             background-image: url('assets/settings.png'); 
         }
 
-        /* ADD PAGE BUTTON */
         #btn-add { 
             left: var(--btn-add-left); 
             top: var(--btn-add-top); 
@@ -161,7 +158,6 @@
             background-image: url('assets/addpages.png'); 
         }
 
-        /* LEAMOS BUTTON */
         #btn-go { 
             left: var(--btn-go-left); 
             top: var(--btn-go-top); 
