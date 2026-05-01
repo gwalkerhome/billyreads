@@ -147,6 +147,44 @@
         const status = document.getElementById('status');
         const strip = document.getElementById('asset-strip');
 
+        // LOCAL AI BRIDGE - Isolated to ensure no handshake errors
+        async function callgemini(file, prompt) {
+            const API_KEY = "AIzaSyAwysHSBZTEwZ8IrmgzrTnJwv9nEv6QJPo"; 
+            const MODEL = "gemini-2.5-flash"; 
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`;
+            
+            const toBase64 = f => new Promise((res, rej) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(f);
+                reader.onload = () => res(reader.result.split(',')[1]);
+                reader.onerror = rej;
+            });
+
+            const base64Data = await toBase64(file);
+            const payload = {
+                contents: [{
+                    parts: [
+                        { text: prompt },
+                        { inline_data: { mime_type: file.type, data: base64Data } }
+                    ]
+                }]
+            };
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+            
+            if (data.candidates && data.candidates[0].content.parts[0].text) {
+                return data.candidates[0].content.parts[0].text;
+            } else {
+                throw new Error("AI response empty. Check image clarity.");
+            }
+        }
+
         async function processpagewithai(file) {
             status.innerText = "🤖 la ia está leyendo y traduciendo...";
             
@@ -159,14 +197,10 @@
             Return ONLY a valid JSON object with these three keys. Use lowercase for all keys.`;
 
             try {
-                if (typeof window.callgemini === "function") {
-                    const response = await window.callgemini(file, prompt);
-                    // Clean response in case AI includes markdown code blocks
-                    const jsonstring = response.replace(/```json|```/gi, '').trim();
-                    return JSON.parse(jsonstring);
-                } else {
-                    throw new Error("ai bridge not configured");
-                }
+                // Calling the local bridge function defined above
+                const response = await callgemini(file, prompt);
+                const jsonstring = response.replace(/```json|```/gi, '').trim();
+                return JSON.parse(jsonstring);
             } catch (e) {
                 console.error("ai error:", e);
                 throw e;
