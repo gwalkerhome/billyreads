@@ -12,7 +12,7 @@
 
         body, html {
             margin: 0; padding: 0; width: 100vw; height: 100vh;
-            overflow: hidden; background: #1a1a1a;
+            overflow: hidden; background: #000;
             font-family: var(--mc-font);
         }
 
@@ -24,26 +24,26 @@
             z-index: 1;
         }
 
-        /* Completely transparent window */
+        /* Transparent window - widened for 4 columns */
         .asset-window {
             position: absolute;
-            right: 5%; top: 10%;
-            width: 45%; height: 75%;
+            right: 2%; top: 10%;
+            width: 55%; height: 75%;
             padding: 20px;
             overflow-y: auto;
             z-index: 10;
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 25px;
+            grid-template-columns: repeat(4, 1fr); /* 4 in a row */
+            gap: 15px; /* Brought closer together */
             box-sizing: border-box;
-            background: transparent; /* Transparent as requested */
+            background: transparent;
         }
         .asset-window::-webkit-scrollbar { width: 0px; }
 
-        /* Small Floating Parchment Thumbnail */
+        /* Slightly larger floating parchment */
         .page-thumb {
             position: relative;
-            width: 80px; /* Smaller thumbnail size */
+            width: 100px; /* Increased from 80px */
             aspect-ratio: 3/4;
             background: url('assets/paper1.png') no-repeat center center;
             background-size: contain;
@@ -52,15 +52,12 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 10px;
+            padding: 12px;
             box-sizing: border-box;
             text-align: center;
-            
-            /* The Magic Effect */
             animation: magicWiggle 4s ease-in-out infinite;
         }
 
-        /* Randomizing the wiggle for each child so they don't sync up */
         .page-thumb:nth-child(even) { animation-duration: 5s; animation-delay: 0.5s; }
         .page-thumb:nth-child(3n) { animation-duration: 4.5s; animation-delay: 0.2s; }
 
@@ -74,13 +71,13 @@
 
         .page-thumb.selected {
             filter: drop-shadow(var(--gold-glow));
-            transform: scale(1.15) !important;
-            animation-play-state: paused; /* Stop wiggling when selected */
+            transform: scale(1.1) !important;
+            animation-play-state: paused;
             z-index: 20;
         }
 
         .page-num-label {
-            font-size: 0.9rem;
+            font-size: 1rem;
             color: #4a3728;
             margin-top: 15px;
             pointer-events: none;
@@ -88,14 +85,14 @@
 
         .page-text-preview {
             font-family: serif;
-            font-size: 4px;
+            font-size: 5px; /* Slightly larger text for larger thumb */
             line-height: 1.1;
             color: #5d4a3a;
             overflow: hidden;
             display: -webkit-box;
-            -webkit-line-clamp: 6;
+            -webkit-line-clamp: 7;
             -webkit-box-orient: vertical;
-            opacity: 0.6;
+            opacity: 0.7;
             font-style: italic;
             pointer-events: none;
         }
@@ -145,7 +142,7 @@
         }
 
         #loading-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.95);
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9);
             display: flex; align-items: center; justify-content: center;
             color: white; z-index: 1000; font-family: var(--mc-font);
         }
@@ -195,8 +192,6 @@
                     const data = docSnap.data();
                     const thumb = document.createElement('div');
                     thumb.className = 'page-thumb';
-                    
-                    // Random animation delay for the magic effect
                     thumb.style.animationDelay = (Math.random() * 2) + "s";
                     
                     thumb.innerHTML = `
