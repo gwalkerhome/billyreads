@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>v12 | billy reads editor</title>
+    <title>v13 | billy reads editor</title>
     <style>
         :root {
             --mc-font: 'Arial Black', Gadget, sans-serif;
@@ -99,11 +99,13 @@
     </div>
 
     <script type="module">
-        // UPDATE_VERSION: 12
+        // UPDATE_VERSION: 13
         import { db, storage, collection, doc, setDoc, getDocs, deleteDoc, query, orderBy, ref, uploadBytes, getDownloadURL } from "./firebase-bridge.js";
 
         const bookid = localStorage.getItem('current_book_id');
         const booktitle = localStorage.getItem('current_book_title');
+        const geminikey = localStorage.getItem('gemini_key');
+
         if (!bookid) location.href = 'magicbook.html';
         document.getElementById('book-title-display').innerText = booktitle ? booktitle.toLowerCase() : "libro";
 
@@ -111,10 +113,11 @@
         const status = document.getElementById('status');
         const strip = document.getElementById('asset-strip');
 
-        // Restore the functional internal AI caller
         async function internalCallGemini(file, prompt) {
-            const API_KEY = "AIzaSyAwysHSBZTEwZ8IrmgzrTnJwv9nEv6QJPo"; 
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
+            if (!geminikey) throw new Error("API Key missing. Please check settings.");
+            
+            // Standardizing to the most common stable model name
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminikey}`;
             
             const base64 = await new Promise((res) => {
                 const r = new FileReader();
@@ -136,13 +139,12 @@
             if (data.candidates && data.candidates[0].content) {
                 return data.candidates[0].content.parts[0].text;
             }
-            throw new Error("No text returned from AI");
+            throw new Error(data.error ? data.error.message : "No text returned from AI");
         }
 
         async function processpagewithai(file) {
             status.innerText = "🤖 la ia está leyendo y traduciendo...";
             
-            // Reverted to your exact historic prompt + children's book context
             const prompt = `Here is a picture of the inside of a children's reading book. 
             Perform OCR on this image. 
             1. Detect if the text is in Spanish, Valenciano, or English.
@@ -174,6 +176,7 @@
                 item.innerHTML = `<button class="btn-del" onclick="window.deletepage('${docsnap.id}')">✕</button>`;
                 strip.appendChild(item);
             });
+            return snap.size;
         }
 
         window.deletepage = async (pageid) => {
@@ -190,13 +193,15 @@
             status.innerText = "📤 procesando imagen...";
 
             try {
+                // Get fresh count before setting page number
+                const currentcount = await refreshstrip();
+                
                 const aidata = await processpagewithai(file);
                 const pageid = `page_${Date.now()}`;
                 const storageref = ref(storage, `books/${bookid}/pages/${pageid}`);
                 const snap = await uploadBytes(storageref, file);
                 const url = await getDownloadURL(snap.ref);
 
-                const currentcount = strip.querySelectorAll('.strip-item').length;
                 await setDoc(doc(collection(db, `books/${bookid}/pages`)), {
                     imageurl: url,
                     pagenumber: currentcount + 1,
