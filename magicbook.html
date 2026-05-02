@@ -16,13 +16,16 @@
             --btn-margin: 2%;
 
             /* 2. NEW "ADD BOOK" ASSET BUTTON (Center Bottom) */
-            --btn-add-width: 15vw;       /* Responsive Width of the new asset */
-            --btn-add-bottom-margin: 2%;  /* Distance from the bottom edge */
+            --btn-add-width: 15vw;       
+            --btn-add-bottom-margin: 2%;  /* Adjust this to move button up/down */
 
             /* 3. BOOK TRACK AND SIZING */
             --book-width: 18vw;
             --book-height: 27vw; 
             --book-gap: 6vw;
+            
+            /* 4. GHOST SPACER (To prevent the last book from being cut off) */
+            --end-spacer: 40vw; 
             
             /* --------------------------- */
         }
@@ -36,20 +39,18 @@
             font-family: var(--mc-font);
         }
 
-        /* 16:9 STAGE LOCK */
         .stage-container {
             position: relative;
             width: 100vw;
-            height: 56.25vw; /* 16:9 Ratio */
+            height: 56.25vw; 
             max-height: 100vh;
-            max-width: 177.78vh; /* Prevents overflow on ultra-wide */
+            max-width: 177.78vh; 
             background: url('assets/libraryback.jpeg') no-repeat center center;
             background-size: cover;
             perspective: 2000px;
             overflow: hidden;
         }
 
-        /* Standard Asset-based Buttons (Back/Settings) */
         .ui-btn {
             position: absolute;
             cursor: pointer;
@@ -66,36 +67,24 @@
         #btn-back { top: var(--btn-margin); left: var(--btn-margin); background-image: url('assets/back1.png'); }
         #btn-settings { bottom: var(--btn-margin); right: var(--btn-margin); background-image: url('assets/settings.png'); }
         
-        /* NEW CUSTOM ASSET BUTTON (Add Book) */
         .ui-btn-custom {
             position: absolute;
             cursor: pointer;
-            z-index: 105; /* Slightly higher than other buttons */
-            
-            /* Load the new children's magical pixie book asset */
+            z-index: 105; 
             background-image: url('assets/addbook.png');
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
             transition: transform 0.1s;
-
-            /* Positioning & Sizing from the Control Panel */
             width: var(--btn-add-width);
-            
-            /* Maintain the book's 3D perspective ratio (roughly 3:4 or 4:5 based on sample) */
             aspect-ratio: 4/5; 
-
-            /* true center horizontally */
             left: 50%;
             transform: translateX(-50%);
-            
-            /* custom margin from bottom */
+            /* Explicitly using the variable here for bottom positioning */
             bottom: var(--btn-add-bottom-margin);
         }
         .ui-btn-custom:active { transform: translateX(-50%) scale(0.9); }
 
-
-        /* SCROLLABLE TRACK */
         .book-track {
             position: absolute;
             top: 0; left: 0;
@@ -103,7 +92,7 @@
             height: 100%;
             display: flex;
             align-items: center;
-            padding: 0 10vw; /* Padding so first/last books don't hit edges */
+            padding: 0 5vw; 
             gap: var(--book-gap);
             overflow-x: auto;
             overflow-y: hidden;
@@ -111,17 +100,24 @@
             -webkit-overflow-scrolling: touch;
             z-index: 10;
         }
-        /* Hide Scrollbar */
         .book-track::-webkit-scrollbar { display: none; }
 
         .book-container {
             position: relative;
-            flex: 0 0 auto; /* Prevents books from shrinking */
+            flex: 0 0 auto; 
             width: var(--book-width);
             height: var(--book-height);
             scroll-snap-align: center;
             transform-style: preserve-3d;
             display: flex; align-items: center; justify-content: center;
+        }
+
+        /* The Ghost Spacer styling */
+        .scroll-spacer {
+            flex: 0 0 auto;
+            width: var(--end-spacer);
+            height: 10px;
+            visibility: hidden;
         }
 
         .book-assembly {
@@ -226,6 +222,11 @@
 
                     track.appendChild(container);
                 });
+
+                // Re-inserting the Ghost Spacer at the end
+                const spacer = document.createElement('div');
+                spacer.className = 'scroll-spacer';
+                track.appendChild(spacer);
 
                 loader.style.display = 'none';
 
