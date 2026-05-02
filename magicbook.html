@@ -17,14 +17,14 @@
 
             /* 2. NEW "ADD BOOK" ASSET BUTTON (Center Bottom) */
             --btn-add-width: 15vw;       
-            --btn-add-bottom-margin: 0%;  /* Adjust this to move button up/down */
+            --btn-add-bottom-margin: 3%;  /* Slightly lifted from the floor */
 
             /* 3. BOOK TRACK AND SIZING */
             --book-width: 18vw;
             --book-height: 27vw; 
             --book-gap: 6vw;
             
-            /* 4. GHOST SPACER (To prevent the last book from being cut off) */
+            /* 4. GHOST SPACER */
             --end-spacer: 40vw; 
             
             /* --------------------------- */
@@ -51,6 +51,7 @@
             overflow: hidden;
         }
 
+        /* Standard Navigation Buttons with "Lift" */
         .ui-btn {
             position: absolute;
             cursor: pointer;
@@ -60,13 +61,19 @@
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
-            transition: transform 0.1s;
+            transition: transform 0.1s, filter 0.1s;
+            /* The Shadow "Lift" effect */
+            filter: drop-shadow(0px 8px 10px rgba(0,0,0,0.6));
         }
-        .ui-btn:active { transform: scale(0.9); }
+        .ui-btn:active { 
+            transform: scale(0.9); 
+            filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.8)); /* Sinks down when pressed */
+        }
 
         #btn-back { top: var(--btn-margin); left: var(--btn-margin); background-image: url('assets/back1.png'); }
         #btn-settings { bottom: var(--btn-margin); right: var(--btn-margin); background-image: url('assets/settings.png'); }
         
+        /* New Book Button with "Lift" */
         .ui-btn-custom {
             position: absolute;
             cursor: pointer;
@@ -75,15 +82,19 @@
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
-            transition: transform 0.1s;
+            transition: transform 0.1s, filter 0.1s;
             width: var(--btn-add-width);
             aspect-ratio: 4/5; 
             left: 50%;
             transform: translateX(-50%);
-            /* Explicitly using the variable here for bottom positioning */
             bottom: var(--btn-add-bottom-margin);
+            /* Matching the Shadow "Lift" */
+            filter: drop-shadow(0px 10px 15px rgba(0,0,0,0.7));
         }
-        .ui-btn-custom:active { transform: translateX(-50%) scale(0.9); }
+        .ui-btn-custom:active { 
+            transform: translateX(-50%) scale(0.9); 
+            filter: drop-shadow(0px 3px 5px rgba(0,0,0,0.8));
+        }
 
         .book-track {
             position: absolute;
@@ -112,7 +123,6 @@
             display: flex; align-items: center; justify-content: center;
         }
 
-        /* The Ghost Spacer styling */
         .scroll-spacer {
             flex: 0 0 auto;
             width: var(--end-spacer);
@@ -223,7 +233,6 @@
                     track.appendChild(container);
                 });
 
-                // Re-inserting the Ghost Spacer at the end
                 const spacer = document.createElement('div');
                 spacer.className = 'scroll-spacer';
                 track.appendChild(spacer);
