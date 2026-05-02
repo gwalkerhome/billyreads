@@ -7,26 +7,19 @@
     <style>
         :root {
             --mc-font: 'Arial Black', Gadget, sans-serif;
-            --accent-gold: #ffd700;
 
             /* --- LAYOUT CONTROL PANEL --- */
-            
-            /* 1. NAVIGATION BUTTONS (Back/Settings) */
             --btn-size: 8vw;
             --btn-margin: 2%;
 
-            /* 2. NEW "ADD BOOK" ASSET BUTTON (Center Bottom) */
+            /* Adjust this to move the chest up from the bottom of the 16:9 stage */
             --btn-add-width: 15vw;       
-            --btn-add-bottom-margin: 3%;  /* Slightly lifted from the floor */
+            --btn-add-bottom-offset: 5%; 
 
-            /* 3. BOOK TRACK AND SIZING */
             --book-width: 18vw;
             --book-height: 27vw; 
             --book-gap: 6vw;
-            
-            /* 4. GHOST SPACER */
             --end-spacer: 40vw; 
-            
             /* --------------------------- */
         }
 
@@ -51,7 +44,24 @@
             overflow: hidden;
         }
 
-        /* Standard Navigation Buttons with "Lift" */
+        /* NEW: Wiggle Animation for Buttons */
+        @keyframes wiggle {
+            0% { transform: translate(0, 0); }
+            25% { transform: translate(2px, -2px); }
+            50% { transform: translate(-1px, 3px); }
+            75% { transform: translate(3px, 1px); }
+            100% { transform: translate(0, 0); }
+        }
+
+        /* Helper to apply wiggle without breaking horizontal centering */
+        @keyframes wiggle-center {
+            0% { transform: translateX(-50%) translate(0, 0); }
+            25% { transform: translateX(-50%) translate(2px, -2px); }
+            50% { transform: translateX(-50%) translate(-1px, 3px); }
+            75% { transform: translateX(-50%) translate(3px, 1px); }
+            100% { transform: translateX(-50%) translate(0, 0); }
+        }
+
         .ui-btn {
             position: absolute;
             cursor: pointer;
@@ -61,19 +71,14 @@
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
-            transition: transform 0.1s, filter 0.1s;
-            /* The Shadow "Lift" effect */
             filter: drop-shadow(0px 8px 10px rgba(0,0,0,0.6));
-        }
-        .ui-btn:active { 
-            transform: scale(0.9); 
-            filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.8)); /* Sinks down when pressed */
+            animation: wiggle 4s ease-in-out infinite; /* Random-feeling wiggle */
+            transition: transform 0.1s;
         }
 
         #btn-back { top: var(--btn-margin); left: var(--btn-margin); background-image: url('assets/back1.png'); }
         #btn-settings { bottom: var(--btn-margin); right: var(--btn-margin); background-image: url('assets/settings.png'); }
         
-        /* New Book Button with "Lift" */
         .ui-btn-custom {
             position: absolute;
             cursor: pointer;
@@ -82,19 +87,18 @@
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
-            transition: transform 0.1s, filter 0.1s;
             width: var(--btn-add-width);
             aspect-ratio: 4/5; 
             left: 50%;
-            transform: translateX(-50%);
-            bottom: var(--btn-add-bottom-margin);
-            /* Matching the Shadow "Lift" */
+            bottom: var(--btn-add-bottom-offset);
             filter: drop-shadow(0px 10px 15px rgba(0,0,0,0.7));
+            animation: wiggle-center 5s ease-in-out infinite; /* Centered wiggle */
+            transition: transform 0.1s;
         }
-        .ui-btn-custom:active { 
-            transform: translateX(-50%) scale(0.9); 
-            filter: drop-shadow(0px 3px 5px rgba(0,0,0,0.8));
-        }
+
+        /* Active states for tactile feedback */
+        .ui-btn:active { transform: scale(0.9); animation: none; }
+        .ui-btn-custom:active { transform: translateX(-50%) scale(0.9); animation: none; }
 
         .book-track {
             position: absolute;
@@ -126,7 +130,6 @@
         .scroll-spacer {
             flex: 0 0 auto;
             width: var(--end-spacer);
-            height: 10px;
             visibility: hidden;
         }
 
@@ -159,8 +162,6 @@
             background-size: cover;
             background-position: center;
             z-index: 10;
-            border-radius: 2px;
-            background-color: #333;
         }
 
         .book-shadow {
@@ -187,9 +188,7 @@
     <div class="stage-container">
         <a href="index.html" id="btn-back" class="ui-btn"></a>
         <a href="settings.html" id="btn-settings" class="ui-btn"></a>
-        
         <a href="newbook.html" id="btn-add-new" class="ui-btn-custom"></a>
-
         <div class="book-track" id="book-track"></div>
     </div>
 
@@ -203,7 +202,6 @@
             try {
                 const q = query(collection(db, "books"), orderBy("createdAt", "desc"));
                 const snap = await getDocs(q);
-                
                 track.innerHTML = "";
 
                 if (snap.empty) {
@@ -214,33 +212,28 @@
 
                 snap.forEach((docSnap) => {
                     const book = docSnap.data();
-                    const bookid = docSnap.id;
                     const coverUrl = book.coverURL || book.imageurl;
-
                     const container = document.createElement('div');
                     container.className = 'book-container';
-                    
                     const delay = (Math.random() * -5).toFixed(2) + "s";
                     
                     container.innerHTML = `
                         <div class="book-shadow"></div>
-                        <div class="book-assembly" style="--float-delay: ${delay}" onclick="selectBook('${bookid}', '${book.title}', '${book.backdropURL}')">
+                        <div class="book-assembly" style="--float-delay: ${delay}" onclick="selectBook('${docSnap.id}', '${book.title}', '${book.backdropURL}')">
                             <div class="book-template"></div>
                             <div class="book-cover-art" style="background-image: url('${coverUrl}')"></div>
                         </div>
                     `;
-
                     track.appendChild(container);
                 });
 
                 const spacer = document.createElement('div');
                 spacer.className = 'scroll-spacer';
                 track.appendChild(spacer);
-
                 loader.style.display = 'none';
 
             } catch (error) {
-                console.error("Library load error:", error);
+                console.error(error);
                 loader.innerText = "Error de conexión.";
             }
         }
