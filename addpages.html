@@ -3,111 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>v14 | billy reads editor</title>
+    <title>v15 | billy reads editor</title>
     <style>
         :root {
             --mc-font: 'Arial Black', Gadget, sans-serif;
             --accent-blue: #4a90e2;
             --danger-red: #e74c3c;
+            --window-bg: rgba(255, 255, 255, 0.9);
         }
 
-        body {
+        body, html {
+            margin: 0; padding: 0; 
+            width: 100vw; height: 100vh;
+            background: #000; 
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
             font-family: 'Segoe UI', sans-serif;
-            background: #f0f4f8; margin: 0; padding: 20px;
-            display: flex; flex-direction: column; align-items: center;
-            height: 100vh; box-sizing: border-box;
         }
 
+        /* 16:9 STAGE LOCK */
+        .stage-container {
+            position: relative;
+            width: 100vw;
+            height: 56.25vw; 
+            max-height: 100vh;
+            max-width: 177.78vh; 
+            background: #f0f4f8;
+            overflow: hidden;
+            margin: auto;
+        }
+
+        #backdrop {
+            position: absolute; inset: 0;
+            background-size: cover;
+            background-position: center;
+            z-index: 1;
+            filter: blur(5px) brightness(0.8);
+        }
+
+        /* Percentage-based UI Elements */
         #btn-top-back {
-            position: absolute; top: 25px; left: 20px; width: 40px; height: 40px;
+            position: absolute; 
+            top: 5%; left: 3%; 
+            width: 6%; aspect-ratio: 1/1;
             background: white; border-radius: 50%; display: flex;
             align-items: center; justify-content: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer;
-            z-index: 100; font-size: 1.2rem; color: #2c3e50; border: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer;
+            z-index: 100; font-size: 1.5vw; color: #2c3e50; border: none;
         }
 
         .main-card {
-            width: 100%; max-width: 500px;
-            background: white; border-radius: 20px;
-            padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            text-align: center; margin-bottom: auto; margin-top: 50px;
+            position: absolute;
+            top: 10%; left: 50%;
+            transform: translateX(-50%);
+            width: 45%;
+            background: var(--window-bg); border-radius: 2vw;
+            padding: 2.5%; box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            text-align: center; z-index: 10;
         }
 
-        h1 { font-family: var(--mc-font); color: #2c3e50; font-size: 1.2rem; margin-top: 0; }
+        h1 { font-family: var(--mc-font); color: #2c3e50; font-size: 1.8vw; margin: 0 0 1.5vw 0; }
         
         .upload-zone {
-            border: 3px dashed #cbd5e0; border-radius: 15px;
-            padding: 40px 20px; margin: 20px 0; cursor: pointer;
+            border: 0.3vw dashed #cbd5e0; border-radius: 1.5vw;
+            padding: 3vw 1.5vw; margin: 1vw 0; cursor: pointer;
+            background: rgba(255,255,255,0.5);
         }
 
         #file-input { display: none; }
 
-        #status { font-size: 0.9rem; color: #7f8c8d; margin-top: 15px; min-height: 1.5em; }
+        #status { font-size: 1vw; color: #7f8c8d; margin-top: 1vw; min-height: 1.5em; font-weight: 600; }
 
-        .bottom-strip-container { width: 100%; max-width: 600px; margin-top: 20px; }
-        .strip-label { font-family: var(--mc-font); font-size: 0.7rem; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; }
+        .bottom-strip-container { 
+            position: absolute;
+            bottom: 12%; left: 5%; right: 5%;
+            z-index: 10;
+        }
+
+        .strip-label { font-family: var(--mc-font); font-size: 0.8vw; color: white; margin-bottom: 0.5vw; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
 
         .asset-strip {
-            display: flex; gap: 12px; overflow-x: auto; padding: 10px 5px;
-            height: 120px; align-items: center;
+            display: flex; gap: 1vw; overflow-x: auto; padding: 0.5vw;
+            height: 10vw; align-items: center;
+            background: rgba(0,0,0,0.3); border-radius: 1vw;
+            backdrop-filter: blur(10px);
         }
 
         .strip-item {
-            position: relative; min-width: 80px; height: 100px;
+            position: relative; min-width: 8vw; height: 8vw;
             background-size: cover; background-position: center;
-            border-radius: 10px; border: 3px solid white;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1); flex-shrink: 0;
+            border-radius: 0.8vw; border: 0.2vw solid white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2); flex-shrink: 0;
         }
 
         .btn-del {
-            position: absolute; top: -8px; right: -8px;
-            width: 24px; height: 24px; background: var(--danger-red);
-            color: white; border: 2px solid white; border-radius: 50%;
-            font-size: 14px; cursor: pointer; display: flex;
+            position: absolute; top: -0.5vw; right: -0.5vw;
+            width: 1.8vw; height: 1.8vw; background: var(--danger-red);
+            color: white; border: 0.15vw solid white; border-radius: 50%;
+            font-size: 1vw; cursor: pointer; display: flex;
             align-items: center; justify-content: center;
+            z-index: 20;
         }
 
-        .nav-footer { margin-top: 20px; width: 100%; max-width: 500px; display: flex; gap: 10px; }
+        .nav-footer { 
+            position: absolute;
+            bottom: 3%; right: 5%;
+            width: 15%; z-index: 10;
+        }
+        
         .btn-bottom {
-            flex: 1; padding: 12px; border: none; border-radius: 12px;
-            font-family: var(--mc-font); cursor: pointer; font-size: 0.8rem;
-            background: #4a90e2; color: white;
+            width: 100%; padding: 1vw; border: none; border-radius: 1vw;
+            font-family: var(--mc-font); cursor: pointer; font-size: 1vw;
+            background: var(--accent-blue); color: white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
     </style>
 </head>
 <body>
 
-    <button id="btn-top-back" onclick="location.href='pages.html'">←</button>
+    <div class="stage-container">
+        <div id="backdrop"></div>
 
-    <div class="main-card">
-        <h1 id="book-title-display">cargando...</h1>
-        <div class="upload-zone" onclick="document.getElementById('file-input').click()">
-            <strong style="color: var(--accent-blue);">+ añadir página</strong>
-            <p style="font-size: 0.8rem; color: #94a3b8;">toca para subir foto del libro.</p>
+        <button id="btn-top-back" onclick="location.href='pages.html'">←</button>
+
+        <div class="main-card">
+            <h1 id="book-title-display">cargando...</h1>
+            <div class="upload-zone" onclick="document.getElementById('file-input').click()">
+                <strong style="color: var(--accent-blue); font-size: 1.2vw;">+ añadir página</strong>
+                <p style="font-size: 0.9vw; color: #94a3b8;">toca para subir foto del libro.</p>
+            </div>
+            <input type="file" id="file-input" accept="image/*">
+            <div id="status">esperando página...</div>
         </div>
-        <input type="file" id="file-input" accept="image/*">
-        <div id="status">esperando página...</div>
-    </div>
 
-    <div class="bottom-strip-container">
-        <div class="strip-label">páginas:</div>
-        <div class="asset-strip" id="asset-strip"></div>
-    </div>
+        <div class="bottom-strip-container">
+            <div class="strip-label">páginas:</div>
+            <div class="asset-strip" id="asset-strip"></div>
+        </div>
 
-    <div class="nav-footer">
-        <button class="btn-bottom" onclick="location.href='pages.html'">finalizar</button>
+        <div class="nav-footer">
+            <button class="btn-bottom" onclick="location.href='pages.html'">finalizar</button>
+        </div>
     </div>
 
     <script type="module">
-        // UPDATE_VERSION: 14
         import { db, storage, collection, doc, setDoc, getDocs, deleteDoc, query, orderBy, ref, uploadBytes, getDownloadURL } from "./firebase-bridge.js";
 
         const bookid = localStorage.getItem('current_book_id');
         const booktitle = localStorage.getItem('current_book_title');
+        const backdropurl = localStorage.getItem('current_book_backdrop');
         const geminikey = localStorage.getItem('gemini_key');
 
         if (!bookid) location.href = 'magicbook.html';
         document.getElementById('book-title-display').innerText = booktitle ? booktitle.toLowerCase() : "libro";
+
+        if (backdropurl) {
+            document.getElementById('backdrop').style.backgroundImage = `url('${backdropurl}')`;
+        }
 
         const fileinput = document.getElementById('file-input');
         const status = document.getElementById('status');
@@ -115,8 +167,6 @@
 
         async function internalCallGemini(file, prompt) {
             if (!geminikey) throw new Error("API Key missing. Please check settings.");
-            
-            // Strictly using gemini-2.5-flash as instructed
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminikey}`;
             
             const base64 = await new Promise((res) => {
@@ -144,7 +194,6 @@
 
         async function processpagewithai(file) {
             status.innerText = "🤖 la ia está leyendo y traduciendo...";
-            
             const prompt = `Here is a picture of the inside of a children's reading book. 
             Perform OCR on this image. 
             1. Detect if the text is in Spanish, Valenciano, or English.
@@ -194,7 +243,6 @@
 
             try {
                 const currentcount = await refreshstrip();
-                
                 const aidata = await processpagewithai(file);
                 const pageid = `page_${Date.now()}`;
                 const storageref = ref(storage, `books/${bookid}/pages/${pageid}`);
