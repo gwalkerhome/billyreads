@@ -11,162 +11,187 @@
             --accent-gold: #ffd700;
             --read-green: #76FF03;
             --quiz-bg: rgba(0, 0, 0, 0.6);
+
+            /* --- LAYOUT CONTROL PANEL --- */
+            /* Use these variables to quickly move/resize assets */
+            --nav-btn-size: 7vw;
+            --lang-btn-size: 5vw;
+            --main-btn-size: 10vw;
+            --stage-margin: 2%;
         }
 
         body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            overflow: hidden; background: #000;
-            font-family: sans-serif;
+            margin: 0; padding: 0; 
+            width: 100vw; height: 100vh;
+            background: #000; 
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
+            font-family: var(--mc-font);
+        }
+
+        /* 16:9 STAGE LOCK */
+        .stage-container {
+            position: relative;
+            width: 100vw;
+            height: 56.25vw; 
+            max-height: 100vh;
+            max-width: 177.78vh; 
+            background: #000;
+            overflow: hidden;
         }
 
         #backdrop {
-            position: fixed; inset: 0;
+            position: absolute; inset: 0;
             background-size: cover;
             background-position: center;
             z-index: 1;
         }
 
+        /* Navigation & UI Buttons */
+        .ui-btn {
+            position: absolute;
+            cursor: pointer;
+            z-index: 100;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            transition: transform 0.1s, filter 0.2s;
+            border: none; background-color: transparent;
+        }
+        .ui-btn:active { transform: scale(0.9); }
+        .ui-btn.inactive { filter: grayscale(1) opacity(0.5); }
+
+        #btn-back { 
+            top: var(--stage-margin); 
+            left: var(--stage-margin); 
+            width: var(--nav-btn-size); 
+            height: var(--nav-btn-size);
+            background-image: url('assets/back1.png'); 
+        }
+
+        /* Language Toggles (Top Right) */
         .language-bar {
             position: absolute;
-            top: 1%; right: 5%;
-            width: 45%; height: 4%;
-            display: flex; justify-content: center; gap: 10px;
-            z-index: 20;
+            top: var(--stage-margin);
+            right: var(--stage-margin);
+            display: flex; gap: 10px;
+            z-index: 100;
+        }
+        .lang-asset-btn {
+            width: var(--lang-btn-size);
+            height: var(--lang-btn-size);
         }
 
-        .lang-btn {
-            background: rgba(0,0,0,0.5);
-            color: white; border: 1px solid white;
-            padding: 2px 15px; border-radius: 10px;
-            font-family: var(--mc-font); font-size: 0.8rem;
-            cursor: pointer; transition: 0.3s;
+        /* Main Activity Buttons (Bottom Center) */
+        .main-controls {
+            position: absolute;
+            bottom: 3%;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 30px;
+            z-index: 110;
+        }
+        .action-asset-btn {
+            width: var(--main-btn-size);
+            height: var(--main-btn-size);
         }
 
-        .lang-btn.active {
-            background: var(--accent-gold);
-            color: black; border-color: var(--accent-gold);
-        }
-
+        /* Text Windows */
         .page-window {
             position: absolute;
-            top: 5%; right: 5%;
-            width: 45%; height: 55%;
+            top: 10%; right: 5%;
+            width: 45%; height: 50%;
             background: var(--window-bg);
             backdrop-filter: blur(10px);
             border-radius: 20px;
-            padding: 30px;
+            padding: 25px;
             box-sizing: border-box;
             z-index: 10;
-            display: flex; flex-direction: column;
             color: white; overflow-y: auto;
+            border: 1px solid rgba(255,255,255,0.2);
         }
 
-        /* Quiz Window - Appears below Page Window */
         .quiz-window {
             position: absolute;
             top: 62%; right: 5%;
-            width: 45%; height: 13%;
+            width: 45%; height: 12%;
             background: var(--quiz-bg);
             backdrop-filter: blur(15px);
             border: 2px solid var(--accent-gold);
             border-radius: 15px;
-            padding: 15px;
+            padding: 10px;
             box-sizing: border-box;
             z-index: 11;
-            display: none; /* Hidden by default */
+            display: none;
             color: white;
-            font-family: 'Segoe UI', sans-serif;
             font-size: 1.1rem;
             text-align: center;
         }
 
-        .page-text {
-            font-size: 1.4rem; line-height: 1.6;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
+        .page-text { font-size: 1.4rem; line-height: 1.6; font-family: 'Segoe UI', sans-serif; }
         .word-span { transition: color 0.2s; display: inline-block; white-space: pre; }
-        .word-read { color: var(--read-green); text-shadow: 0 0 5px rgba(118, 255, 3, 0.5); }
+        .word-read { color: var(--read-green); text-shadow: 0 0 5px rgba(118, 255, 3, 0.8); }
 
+        /* Nav Arrows */
         .nav-arrow {
             position: absolute;
-            top: 25%;
-            width: 50px; height: 50px;
-            background: rgba(0,0,0,0.4);
+            top: 40%;
+            width: 60px; height: 60px;
+            background: rgba(0,0,0,0.3);
             color: white; border: 2px solid white;
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            font-family: var(--mc-font); cursor: pointer;
-            z-index: 15;
+            font-size: 2rem; cursor: pointer; z-index: 50;
         }
-
         #prev-btn { left: 47%; }
         #next-btn { right: 1%; }
 
-        .bottom-controls {
-            position: absolute;
-            bottom: 5%; left: 5%;
-            z-index: 20;
-            display: flex; gap: 15px;
-        }
+        /* Listening Animation */
+        .listening { filter: drop-shadow(0 0 15px #ff4757) brightness(1.2); animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
 
-        .btn-action {
-            padding: 12px 25px; border: none; border-radius: 12px;
-            font-family: var(--mc-font); cursor: pointer;
-            transition: transform 0.1s;
-            display: flex; align-items: center; gap: 8px;
-        }
-        .btn-action:active { transform: scale(0.95); }
-
-        #btn-exit { background: #e74c3c; color: white; }
-        #btn-voice { background: var(--accent-gold); color: black; }
-        #btn-mic { background: white; color: black; }
-        #btn-quiz { background: #9b59b6; color: white; }
-
-        .listening { animation: pulse 1.5s infinite; background: #ff4757 !important; color: white !important; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
-
-        /* Success Overlay */
         #success-overlay {
             position: fixed; inset: 0;
             display: none; align-items: center; justify-content: center;
-            z-index: 100; pointer-events: none;
+            z-index: 1000; pointer-events: none;
             font-size: 15rem;
         }
-
-        #loading-txt { text-align: center; font-style: italic; opacity: 0.7; }
     </style>
 </head>
 <body>
 
-    <div id="backdrop"></div>
     <div id="success-overlay">✅</div>
 
-    <div class="language-bar">
-        <button id="btn-es" class="lang-btn active" onclick="setlanguage('es')">ES</button>
-        <button id="btn-va" class="lang-btn" onclick="setlanguage('va')">VA</button>
-        <button id="btn-en" class="lang-btn" onclick="setlanguage('en')">EN</button>
-    </div>
+    <div class="stage-container">
+        <div id="backdrop"></div>
 
-    <div id="prev-btn" class="nav-arrow" onclick="changepage(-1)">&lt;</div>
-    
-    <div class="page-window">
-        <div id="text-content" class="page-text">
-            <p id="loading-txt">abriendo libro...</p>
+        <button id="btn-back" class="ui-btn" onclick="location.href='pages.html'"></button>
+
+        <div class="language-bar">
+            <button id="btn-es" class="ui-btn lang-asset-btn" style="background-image: url('assets/spanish.png');" onclick="setlanguage('es')"></button>
+            <button id="btn-va" class="ui-btn lang-asset-btn inactive" style="background-image: url('assets/valencian.png');" onclick="setlanguage('va')"></button>
+            <button id="btn-en" class="ui-btn lang-asset-btn inactive" style="background-image: url('assets/English.png');" onclick="setlanguage('en')"></button>
         </div>
-    </div>
 
-    <div id="quiz-window" class="quiz-window">
-        <div id="quiz-text">preparando pregunta...</div>
-    </div>
+        <div id="prev-btn" class="nav-arrow" onclick="changepage(-1)">&lt;</div>
+        <div id="next-btn" class="nav-arrow" onclick="changepage(1)">&gt;</div>
 
-    <div id="next-btn" class="nav-arrow" onclick="changepage(1)">&gt;</div>
+        <div class="page-window">
+            <div id="text-content" class="page-text">
+                <p id="loading-txt">abriendo libro...</p>
+            </div>
+        </div>
 
-    <div class="bottom-controls">
-        <button id="btn-exit" class="btn-action" onclick="location.href='pages.html'">salir</button>
-        <button id="btn-voice" class="btn-action" onclick="togglevoice()">🔊 escuchar</button>
-        <button id="btn-mic" class="btn-action" onclick="togglemic()">🎤 leer</button>
-        <button id="btn-quiz" class="btn-action" onclick="startquiz()">❓ quiz me</button>
+        <div id="quiz-window" class="quiz-window">
+            <div id="quiz-text">preparando pregunta...</div>
+        </div>
+
+        <div class="main-controls">
+            <button id="btn-voice" class="ui-btn action-asset-btn" style="background-image: url('assets/listen2.png');" onclick="togglevoice()"></button>
+            <button id="btn-mic" class="ui-btn action-asset-btn" style="background-image: url('assets/readmic.png');" onclick="togglemic()"></button>
+            <button id="btn-quiz" class="ui-btn action-asset-btn" style="background-image: url('assets/quiz.png');" onclick="startquiz()"></button>
+        </div>
     </div>
 
     <script type="module">
@@ -201,15 +226,15 @@
                 snap.forEach(doc => allpages.push(doc.data()));
                 pagedata = selectedimageurls.map(url => allpages.find(p => p.imageurl === url)).filter(p => p !== undefined);
                 updatedisplay();
-            } catch (e) {
-                console.error(e);
-            }
+            } catch (e) { console.error(e); }
         }
 
         window.setlanguage = (lang) => {
             stopvoice(); stopmic();
             currentlang = lang;
-            document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.toggle('active', btn.id === `btn-${lang}`));
+            document.querySelectorAll('.lang-asset-btn').forEach(btn => {
+                btn.classList.toggle('inactive', btn.id !== `btn-${lang}`);
+            });
             document.getElementById('quiz-window').style.display = 'none';
             isquizactive = false;
             updatedisplay();
@@ -245,47 +270,38 @@
             const voices = window.speechSynthesis.getVoices();
             if (voicename) msg.voice = voices.find(v => v.name === voicename);
             msg.rate = parseFloat(localStorage.getItem('billy_rate') || 1.0);
-            msg.pitch = parseFloat(localStorage.getItem('billy_pitch') || 1.0);
-            document.getElementById('btn-voice').innerHTML = "⏹ detener";
-            msg.onend = () => document.getElementById('btn-voice').innerHTML = "🔊 escuchar";
+            msg.onend = () => document.getElementById('btn-voice').classList.remove('listening');
+            
+            document.getElementById('btn-voice').classList.add('listening');
             window.speechSynthesis.speak(msg);
         };
 
         function stopvoice() {
             window.speechSynthesis.cancel();
-            document.getElementById('btn-voice').innerHTML = "🔊 escuchar";
+            document.getElementById('btn-voice').classList.remove('listening');
         }
 
-        // Quiz Logic
         window.startquiz = async () => {
-            if (!geminikey) { alert("api key missing in settings"); return; }
+            if (!geminikey) { alert("api key missing"); return; }
             stopmic(); stopvoice();
-            
             const qwin = document.getElementById('quiz-window');
-            const qtext = document.getElementById('quiz-text');
             qwin.style.display = 'block';
-            qtext.innerText = "pensando una pregunta...";
+            document.getElementById('quiz-text').innerText = "...";
             isquizactive = true;
 
-            const pagetext = pagedata[currentindex][`text_${currentlang}`];
-            
             try {
+                const pagetext = pagedata[currentindex][`text_${currentlang}`];
                 const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminikey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: `Based on this text: "${pagetext}", ask a very short, simple question for a child in ${currentlang}. Only output the question text.` }] }]
+                        contents: [{ parts: [{ text: `Based on: "${pagetext}", ask a very short child-friendly question in ${currentlang}. Text only.` }] }]
                     })
                 });
                 const data = await response.json();
-                const question = data.candidates[0].content.parts[0].text;
-                qtext.innerText = question;
-                
-                // Automatically open mic for Billy to answer
+                document.getElementById('quiz-text').innerText = data.candidates[0].content.parts[0].text;
                 setTimeout(() => togglemic(), 1000);
-            } catch (e) {
-                qtext.innerText = "error al generar pregunta.";
-            }
+            } catch (e) { document.getElementById('quiz-text').innerText = "error"; }
         };
 
         window.togglemic = () => {
@@ -294,7 +310,6 @@
             else {
                 stopvoice();
                 btn.classList.add('listening');
-                btn.innerHTML = "⏹ parar";
                 recognition.lang = currentlang === 'en' ? 'en-US' : 'es-ES';
                 recognition.start();
             }
@@ -302,41 +317,22 @@
 
         function stopmic() {
             if (recognition) recognition.stop();
-            const btn = document.getElementById('btn-mic');
-            btn.classList.remove('listening');
-            btn.innerHTML = "🎤 leer";
-        }
-
-        function playting() {
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.5);
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+            document.getElementById('btn-mic').classList.remove('listening');
         }
 
         async function verifyanswer(answer) {
             const pagetext = pagedata[currentindex][`text_${currentlang}`];
             const question = document.getElementById('quiz-text').innerText;
-            
             try {
                 const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminikey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: `Text: "${pagetext}". Question: "${question}". Billy's answer: "${answer}". Is this answer correct? Reply only with "YES" or "NO".` }] }]
+                        contents: [{ parts: [{ text: `Text: "${pagetext}". Question: "${question}". Answer: "${answer}". Correct? YES/NO only.` }] }]
                     })
                 });
                 const data = await response.json();
-                const result = data.candidates[0].content.parts[0].text.trim().toUpperCase();
-                
-                if (result.includes("YES")) {
-                    playting();
+                if (data.candidates[0].content.parts[0].text.trim().toUpperCase().includes("YES")) {
                     const overlay = document.getElementById('success-overlay');
                     overlay.style.display = 'flex';
                     setTimeout(() => { overlay.style.display = 'none'; }, 2000);
@@ -348,24 +344,15 @@
         if (recognition) {
             recognition.onresult = (event) => {
                 let transcript = "";
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    transcript += event.results[i][0].transcript;
-                }
-                
+                for (let i = event.resultIndex; i < event.results.length; ++i) transcript += event.results[i][0].transcript;
                 if (isquizactive) {
-                    if (event.results[event.results.length - 1].isFinal) {
-                        verifyanswer(transcript);
-                    }
+                    if (event.results[event.results.length - 1].isFinal) verifyanswer(transcript);
                 } else {
-                    // Standard reading highlight logic
                     const spokenwords = transcript.toLowerCase().split(/\s+/);
                     const spans = document.querySelectorAll('.word-span');
-                    const strictness = parseInt(localStorage.getItem('billy_strictness') || '2');
-                    const lookahead = strictness === 1 ? 5 : (strictness === 4 ? 1 : 3);
-                    
                     spokenwords.forEach(spoken => {
                         const cleanvoice = spoken.replace(/[.,!?;:]/g, "");
-                        for (let i = lastmatchedindex + 1; i <= Math.min(lastmatchedindex + lookahead, spans.length - 1); i++) {
+                        for (let i = lastmatchedindex + 1; i <= Math.min(lastmatchedindex + 3, spans.length - 1); i++) {
                             if (cleanvoice === spans[i].innerText.toLowerCase().replace(/[.,!?;:]/g, "")) {
                                 spans[i].classList.add('word-read');
                                 lastmatchedindex = i;
