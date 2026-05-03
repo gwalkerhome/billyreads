@@ -1,6 +1,6 @@
 // firebase-bridge.js - The Unified Cloud Link
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, collection, addDoc, getDocs, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, collection, addDoc, getDocs, deleteDoc, query, orderBy, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
 const firebaseConfig = {
@@ -56,7 +56,6 @@ async function getGlobalTheme() {
 }
 
 // STAMP OF INTEGRITY: These exports match the requirements of your working Magic Book scripts.
-// STAMP OF INTEGRITY: Added setDoc to the export list
 export { 
     db, 
     storage, 
@@ -69,9 +68,10 @@ export {
     getDocs, 
     deleteDoc, 
     doc, 
-    setDoc, // <--- This was missing!
+    setDoc,
     query, 
     orderBy, 
+    writeBatch,
     saveGlobalTheme, 
     getGlobalTheme 
 };
