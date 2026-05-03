@@ -13,11 +13,11 @@
             --quiz-bg: rgba(0, 0, 0, 0.6);
 
             /* --- LAYOUT CONTROL PANEL --- */
-            /* Use these variables to quickly move/resize assets */
-            --nav-btn-size: 7vw;
-            --lang-btn-size: 5vw;
-            --main-btn-size: 10vw;
-            --stage-margin: 2%;
+            /* Move and resize your assets here */
+            --nav-btn-size: 8vw;
+            --lang-btn-size: 6vw;
+            --main-btn-size: 12vw;
+            --stage-margin: 3%;
         }
 
         body, html {
@@ -29,14 +29,13 @@
             font-family: var(--mc-font);
         }
 
-        /* 16:9 STAGE LOCK */
         .stage-container {
             position: relative;
             width: 100vw;
             height: 56.25vw; 
             max-height: 100vh;
             max-width: 177.78vh; 
-            background: #000;
+            background: #111;
             overflow: hidden;
         }
 
@@ -47,67 +46,74 @@
             z-index: 1;
         }
 
-        /* Navigation & UI Buttons */
+        /* Base Button Styles */
         .ui-btn {
             position: absolute;
             cursor: pointer;
-            z-index: 100;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
+            z-index: 500; /* High z-index to stay on top */
+            border: none;
+            background: transparent;
+            padding: 0;
             transition: transform 0.1s, filter 0.2s;
-            border: none; background-color: transparent;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .ui-btn img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0px 8px 10px rgba(0,0,0,0.6));
         }
         .ui-btn:active { transform: scale(0.9); }
         .ui-btn.inactive { filter: grayscale(1) opacity(0.5); }
 
+        /* Exit Button - Top Left */
         #btn-back { 
             top: var(--stage-margin); 
             left: var(--stage-margin); 
             width: var(--nav-btn-size); 
             height: var(--nav-btn-size);
-            background-image: url('assets/back1.png'); 
         }
 
-        /* Language Toggles (Top Right) */
+        /* Language Toggles - Top Right */
         .language-bar {
             position: absolute;
             top: var(--stage-margin);
             right: var(--stage-margin);
-            display: flex; gap: 10px;
-            z-index: 100;
+            display: flex; 
+            gap: 15px;
+            z-index: 500;
         }
         .lang-asset-btn {
             width: var(--lang-btn-size);
             height: var(--lang-btn-size);
         }
 
-        /* Main Activity Buttons (Bottom Center) */
+        /* Main Controls - Bottom Center */
         .main-controls {
             position: absolute;
-            bottom: 3%;
+            bottom: 4%;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
-            gap: 30px;
-            z-index: 110;
+            gap: 4vw;
+            z-index: 500;
         }
         .action-asset-btn {
             width: var(--main-btn-size);
             height: var(--main-btn-size);
         }
 
-        /* Text Windows */
+        /* Text & Quiz Windows */
         .page-window {
             position: absolute;
             top: 10%; right: 5%;
             width: 45%; height: 50%;
             background: var(--window-bg);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(12px);
             border-radius: 20px;
             padding: 25px;
             box-sizing: border-box;
-            z-index: 10;
+            z-index: 100;
             color: white; overflow-y: auto;
             border: 1px solid rgba(255,255,255,0.2);
         }
@@ -121,57 +127,56 @@
             border: 2px solid var(--accent-gold);
             border-radius: 15px;
             padding: 10px;
-            box-sizing: border-box;
-            z-index: 11;
+            z-index: 110;
             display: none;
             color: white;
-            font-size: 1.1rem;
             text-align: center;
         }
 
-        .page-text { font-size: 1.4rem; line-height: 1.6; font-family: 'Segoe UI', sans-serif; }
-        .word-span { transition: color 0.2s; display: inline-block; white-space: pre; }
-        .word-read { color: var(--read-green); text-shadow: 0 0 5px rgba(118, 255, 3, 0.8); }
-
-        /* Nav Arrows */
+        /* Navigation Arrows */
         .nav-arrow {
             position: absolute;
-            top: 40%;
+            top: 35%;
             width: 60px; height: 60px;
-            background: rgba(0,0,0,0.3);
-            color: white; border: 2px solid white;
+            background: rgba(0,0,0,0.5);
+            color: white; border: 2px solid rgba(255,255,255,0.8);
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            font-size: 2rem; cursor: pointer; z-index: 50;
+            font-size: 2.5rem; cursor: pointer; z-index: 200;
         }
         #prev-btn { left: 47%; }
-        #next-btn { right: 1%; }
+        #next-btn { right: 1.5%; }
 
-        /* Listening Animation */
-        .listening { filter: drop-shadow(0 0 15px #ff4757) brightness(1.2); animation: pulse 1.5s infinite; }
+        /* Animation for Voice/Mic */
+        .listening { animation: pulse 1.5s infinite; filter: brightness(1.3) drop-shadow(0 0 15px #ff4757); }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
 
-        #success-overlay {
-            position: fixed; inset: 0;
-            display: none; align-items: center; justify-content: center;
-            z-index: 1000; pointer-events: none;
-            font-size: 15rem;
-        }
+        .page-text { font-size: 1.4rem; line-height: 1.6; font-family: 'Segoe UI', sans-serif; }
+        .word-span { transition: color 0.2s; display: inline-block; white-space: pre; }
+        .word-read { color: var(--read-green); text-shadow: 0 0 8px rgba(118, 255, 3, 0.9); }
     </style>
 </head>
 <body>
 
-    <div id="success-overlay">✅</div>
+    <div id="success-overlay" style="position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:2000; pointer-events:none; font-size:15rem;">✅</div>
 
     <div class="stage-container">
         <div id="backdrop"></div>
 
-        <button id="btn-back" class="ui-btn" onclick="location.href='pages.html'"></button>
+        <button id="btn-back" class="ui-btn" onclick="location.href='pages.html'">
+            <img src="assets/back1.png" alt="back">
+        </button>
 
         <div class="language-bar">
-            <button id="btn-es" class="ui-btn lang-asset-btn" style="background-image: url('assets/spanish.png');" onclick="setlanguage('es')"></button>
-            <button id="btn-va" class="ui-btn lang-asset-btn inactive" style="background-image: url('assets/valencian.png');" onclick="setlanguage('va')"></button>
-            <button id="btn-en" class="ui-btn lang-asset-btn inactive" style="background-image: url('assets/english.png');" onclick="setlanguage('en')"></button>
+            <button id="btn-es" class="ui-btn lang-asset-btn" onclick="setlanguage('es')">
+                <img src="assets/spanish.png" alt="es">
+            </button>
+            <button id="btn-va" class="ui-btn lang-asset-btn inactive" onclick="setlanguage('va')">
+                <img src="assets/valencian.png" alt="va">
+            </button>
+            <button id="btn-en" class="ui-btn lang-asset-btn inactive" onclick="setlanguage('en')">
+                <img src="assets/english.png" alt="en">
+            </button>
         </div>
 
         <div id="prev-btn" class="nav-arrow" onclick="changepage(-1)">&lt;</div>
@@ -188,9 +193,15 @@
         </div>
 
         <div class="main-controls">
-            <button id="btn-voice" class="ui-btn action-asset-btn" style="background-image: url('assets/listen2.png');" onclick="togglevoice()"></button>
-            <button id="btn-mic" class="ui-btn action-asset-btn" style="background-image: url('assets/readmic.png');" onclick="togglemic()"></button>
-            <button id="btn-quiz" class="ui-btn action-asset-btn" style="background-image: url('assets/quiz.png');" onclick="startquiz()"></button>
+            <button id="btn-voice" class="ui-btn action-asset-btn" onclick="togglevoice()">
+                <img src="assets/listen2.png" alt="listen">
+            </button>
+            <button id="btn-mic" class="ui-btn action-asset-btn" onclick="togglemic()">
+                <img src="assets/readmic.png" alt="read">
+            </button>
+            <button id="btn-quiz" class="ui-btn action-asset-btn" onclick="startquiz()">
+                <img src="assets/quiz.png" alt="quiz">
+            </button>
         </div>
     </div>
 
