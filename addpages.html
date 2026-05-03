@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>v16 | billy reads editor</title>
+    <title>v17 | billy reads editor</title>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <style>
         :root {
             --mc-font: 'Arial Black', Gadget, sans-serif;
             --accent-blue: #4a90e2;
             --danger-red: #e74c3c;
-            --window-bg: rgba(255, 255, 255, 0.9);
+            --glass-bg: rgba(255, 255, 255, 0.15);
         }
 
         body, html {
@@ -28,7 +28,7 @@
             height: 56.25vw; 
             max-height: 100vh;
             max-width: 177.78vh; 
-            background: #f0f4f8;
+            background: #111;
             overflow: hidden;
             margin: auto;
         }
@@ -41,37 +41,63 @@
             filter: blur(5px) brightness(0.8);
         }
 
-        #btn-top-back {
-            position: absolute; 
-            top: 5%; left: 3%; 
-            width: 6%; aspect-ratio: 1/1;
-            background: white; border-radius: 50%; display: flex;
-            align-items: center; justify-content: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer;
-            z-index: 100; font-size: 1.5vw; color: #2c3e50; border: none;
+        .ui-btn {
+            position: absolute;
+            cursor: pointer;
+            z-index: 500;
+            border: none;
+            background: transparent;
+            padding: 0;
+            transition: transform 0.1s;
         }
+        .ui-btn img {
+            display: block;
+            width: 100%;
+            height: auto;
+            filter: drop-shadow(0px 8px 10px rgba(0,0,0,0.4));
+        }
+        .ui-btn:active { transform: scale(0.9); }
+
+        #btn-top-back { top: 5%; left: 3%; width: 8%; }
 
         .main-card {
             position: absolute;
             top: 10%; left: 50%;
             transform: translateX(-50%);
             width: 45%;
-            background: var(--window-bg); border-radius: 2vw;
-            padding: 2.5%; box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            background: transparent; 
             text-align: center; z-index: 10;
         }
 
-        h1 { font-family: var(--mc-font); color: #2c3e50; font-size: 1.8vw; margin: 0 0 1.5vw 0; }
+        h1 { 
+            font-family: var(--mc-font); 
+            color: white; 
+            font-size: 1.8vw; 
+            margin: 0 0 1.5vw 0; 
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
         
         .upload-zone {
-            border: 0.3vw dashed #cbd5e0; border-radius: 1.5vw;
+            border: 0.2vw dashed rgba(255,255,255,0.4); 
+            border-radius: 1.5vw;
             padding: 3vw 1.5vw; margin: 1vw 0; cursor: pointer;
-            background: rgba(255,255,255,0.5);
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            color: white;
+            transition: background 0.3s;
         }
+        .upload-zone:hover { background: rgba(255,255,255,0.25); }
 
         #file-input { display: none; }
 
-        #status { font-size: 1vw; color: #7f8c8d; margin-top: 1vw; min-height: 1.5em; font-weight: 600; }
+        #status { 
+            font-size: 1.1vw; 
+            color: #ffd700; 
+            margin-top: 1vw; 
+            min-height: 1.5em; 
+            font-weight: 600; 
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
 
         .bottom-strip-container { 
             position: absolute;
@@ -79,13 +105,22 @@
             z-index: 10;
         }
 
-        .strip-label { font-family: var(--mc-font); font-size: 0.8vw; color: white; margin-bottom: 0.5vw; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .strip-label { 
+            font-family: var(--mc-font); 
+            font-size: 0.8vw; 
+            color: white; 
+            margin-bottom: 0.5vw; 
+            text-transform: uppercase; 
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5); 
+        }
 
         .asset-strip {
             display: flex; gap: 1vw; overflow-x: auto; padding: 1.5vw;
             height: 10vw; align-items: center;
-            background: rgba(0,0,0,0.3); border-radius: 1vw;
-            backdrop-filter: blur(10px);
+            background: var(--glass-bg); 
+            border-radius: 1vw;
+            backdrop-filter: blur(15px);
+            border: 0.1vw solid rgba(255,255,255,0.1);
         }
 
         .strip-item {
@@ -97,7 +132,6 @@
         }
         .strip-item:active { cursor: grabbing; }
         
-        /* Dragging placeholder style */
         .sortable-ghost { opacity: 0.3; transform: scale(0.9); }
 
         .btn-del {
@@ -109,17 +143,11 @@
             z-index: 20;
         }
 
-        .nav-footer { 
+        #btn-save { 
             position: absolute;
             bottom: 3%; right: 5%;
-            width: 15%; z-index: 10;
-        }
-        
-        .btn-bottom {
-            width: 100%; padding: 1vw; border: none; border-radius: 1vw;
-            font-family: var(--mc-font); cursor: pointer; font-size: 1vw;
-            background: var(--accent-blue); color: white;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            width: 10%; 
+            z-index: 10;
         }
     </style>
 </head>
@@ -128,13 +156,15 @@
     <div class="stage-container">
         <div id="backdrop"></div>
 
-        <button id="btn-top-back" onclick="location.href='pages.html'">←</button>
+        <button id="btn-top-back" class="ui-btn" onclick="location.href='pages.html'">
+            <img src="assets/back1.png" alt="back">
+        </button>
 
         <div class="main-card">
             <h1 id="book-title-display">cargando...</h1>
             <div class="upload-zone" onclick="document.getElementById('file-input').click()">
-                <strong style="color: var(--accent-blue); font-size: 1.2vw;">+ añadir página</strong>
-                <p style="font-size: 0.9vw; color: #94a3b8;">toca para subir foto del libro.</p>
+                <strong style="color: #76FF03; font-size: 1.4vw;">+ añadir página</strong>
+                <p style="font-size: 1vw; color: #eee; margin-top: 0.5vw;">toca para subir foto del libro.</p>
             </div>
             <input type="file" id="file-input" accept="image/*">
             <div id="status">esperando página...</div>
@@ -145,9 +175,9 @@
             <div class="asset-strip" id="asset-strip"></div>
         </div>
 
-        <div class="nav-footer">
-            <button class="btn-bottom" onclick="location.href='pages.html'">finalizar</button>
-        </div>
+        <button id="btn-save" class="ui-btn" onclick="location.href='pages.html'">
+            <img src="assets/save.png" alt="save">
+        </button>
     </div>
 
     <script type="module">
@@ -169,7 +199,6 @@
         const status = document.getElementById('status');
         const strip = document.getElementById('asset-strip');
 
-        // Initialize Drag and Drop
         const sortable = Sortable.create(strip, {
             animation: 150,
             ghostClass: 'sortable-ghost',
@@ -179,7 +208,7 @@
         });
 
         async function updatepageorder() {
-            status.style.color = "#4a90e2";
+            status.style.color = "#ffd700";
             status.innerText = "🔄 actualizando orden...";
             
             const batch = writeBatch(db);
@@ -193,11 +222,11 @@
 
             try {
                 await batch.commit();
-                status.style.color = "green";
+                status.style.color = "#76FF03";
                 status.innerText = "✅ orden guardado.";
             } catch (err) {
                 console.error(err);
-                status.style.color = "red";
+                status.style.color = "#ff4757";
                 status.innerText = "❌ error al ordenar.";
             }
         }
@@ -230,6 +259,7 @@
         }
 
         async function processpagewithai(file) {
+            status.style.color = "#ffd700";
             status.innerText = "🤖 la ia está leyendo y traduciendo...";
             const prompt = `Here is a picture of the inside of a children's reading book. 
             Perform OCR on this image. 
@@ -258,7 +288,7 @@
                 const data = docsnap.data();
                 const item = document.createElement('div');
                 item.className = 'strip-item';
-                item.setAttribute('data-id', docsnap.id); // Store ID for reordering
+                item.setAttribute('data-id', docsnap.id); 
                 item.style.backgroundImage = `url('${data.imageurl}')`;
                 item.innerHTML = `<button class="btn-del" onclick="window.deletepage('${docsnap.id}')">✕</button>`;
                 strip.appendChild(item);
@@ -276,7 +306,7 @@
             const file = e.target.files[0];
             if (!file) return;
 
-            status.style.color = "#4a90e2";
+            status.style.color = "#ffd700";
             status.innerText = "📤 procesando imagen...";
 
             try {
@@ -296,11 +326,11 @@
                     uploadedat: Date.now()
                 });
 
-                status.style.color = "green";
+                status.style.color = "#76FF03";
                 status.innerText = "✅ guardado correctamente.";
                 refreshstrip();
             } catch (err) {
-                status.style.color = "red";
+                status.style.color = "#ff4757";
                 status.innerText = "❌ error: " + err.message;
             }
         };
