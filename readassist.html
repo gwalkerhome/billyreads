@@ -15,9 +15,24 @@
             /* --- LAYOUT CONTROL PANEL (PERCENTS) --- */
             --nav-btn-w: 8%;
             --lang-btn-w: 6%;
-            --main-btn-w: 40%;
             --stage-margin-x: 4%; 
             --stage-margin-y: 6%;
+
+            /* --- MAIN BUTTON CONTROLS (Vertical Stack) --- */
+            /* Listen Button */
+            --btn-voice-w: 12%;
+            --btn-voice-top: 30%;
+            --btn-voice-left: 25%;
+
+            /* Read Button */
+            --btn-mic-w: 12%;
+            --btn-mic-top: 50%;
+            --btn-mic-left: 25%;
+
+            /* Quiz Button */
+            --btn-quiz-w: 12%;
+            --btn-quiz-top: 70%;
+            --btn-quiz-left: 25%;
         }
 
         body, html {
@@ -87,24 +102,27 @@
         }
         .lang-asset-btn {
             width: var(--lang-btn-w);
-            position: relative; /* Override absolute for flex flow */
+            position: relative; 
         }
 
-        /* Main Controls - Bottom Center */
-        .main-controls {
-            position: absolute;
-            bottom: 5%;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 4%;
-            z-index: 500;
-            width: 50%;
-            justify-content: center;
+        /* Individual Main Action Placement */
+        #btn-voice {
+            width: var(--btn-voice-w);
+            top: var(--btn-voice-top);
+            left: var(--btn-voice-left);
+            transform: translate(-50%, -50%);
         }
-        .action-asset-btn {
-            width: var(--main-btn-w);
-            position: relative; /* Override absolute for flex flow */
+        #btn-mic {
+            width: var(--btn-mic-w);
+            top: var(--btn-mic-top);
+            left: var(--btn-mic-left);
+            transform: translate(-50%, -50%);
+        }
+        #btn-quiz {
+            width: var(--btn-quiz-w);
+            top: var(--btn-quiz-top);
+            left: var(--btn-quiz-left);
+            transform: translate(-50%, -50%);
         }
 
         /* Navigation Arrows */
@@ -197,17 +215,15 @@
             <div id="quiz-text">preparando pregunta...</div>
         </div>
 
-        <div class="main-controls">
-            <button id="btn-voice" class="ui-btn action-asset-btn" onclick="togglevoice()">
-                <img src="assets/listen2.png" alt="listen">
-            </button>
-            <button id="btn-mic" class="ui-btn action-asset-btn" onclick="togglemic()">
-                <img src="assets/readmic.png" alt="read">
-            </button>
-            <button id="btn-quiz" class="ui-btn action-asset-btn" onclick="startquiz()">
-                <img src="assets/quiz.png" alt="quiz">
-            </button>
-        </div>
+        <button id="btn-voice" class="ui-btn" onclick="togglevoice()">
+            <img src="assets/listen2.png" alt="listen">
+        </button>
+        <button id="btn-mic" class="ui-btn" onclick="togglemic()">
+            <img src="assets/readmic.png" alt="read">
+        </button>
+        <button id="btn-quiz" class="ui-btn" onclick="startquiz()">
+            <img src="assets/quiz.png" alt="quiz">
+        </button>
     </div>
 
     <script type="module">
