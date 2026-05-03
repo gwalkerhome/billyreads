@@ -79,8 +79,21 @@
             height: auto;
             filter: drop-shadow(0px 8px 10px rgba(0,0,0,0.6));
         }
-        .ui-btn:active { transform: scale(0.9); }
-        .ui-btn.inactive { filter: grayscale(1) opacity(0.5); }
+        .ui-btn:active { transform: translate(-50%, -50%) scale(0.9) !important; }
+
+        /* Updated Language Toggles: Full color, but selected one glows/lifts */
+        .lang-asset-btn {
+            width: var(--lang-btn-w);
+            position: relative; 
+            filter: drop-shadow(0px 4px 5px rgba(0,0,0,0.4));
+        }
+        .lang-asset-btn.selected { 
+            transform: translateY(-10%);
+            filter: brightness(1.2) drop-shadow(0 0 10px var(--accent-gold)); 
+        }
+        .lang-asset-btn.inactive { 
+            opacity: 0.8; /* Subtle transparency but stays full color */
+        }
 
         /* Exit Button - Top Left */
         #btn-back { 
@@ -100,12 +113,8 @@
             width: 100%;
             justify-content: flex-end;
         }
-        .lang-asset-btn {
-            width: var(--lang-btn-w);
-            position: relative; 
-        }
 
-        /* Individual Main Action Placement */
+        /* Individual Main Action Placement with Fixed Centering */
         #btn-voice {
             width: var(--btn-voice-w);
             top: var(--btn-voice-top);
@@ -123,6 +132,18 @@
             top: var(--btn-quiz-top);
             left: var(--btn-quiz-left);
             transform: translate(-50%, -50%);
+        }
+
+        /* Feedback States - Modified to prevent jumping */
+        .listening { 
+            filter: brightness(1.2) drop-shadow(0 0 15px #ff4757); 
+            animation: pulse-fixed 1.5s infinite; 
+        }
+
+        /* Pulse that respects the -50% -50% centering */
+        @keyframes pulse-fixed { 
+            0%, 100% { transform: translate(-50%, -50%) scale(1); } 
+            50% { transform: translate(-50%, -50%) scale(1.08); } 
         }
 
         /* Navigation Arrows */
@@ -170,10 +191,6 @@
             text-align: center;
         }
 
-        /* Feedback States */
-        .listening { animation: pulse 1.5s infinite; filter: brightness(1.2) drop-shadow(0 0 15px #ff4757); }
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
-
         .page-text { font-size: 1.6vw; line-height: 1.6; font-family: 'Segoe UI', sans-serif; }
         .word-span { transition: color 0.2s; display: inline-block; white-space: pre; }
         .word-read { color: var(--read-green); text-shadow: 0 0 0.8vw rgba(118, 255, 3, 0.9); }
@@ -191,7 +208,7 @@
         </button>
 
         <div class="language-bar">
-            <button id="btn-es" class="ui-btn lang-asset-btn" onclick="setlanguage('es')">
+            <button id="btn-es" class="ui-btn lang-asset-btn selected" onclick="setlanguage('es')">
                 <img src="assets/spanish.png" alt="es">
             </button>
             <button id="btn-va" class="ui-btn lang-asset-btn inactive" onclick="setlanguage('va')">
@@ -265,7 +282,9 @@
             stopvoice(); stopmic();
             currentlang = lang;
             document.querySelectorAll('.lang-asset-btn').forEach(btn => {
-                btn.classList.toggle('inactive', btn.id !== `btn-${lang}`);
+                const isSelected = btn.id === `btn-${lang}`;
+                btn.classList.toggle('selected', isSelected);
+                btn.classList.toggle('inactive', !isSelected);
             });
             document.getElementById('quiz-window').style.display = 'none';
             isquizactive = false;
